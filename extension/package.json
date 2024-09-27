@@ -1,0 +1,17 @@
+{
+  "name": "extension",
+  "module": "index.ts",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/chrome": "^0.0.272",
+    "nodemon": "^3.1.7",
+    "tailwindcss": "^3.4.13"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "dev": "bun nodemon"
+  },
+  "type": "module"
+}

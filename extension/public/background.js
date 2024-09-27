@@ -1,3 +1,5 @@
+// THIS IS WHERE WE DO CONSTANTLY RUNNING TASKS
+
 console.log('Hello from the background')
 
 // // chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
