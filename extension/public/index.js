@@ -9,6 +9,22 @@ function getTag(type, props, children) {
 }
 
 // src/index.ts
+var clearChildren = function(id) {
+  const parent = document.querySelector(`#${id}`);
+  if (!parent)
+    throw Error(`failed to find parent container for given id: ${id}`);
+  while (parent.firstChild)
+    parent.removeChild(parent.firstChild);
+  return parent;
+};
+var updateRender = function() {
+  window.localStorage.setItem("vault", JSON.stringify(vault));
+  const dir = clearChildren("directoryContainer");
+  dir.append(...getVaultList(vault));
+};
+var getCurrentFolder = function() {
+  return folderLoc.reduce((currentLoc, key) => currentLoc = currentLoc[key], vault);
+};
 var getVaultList = function(folder, prefix = []) {
   return Object.keys(folder).map((key) => {
     const newPrefix = prefix.concat(key);
@@ -26,35 +42,47 @@ var getVaultList = function(folder, prefix = []) {
         className: "bg-red-500 p-2 rounded-xl",
         textContent: "Delete",
         onclick: (e) => {
-          console.log("Trigger delete of record", folder, key);
           delete folder[key];
-          window.localStorage.setItem("vault", JSON.stringify(vault));
+          updateRender();
         }
       })
     ]) : getTag("div", {}, [
-      getTag("div", {
-        textContent: `${key} (${Object.keys(folder[key]).length})`,
-        className: "rounded-xl p-2",
-        onclick: (e) => {
-          folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
-          console.log(folderLoc);
-          const target = e.target;
-          target.classList.toggle("bg-blue-600");
-          target.classList.toggle("text-white");
-          const childContainer = document.querySelector(`#${idTest}`);
-          if (childContainer) {
-            childContainer.classList.toggle("border-l-2");
-            if (hidden) {
-              childContainer.append(...getVaultList(folder[key], newPrefix));
-            } else {
-              while (childContainer.firstChild)
-                childContainer.removeChild(childContainer.firstChild);
+      getTag("div", { className: "flex justify-between items-center gap-2" }, [
+        getTag("div", {
+          textContent: `${key} (${Object.keys(folder[key]).length})`,
+          className: "flex-1 rounded-xl p-2 folder",
+          onclick: (e) => {
+            document.querySelectorAll(".folder").forEach((node) => {
+              node.classList.remove("bg-blue-600", "text-white");
+            });
+            folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
+            console.log(folderLoc);
+            const target = e.target;
+            target.classList.toggle("bg-blue-600");
+            target.classList.toggle("text-white");
+            const childContainer = document.querySelector(`#${idTest}`);
+            if (childContainer) {
+              childContainer.classList.toggle("border-l-2");
+              if (hidden) {
+                childContainer.append(...getVaultList(folder[key], newPrefix));
+              } else {
+                while (childContainer.firstChild)
+                  childContainer.removeChild(childContainer.firstChild);
+              }
+              hidden = !hidden;
             }
-            hidden = !hidden;
           }
-        }
-      }),
-      getTag("div", { id: idTest, className: "m-2 mr-0 border-black" })
+        }),
+        getTag("button", {
+          textContent: "Delete",
+          className: "bg-red-500 p-2 rounded-xl",
+          onclick: (e) => {
+            delete folder[key];
+            updateRender();
+          }
+        })
+      ]),
+      getTag("div", { id: idTest, className: "m-2 mr-0 border-blue-600 folderContents" })
     ]);
   });
 };
@@ -72,14 +100,13 @@ chrome.tabs.query({ active: true }, (tabs) => {
       }),
       getTag("button", {
         className: "p-2 rounded-xl border-2 border-blue-600",
-        textContent: "Add",
+        textContent: "\uFF0B",
         onclick: (e) => {
           const title = document.querySelector("#title").value;
           if (title && currentTab.url) {
-            const loc = folderLoc.reduce((currentLoc, key) => currentLoc = currentLoc[key], vault);
-            loc[title] = currentTab.url;
+            getCurrentFolder()[title] = currentTab.url;
           }
-          window.localStorage.setItem("vault", JSON.stringify(vault));
+          updateRender();
         }
       }),
       getTag("button", {
@@ -88,17 +115,17 @@ chrome.tabs.query({ active: true }, (tabs) => {
         onclick: (e) => {
           const title = document.querySelector("#title").value;
           if (title) {
-            const loc = folderLoc.reduce((currentLoc, key) => currentLoc = currentLoc[key], vault);
-            console.log(folderLoc, loc);
-            loc[title] = {};
+            getCurrentFolder()[title] = {};
           }
-          window.localStorage.setItem("vault", JSON.stringify(vault));
+          updateRender();
         }
       })
     ]),
-    Object.keys(vault).length ? getTag("div", { className: "p-4 flex flex-col gap-2" }, getVaultList(vault)) : getTag("div", {
-      textContent: "No vault found",
-      className: "p-4 text-center text-xl font-bold text-gray-500"
-    })
+    getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vault).length ? getVaultList(vault) : [
+      getTag("div", {
+        textContent: "No vault found",
+        className: "p-4 text-center text-xl font-bold text-gray-500"
+      })
+    ])
   ]));
 });
