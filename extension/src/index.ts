@@ -1,5 +1,11 @@
 import t from './lib/getTag';
 
+// TO-DO
+//
+// To implement password protected folders, we can add an attribute to the folder with key = '' and val = someHash
+//  - If folder has '' key, ask for password before viewing
+//  - However this does not really provide much actual security, it would be very easy to just view local storage and find the values that way
+
 interface Vault {
   [key: string]: Vault | string
 }
@@ -47,46 +53,76 @@ function getVaultList(folder: Vault, prefix: string[] = []) {
         }
       })
     ]) : t('div', {}, [
-        t('div', { className: 'flex justify-between items-center gap-2' }, [
-          t('div', {
-            textContent: `${key} (${Object.keys(folder[key]).length})`,
-            className: 'flex-1 rounded-xl p-2 folder',
-            onclick: (e) => {
-              // On click, clear all other selected directories
-              document.querySelectorAll('.folder').forEach(node => {
-                node.classList.remove('bg-blue-600', 'text-white')
-              })
-              // document.querySelectorAll('.folderContents').forEach(node => {
-              //   while (node.firstChild) node.removeChild(node.firstChild);
-              // })
+        t('div', { id: `header-${idTest}`, className: 'flex justify-between items-center gap-2' }, [
+          t('div', {}, [
+            t('div', {
+              id: `title-${idTest}`,
+              textContent: `${key} (${Object.keys(folder[key]).length})`,
+              className: 'flex-1 rounded-xl p-2 folder',
+              onclick: (e) => {
+                // On click, clear all other selected directories
+                // document.querySelectorAll('.folder').forEach(node => {
+                //   node.classList.remove('bg-blue-600', 'text-white')
+                // })
+                // document.querySelectorAll('.folderContents').forEach(node => {
+                //   while (node.firstChild) node.removeChild(node.firstChild);
+                // })
 
-              folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
-              console.log(folderLoc)
-              const target = e.target as HTMLDivElement
-              target.classList.toggle('bg-blue-600')
-              target.classList.toggle('text-white')
-              // target.classList.toggle('ml-2')
-              const childContainer = document.querySelector(`#${idTest}`)
-              if (childContainer) {
-                childContainer.classList.toggle('border-l-2')
-                if (hidden) {
-                  childContainer.append(...getVaultList(folder[key] as Vault, newPrefix))
-                } else {
-                  while (childContainer.firstChild) childContainer.removeChild(childContainer.firstChild)
+                folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
+                console.log(folderLoc)
+                const target = e.target as HTMLDivElement;
+                target.classList.toggle('bg-blue-600');
+                target.classList.toggle('text-white');
+                // target.classList.toggle('ml-2')
+                const childContainer = document.querySelector(`#${idTest}`);
+                const container = document.querySelector(`#edit-${idTest}`)
+                if (!container) throw Error('Cant find edit container')
+                if (childContainer) {
+                  childContainer.classList.toggle('border-l-2');
+                  if (hidden) {
+                    childContainer.append(...getVaultList(folder[key] as Vault, newPrefix));
+
+                    document.querySelector(`#header-${idTest}`)?.append(
+                      t('button', {
+                        id: `settings-${idTest}`,
+                        textContent: '☰',
+                        className: 'w-8 h-8 flex justify-center items-center border-2 border-blue-600 p-2 rounded-xl',
+                        onclick: (e) => {
+                          container.classList.toggle('p-2');
+                          target.classList.toggle('rounded-b-none');
+                          if (container.hasChildNodes()) return clearChildren(`edit-${idTest}`)
+                          container.append(
+                            t('button', {
+                              textContent: 'Delete',
+                              className: 'bg-red-500 flex-1 rounded-xl',
+                              onclick: (e) => {
+                                delete folder[key];
+                                updateRender();
+                              }
+                            }),
+                            t('button', {
+                              textContent: 'Rename',
+                              className: 'bg-green-500 flex-1 rounded-xl',
+                              onclick: () => {
+
+                              }
+                            })
+                          )
+                        }
+                      })
+                    )
+                  } else {
+                    while (childContainer.firstChild) childContainer.removeChild(childContainer.firstChild);
+                    document.querySelector(`#settings-${idTest}`)?.remove()
+                  }
+                  hidden = !hidden;
                 }
-                hidden = !hidden
               }
-            }
-          }),
-          t('button', {
-            textContent: 'Delete',
-            className: 'bg-red-500 p-2 rounded-xl',
-            onclick: (e) => {
-              delete folder[key];
-              updateRender();
-            }
-          })
+            })
+          ]),
+
         ]),
+        t('div', { id: `edit-${idTest}`, className: 'flex gap-2 bg-gray-300 rounded-xl rounded-tl-none' }),
         t('div', { id: idTest, className: 'm-2 mr-0 border-blue-600 folderContents' })
       ])
   })
@@ -103,61 +139,44 @@ chrome.tabs.query({ active: true }, (tabs) => {
   );
   document.body.append(
     t('div', { className: 'p-4' }, [
-      t('div', { className: 'flex gap-2' }, [
+      t('form', { className: 'flex gap-2' }, [
         t('input', {
           className: 'p-2 text-nowrap m-auto border-2 border-blue-600 rounded-xl',
           value: currentTab.title,
+          required: true,
           id: 'title'
         }),
         t('button', {
           className: 'p-2 rounded-xl border-2 border-blue-600',
           textContent: '＋',
+          type: 'submit',
           onclick: (e) => {
             // MAKE SURE TITLE DOESNT ALREADY EXIST IN CURRENT FOLDER
             // If it does, then the previous link will be overwritten
 
             const title = (document.querySelector('#title') as HTMLInputElement).value;
-            if (title && currentTab.url) {
-              // const loc = folderLoc.reduce((currentLoc, key) => currentLoc = currentLoc[key] as Vault, vault)
-              // loc[title] = currentTab.url;
-              getCurrentFolder()[title] = currentTab.url;
-            }
+            if (title && currentTab.url) getCurrentFolder()[title] = currentTab.url;
             updateRender();
           }
         }),
         t('button', {
           className: 'p-2 rounded-xl border-2 border-blue-600',
           textContent: '📁',
+          type: 'submit',
           onclick: (e) => {
             const title = (document.querySelector('#title') as HTMLInputElement).value;
-            if (title) {
-              // const loc = folderLoc.reduce((currentLoc, key) => currentLoc = currentLoc[key] as Vault, vault)
-              // console.log(folderLoc, loc)
-              // loc[title] = {}
-              getCurrentFolder()[title] = {};
-            }
+            if (title) getCurrentFolder()[title] = {};
             updateRender();
           }
         })
       ]),
       t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 py-2' }, 
         Object.keys(vault).length ? getVaultList(vault)
-          : [
-            t('div', {
-              textContent: 'No vault found',
-              className: 'p-4 text-center text-xl font-bold text-gray-500'
-            })
-          ]
+          : [ t('div', {
+            textContent: 'No vault found',
+            className: 'p-4 text-center text-xl font-bold text-gray-500'
+          }) ]
       )
-
-      // t('div', { id: 'directoryContainer' }, [
-      //   Object.keys(vault).length ? t('div', { className: 'p-4 flex flex-col gap-2' },
-      //     getVaultList(vault)
-      //   ) : t('div', {
-      //       textContent: 'No vault found',
-      //       className: 'p-4 text-center text-xl font-bold text-gray-500'
-      //     })
-      // ])
     ])
   )
 });
