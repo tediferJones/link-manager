@@ -69,6 +69,14 @@ var generateSettingsDropDown = function(target, container, id, folder, key) {
           });
           renameInput.focus();
         }
+      }), getTag("button", {
+        textContent: "Lock",
+        className: "bg-orange-500 flex-1 rounded-xl",
+        onclick: async () => {
+          const key2 = "this is my password";
+          const bytes = new TextEncoder().encode(JSON.stringify(folder[key2]));
+          console.log("Buffer");
+        }
       }));
     }
   });

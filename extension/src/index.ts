@@ -1,4 +1,5 @@
 import t from './lib/getTag';
+import { getFullKey, getRandBase64 } from './lib/security';
 
 // TO-DO
 //
@@ -85,6 +86,36 @@ function generateSettingsDropDown(
             });
             renameInput.focus();
           }
+        }),
+        t('button', {
+          textContent: 'Lock',
+          className: 'bg-orange-500 flex-1 rounded-xl',
+          onclick: async () => {
+            const key = 'this is my password'
+            const bytes = new TextEncoder().encode(JSON.stringify(folder[key]));
+            console.log('Buffer')
+            // console.log(Buffer)
+            
+            // const iv = getRandBase64('iv');
+            // const salt = getRandBase64('salt');
+            // const encKey = getFullKey(key, salt);
+            // console.log('did the thing')
+
+
+            // const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            // console.log(
+            //   'bytes', bytes,
+            //   'iv', iv,
+            // )
+            // const encrypted = await window.crypto.subtle.encrypt(
+            //   {
+            //     name: "AES-GCM",
+            //     iv: iv
+            //   },
+            //   key,
+            //   encodedText
+            // );
+          }
         })
       )
     }
@@ -93,30 +124,10 @@ function generateSettingsDropDown(
 
 function getVaultList(folder: Vault, prefix: string[] = [], id: string = 'id') {
   return Object.keys(folder).sort().map((key, i) => {
-    // id = id += `-${i}`
     const idTest = id + `-${i}`
     const newPrefix = prefix.concat(key);
-    // const idTest = newPrefix.join('-').replaceAll(' ', '_');
     let hidden = true;
     return typeof(folder[key]) === 'string' ?
-      // t('div', { className: 'flex justify-between items-center' }, [
-      //   t('a', {
-      //     className: 'p-2 underline text-blue-600 truncate',
-      //     textContent: key,
-      //     href: folder[key],
-      //     target: '_blank',
-      //     rel: 'noopener noreferrer'
-      //   }),
-      //   t('button', {
-      //     className: 'bg-red-500 p-2 rounded-xl',
-      //     textContent: 'Delete',
-      //     onclick: () => {
-      //       delete folder[key];
-      //       updateRender();
-      //     }
-      //   })
-      // ])
-
       t('div', {}, [
         t('div', { className: 'flex justify-between items-center' }, [
           t('a', {
@@ -127,13 +138,6 @@ function getVaultList(folder: Vault, prefix: string[] = [], id: string = 'id') {
             target: '_blank',
             rel: 'noopener noreferrer'
           }),
-          // generateSettingsDropDown(
-          //   document.querySelector(`#title-${idTest}`)!,
-          //   document.querySelector(`#edit-${idTest}`)!,
-          //   idTest,
-          //   folder,
-          //   key
-          // ),
           t('button', {
             id: `settings-${idTest}`,
             textContent: '☰',
@@ -185,7 +189,6 @@ function getVaultList(folder: Vault, prefix: string[] = [], id: string = 'id') {
             }
           })
         ]),
-        // t('div', { id: `edit-${idTest}` })
         t('div', { id: `edit-${idTest}`, className: 'flex gap-2 bg-gray-300 rounded-xl rounded-t-none' }),
       ])
       : t('div', {}, [
