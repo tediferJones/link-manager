@@ -8,6 +8,56 @@ function getTag(type, props, children) {
   return node;
 }
 
+// src/lib/security.ts
+var bufferFrom = function(data, encoding) {
+  if (encoding === "utf8") {
+    const encoder = new TextEncoder;
+    return encoder.encode(data);
+  } else if (encoding === "base64") {
+    const decodedString = atob(data);
+    const bytes = new Uint8Array(decodedString.length);
+    for (let i = 0;i < decodedString.length; i++) {
+      bytes[i] = decodedString.charCodeAt(i);
+    }
+    return bytes;
+  } else {
+    throw new Error('Unsupported encoding type. Use "utf8" or "base64".');
+  }
+};
+var bufferTo = function(buffer, encoding) {
+  const bytes = new Uint8Array(buffer);
+  if (encoding === "utf8") {
+    const decoder = new TextDecoder("utf-8");
+    return decoder.decode(bytes);
+  } else if (encoding === "base64") {
+    const binaryString = Array.from(bytes).map((byte) => String.fromCharCode(byte)).join("");
+    return btoa(binaryString);
+  } else {
+    throw new Error('Unsupported encoding type. Use "utf8" or "base64".');
+  }
+};
+async function getFullKey(password, salt) {
+  return await crypto.subtle.deriveKey({
+    name: "PBKDF2",
+    salt: bufferFrom(salt, "base64"),
+    iterations: 1e6,
+    hash: "SHA-256"
+  }, await crypto.subtle.importKey("raw", bufferFrom(password, "utf8"), "PBKDF2", false, ["deriveBits", "deriveKey"]), { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+}
+async function encrypt(plainText, fullKey, iv) {
+  return bufferTo(await crypto.subtle.encrypt({ name: "AES-GCM", iv: bufferFrom(iv, "base64") }, fullKey, bufferFrom(plainText, "utf8")), "base64");
+}
+async function decrypt(cipherText, fullKey, iv) {
+  return bufferTo(await crypto.subtle.decrypt({ name: "AES-GCM", iv: bufferFrom(iv, "base64") }, fullKey, bufferFrom(cipherText, "base64")), "utf8");
+}
+function getRandBase64(type) {
+  const length = {
+    salt: 32,
+    iv: 12
+  }[type];
+  return bufferTo(crypto.getRandomValues(new Uint8Array(length)).buffer, "base64");
+}
+
 // src/index.ts
 var clearChildren = function(id) {
   const parent = document.querySelector(`#${id}`);
@@ -73,9 +123,34 @@ var generateSettingsDropDown = function(target, container, id, folder, key) {
         textContent: "Lock",
         className: "bg-orange-500 flex-1 rounded-xl",
         onclick: async () => {
-          const key2 = "this is my password";
-          const bytes = new TextEncoder().encode(JSON.stringify(folder[key2]));
-          console.log("Buffer");
+          const dropdownContainer = clearChildren(`edit-${id}`);
+          dropdownContainer.append(getTag("form", {
+            className: "m-0 flex gap-2",
+            onsubmit: async (e) => {
+              e.preventDefault();
+              const form = e.currentTarget;
+              const password = form.elements.namedItem("password").value;
+              const salt = getRandBase64("salt");
+              const iv = getRandBase64("iv");
+              const encrypted = await encrypt(JSON.stringify(folder[key]), await getFullKey(password, salt), iv);
+              console.log("encrypted", encrypted);
+              const decrypted = await decrypt(encrypted, await getFullKey(password, salt), iv);
+              console.log("decrypted", decrypted, JSON.parse(decrypted));
+            }
+          }, [
+            getTag("input", {
+              name: "password",
+              type: "password",
+              required: true,
+              placeholder: "Password",
+              className: "p-2 border-2 border-blue-600 rounded-xl"
+            }),
+            getTag("button", {
+              type: "submit",
+              textContent: "Encrypt",
+              className: "p-2 rounded-xl bg-blue-600 text-white"
+            })
+          ]));
         }
       }));
     }

@@ -1,5 +1,10 @@
-import t from './lib/getTag';
-import { getFullKey, getRandBase64 } from './lib/security';
+import t from '@/lib/getTag';
+import {
+  decrypt,
+  encrypt,
+  getFullKey,
+  getRandBase64
+} from '@/lib/security';
 
 // TO-DO
 //
@@ -91,30 +96,45 @@ function generateSettingsDropDown(
           textContent: 'Lock',
           className: 'bg-orange-500 flex-1 rounded-xl',
           onclick: async () => {
-            const key = 'this is my password'
-            const bytes = new TextEncoder().encode(JSON.stringify(folder[key]));
-            console.log('Buffer')
-            // console.log(Buffer)
-            
-            // const iv = getRandBase64('iv');
-            // const salt = getRandBase64('salt');
-            // const encKey = getFullKey(key, salt);
-            // console.log('did the thing')
+            const dropdownContainer = clearChildren(`edit-${id}`)
+            dropdownContainer.append(
+              t('form', {
+                className: 'm-0 flex gap-2',
+                onsubmit: async (e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget as HTMLFormElement;
+                  const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+                  const salt = getRandBase64('salt');
+                  const iv = getRandBase64('iv');
+                  const encrypted = await encrypt(
+                    JSON.stringify(folder[key]),
+                    await getFullKey(password, salt),
+                    iv,
+                  );
+                  console.log('encrypted', encrypted);
 
-
-            // const iv = window.crypto.getRandomValues(new Uint8Array(12));
-            // console.log(
-            //   'bytes', bytes,
-            //   'iv', iv,
-            // )
-            // const encrypted = await window.crypto.subtle.encrypt(
-            //   {
-            //     name: "AES-GCM",
-            //     iv: iv
-            //   },
-            //   key,
-            //   encodedText
-            // );
+                  const decrypted = await decrypt(
+                    encrypted,
+                    await getFullKey(password, salt),
+                    iv
+                  );
+                  console.log('decrypted', decrypted, JSON.parse(decrypted));
+                }
+              }, [
+                  t('input', {
+                    name: 'password',
+                    type: 'password',
+                    required: true,
+                    placeholder: 'Password',
+                    className: 'p-2 border-2 border-blue-600 rounded-xl',
+                  }),
+                  t('button', {
+                    type: 'submit',
+                    textContent: 'Encrypt',
+                    className: 'p-2 rounded-xl bg-blue-600 text-white'
+                  })
+                ])
+            )
           }
         })
       )

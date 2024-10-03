@@ -1,14 +1,47 @@
-async function getFullKey(password: string, salt: string) {
+function bufferFrom(data: string, encoding: 'utf8' | 'base64'): Uint8Array {
+  if (encoding === 'utf8') {
+    const encoder = new TextEncoder();
+    return encoder.encode(data); // Return Uint8Array for UTF-8 encoded string
+  } else if (encoding === 'base64') {
+    const decodedString = atob(data); // Decode Base64 string to binary string
+    const bytes = new Uint8Array(decodedString.length);
+    for (let i = 0; i < decodedString.length; i++) {
+      bytes[i] = decodedString.charCodeAt(i); // Convert each character to byte
+    }
+    return bytes; // Return Uint8Array for Base64 decoded string
+  } else {
+    throw new Error('Unsupported encoding type. Use "utf8" or "base64".');
+  }
+}
+
+function bufferTo(buffer: ArrayBuffer, encoding: 'utf8' | 'base64'): string {
+  const bytes = new Uint8Array(buffer);
+
+  if (encoding === 'utf8') {
+    // Use TextDecoder for UTF-8 decoding
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(bytes);
+  } else if (encoding === 'base64') {
+    // Convert bytes to a binary string
+    const binaryString = Array.from(bytes).map(byte => String.fromCharCode(byte)).join('');
+    // Encode the binary string to Base64
+    return btoa(binaryString);
+  } else {
+    throw new Error('Unsupported encoding type. Use "utf8" or "base64".');
+  }
+}
+
+export async function getFullKey(password: string, salt: string) {
   return await crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: Buffer.from(salt, 'base64'),
+      salt: bufferFrom(salt, 'base64'),
       iterations: 1000000,
       hash: 'SHA-256',
     },
     await crypto.subtle.importKey(
       'raw',
-      Buffer.from(password),
+      bufferFrom(password, 'utf8'),
       'PBKDF2',
       false,
       ['deriveBits', 'deriveKey'],
@@ -19,81 +52,42 @@ async function getFullKey(password: string, salt: string) {
   )
 }
 
-async function encrypt(plainText: string, fullKey: CryptoKey, iv: string) {
-  return Buffer.from(
+export async function encrypt(plainText: string, fullKey: CryptoKey, iv: string) {
+  return bufferTo(
     await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: Buffer.from(iv, 'base64') },
+      { name: 'AES-GCM', iv: bufferFrom(iv, 'base64') },
       fullKey,
-      Buffer.from(plainText),
-    )
-  ).toString('base64')
+      bufferFrom(plainText, 'utf8'),
+    ),
+    'base64'
+  )
 }
 
-async function decrypt(cipherText: string, fullKey: CryptoKey, iv: string) {
-  return Buffer.from(
+export async function decrypt(cipherText: string, fullKey: CryptoKey, iv: string) {
+  return bufferTo(
     await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: Buffer.from(iv, 'base64') },
+      { name: 'AES-GCM', iv: bufferFrom(iv, 'base64') },
       fullKey,
-      Buffer.from(cipherText, 'base64'),
-    )
-  ).toString()
+      bufferFrom(cipherText, 'base64')
+    ),
+    'utf8'
+  )
 }
 
-const charTypes: { [key: string]: (n: number) => boolean } = {
-  uppercase: (n) => 65 <= n && n <= 90, // 65 - 90
-  lowercase: (n) => 97 <= n && n <= 122, // 97 - 122
-  numbers: (n) => 48 <= n && n <= 57, // 48 - 57
-  // 33 - 47 & 58 - 64 & 91 - 96 & 123 - 126
-  symbols: (n) => (
-    (33 <= n && n <= 47) ||
-      (58 <= n && n <= 64) ||
-      (91 <= n && n <= 96) ||
-      (123 <= n && n <= 126)
-  ), 
-};
+export function getRandBase64(type: 'salt' | 'iv') {
+  const length = {
+    salt: 32,
+    iv: 12,
+  }[type]
 
-function getRandPwd(length: number, valid: string[], pwd: number[] = []): string {
-  return pwd.length >= length ? pwd.slice(0, length).map(charCode => String.fromCharCode(charCode)).join('') :
-    getRandPwd(
-      length,
-      valid,
-      pwd.concat(
-        Array.from(crypto.getRandomValues(Buffer.alloc(length)))
-          .map(rand => rand > 128 ? Math.floor(rand / 2) : rand)
-          .filter(rand => valid.some(charType => charTypes[charType](rand)))
-      )
-    )
+  return bufferTo(
+    crypto.getRandomValues(new Uint8Array(length)).buffer as ArrayBuffer,
+    'base64'
+  )
 }
 
-function getRandBase64(type: 'salt' | 'iv') {
-  return crypto.getRandomValues(
-    Buffer.alloc({
-      salt: 32,
-      iv: 12,
-    }[type])
-  ).toString('base64')
-}
-
-
-async function getHash(str: string) {
-  return Buffer.from(
-    await crypto.subtle.digest('SHA-256', Buffer.from(str))
-  ).toString('base64')
-}
-
-function isBase64(strings: string[]) {
+export function isBase64(strings: string[]) {
   return strings.every(str => {
     return str.match(/^[-A-Za-z0-9+/]*={0,3}$/)
   })
-}
-
-export {
-  encrypt,
-  decrypt,
-  getFullKey,
-  getRandBase64,
-  charTypes,
-  getRandPwd,
-  getHash,
-  isBase64,
 }
