@@ -69,185 +69,269 @@ function getRandBase64(type) {
 }
 
 // src/components/getVaultList.ts
-function getVaultList(folder, refs, prefix = [], id = "id") {
-  return Object.keys(folder.contents).sort().map((key, i) => {
-    const idTest = id + `-${i}`;
-    const newPrefix = prefix.concat(key);
-    let hidden = true;
-    return folder.contents[key].url ? getTag("div", {}, [
-      getTag("div", { className: "flex justify-between items-center" }, [
-        getTag("a", {
-          id: `title-${idTest}`,
-          className: "p-2 underline text-blue-600 truncate",
-          textContent: key,
-          href: folder.contents[key],
-          target: "_blank",
-          rel: "noopener noreferrer"
-        }),
-        getTag("button", {
-          id: `settings-${idTest}`,
-          textContent: "\u2630",
-          className: "w-8 h-8 flex justify-center items-center border-2 border-blue-600 p-2 rounded-xl",
-          onclick: () => {
-            const container = document.querySelector(`#edit-${idTest}`);
-            if (!container)
-              throw Error("cant find edit container");
-            container.classList.toggle("p-2");
-            document.querySelector(`#title-${idTest}`)?.classList.toggle("rounded-b-none");
-            if (container.hasChildNodes())
-              return clearChildren(`edit-${idTest}`);
-            container.append(getTag("button", {
-              textContent: "Delete",
-              className: "bg-red-500 flex-1 rounded-xl",
-              onclick: () => {
-                delete folder.contents[key];
+var renderLink = function({ idTest, folder, key, refs }) {
+  return getTag("div", {}, [
+    getTag("div", { className: "flex justify-between items-center" }, [
+      getTag("a", {
+        id: `title-${idTest}`,
+        className: "p-2 underline text-blue-600 truncate",
+        textContent: key,
+        href: folder.contents[key],
+        target: "_blank",
+        rel: "noopener noreferrer"
+      }),
+      getTag("button", {
+        id: `settings-${idTest}`,
+        textContent: "\u2630",
+        className: "w-8 h-8 flex justify-center items-center border-2 border-blue-600 p-2 rounded-xl",
+        onclick: () => {
+          const container = document.querySelector(`#edit-${idTest}`);
+          if (!container)
+            throw Error("cant find edit container");
+          container.classList.toggle("p-2");
+          document.querySelector(`#title-${idTest}`)?.classList.toggle("rounded-b-none");
+          if (container.hasChildNodes())
+            return clearChildren(`edit-${idTest}`);
+          container.append(getTag("button", {
+            textContent: "Delete",
+            className: "bg-red-500 flex-1 rounded-xl",
+            onclick: () => {
+              delete folder.contents[key];
+              refs.updateRender();
+            }
+          }), getTag("button", {
+            textContent: "Rename",
+            className: "bg-green-500 flex-1 rounded-xl",
+            onclick: () => {
+              const title = document.querySelector(`#title-${idTest}`);
+              if (!title)
+                throw Error("cant find title element");
+              title.replaceWith(getTag("input", {
+                id: `rename-${idTest}`,
+                className: "p-2 border-2 border-blue-600 rounded-xl",
+                value: key
+              }));
+              const renameInput = document.querySelector(`#rename-${idTest}`);
+              if (!renameInput)
+                throw Error("cant find rename element");
+              renameInput.addEventListener("blur", () => {
+                console.log("trigger blur event");
+                const newKey = document.querySelector(`#rename-${idTest}`).value;
+                if (newKey && newKey !== key) {
+                  folder.contents[newKey] = folder.contents[key];
+                  delete folder.contents[key];
+                }
                 refs.updateRender();
-              }
-            }), getTag("button", {
-              textContent: "Rename",
-              className: "bg-green-500 flex-1 rounded-xl",
-              onclick: () => {
-                const title = document.querySelector(`#title-${idTest}`);
-                if (!title)
-                  throw Error("cant find title element");
-                title.replaceWith(getTag("input", {
-                  id: `rename-${idTest}`,
-                  className: "p-2 border-2 border-blue-600 rounded-xl",
-                  value: key
-                }));
-                const renameInput = document.querySelector(`#rename-${idTest}`);
-                if (!renameInput)
-                  throw Error("cant find rename element");
-                renameInput.addEventListener("blur", () => {
-                  console.log("trigger blur event");
-                  const newKey = document.querySelector(`#rename-${idTest}`).value;
-                  if (newKey && newKey !== key) {
-                    folder.contents[newKey] = folder.contents[key];
-                    delete folder.contents[key];
+              });
+              renameInput.focus();
+            }
+          }));
+        }
+      })
+    ]),
+    getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
+  ]);
+};
+var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
+  console.log("folder name", key);
+  return getTag("div", {}, [
+    getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
+      getTag("div", {}, [
+        getTag("div", {
+          id: `title-${idTest}`,
+          textContent: `${key} (${Object.keys(folder.contents[key].contents).length})`,
+          className: "flex-1 rounded-xl p-2 folder",
+          onclick: (e) => {
+            refs.folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
+            console.log(refs.folderLoc);
+            const target = e.target;
+            target.classList.toggle("bg-blue-600");
+            target.classList.toggle("text-white");
+            const dirContents = document.querySelector(`#${idTest}`);
+            const settingsContainer = document.querySelector(`#edit-${idTest}`);
+            if (!settingsContainer)
+              throw Error("Cant find edit container");
+            if (dirContents) {
+              dirContents.classList.toggle("border-l-2");
+              if (hidden) {
+                dirContents.append(...getVaultList(folder.contents[key], refs, newPrefix, idTest));
+                document.querySelector(`#header-${idTest}`)?.append(getTag("button", {
+                  id: `settings-${idTest}`,
+                  textContent: "\u2630",
+                  className: "w-8 h-8 flex justify-center items-center border-2 border-blue-600 p-2 rounded-xl",
+                  onclick: () => {
+                    settingsContainer.classList.toggle("p-2");
+                    target.classList.toggle("rounded-b-none");
+                    if (settingsContainer.hasChildNodes())
+                      return clearChildren(`edit-${idTest}`);
+                    settingsContainer.append(getTag("button", {
+                      textContent: "Delete",
+                      className: "bg-red-500 flex-1 rounded-xl",
+                      onclick: () => {
+                        delete folder.contents[key];
+                        refs.updateRender();
+                      }
+                    }), getTag("button", {
+                      textContent: "Rename",
+                      className: "bg-green-500 flex-1 rounded-xl",
+                      onclick: () => {
+                        const title = document.querySelector(`#title-${idTest}`);
+                        if (!title)
+                          throw Error("cant find title element");
+                        title.replaceWith(getTag("input", {
+                          id: `rename-${idTest}`,
+                          className: "p-2 border-2 border-blue-600 rounded-xl",
+                          value: key
+                        }));
+                        const renameInput = document.querySelector(`#rename-${idTest}`);
+                        if (!renameInput)
+                          throw Error("cant find rename element");
+                        renameInput.addEventListener("blur", () => {
+                          console.log("trigger blur event");
+                          const newKey = document.querySelector(`#rename-${idTest}`).value;
+                          if (newKey && newKey !== key) {
+                            folder.contents[newKey] = folder.contents[key];
+                            delete folder.contents[key];
+                          }
+                          refs.updateRender();
+                        });
+                        renameInput.focus();
+                      }
+                    }), getTag("button", {
+                      textContent: "Lock",
+                      className: "bg-orange-500 flex-1 rounded-xl",
+                      onclick: async () => {
+                        const dropdownContainer = clearChildren(`edit-${idTest}`);
+                        dropdownContainer.append(getTag("form", {
+                          className: "m-0 flex gap-2",
+                          onsubmit: async (e2) => {
+                            e2.preventDefault();
+                            const form = e2.currentTarget;
+                            const password = form.elements.namedItem("password").value;
+                            const salt = getRandBase64("salt");
+                            const iv = getRandBase64("iv");
+                            const fullKey = await getFullKey(password, salt);
+                            const encrypted = await encrypt(JSON.stringify(folder.contents[key]), fullKey, iv);
+                            console.log("encrypted", encrypted);
+                            folder.contents[key].locked = {
+                              data: encrypted,
+                              iv,
+                              salt,
+                              fullKey
+                            };
+                            refs.updateRender();
+                          }
+                        }, [
+                          getTag("input", {
+                            name: "password",
+                            type: "password",
+                            required: true,
+                            placeholder: "Password",
+                            className: "p-2 border-2 border-blue-600 rounded-xl"
+                          }),
+                          getTag("button", {
+                            type: "submit",
+                            textContent: "Encrypt",
+                            className: "p-2 rounded-xl bg-blue-600 text-white"
+                          })
+                        ]));
+                      }
+                    }));
                   }
-                  refs.updateRender();
-                });
-                renameInput.focus();
+                }));
+              } else {
+                while (dirContents.firstChild)
+                  dirContents.removeChild(dirContents.firstChild);
+                document.querySelector(`#settings-${idTest}`)?.remove();
               }
-            }));
+              hidden = !hidden;
+            }
           }
         })
-      ]),
-      getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
-    ]) : getTag("div", {}, [
-      getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
-        getTag("div", {}, [
-          getTag("div", {
-            id: `title-${idTest}`,
-            textContent: `${key} (${Object.keys(folder.contents[key].contents).length})`,
-            className: "flex-1 rounded-xl p-2 folder",
-            onclick: (e) => {
-              refs.folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
-              console.log(refs.folderLoc);
-              const target = e.target;
-              target.classList.toggle("bg-blue-600");
-              target.classList.toggle("text-white");
-              const dirContents = document.querySelector(`#${idTest}`);
-              const settingsContainer = document.querySelector(`#edit-${idTest}`);
-              if (!settingsContainer)
-                throw Error("Cant find edit container");
-              if (dirContents) {
-                dirContents.classList.toggle("border-l-2");
-                if (hidden) {
-                  dirContents.append(...getVaultList(folder.contents[key], refs, newPrefix, idTest));
-                  document.querySelector(`#header-${idTest}`)?.append(getTag("button", {
-                    id: `settings-${idTest}`,
-                    textContent: "\u2630",
-                    className: "w-8 h-8 flex justify-center items-center border-2 border-blue-600 p-2 rounded-xl",
-                    onclick: () => {
-                      settingsContainer.classList.toggle("p-2");
-                      target.classList.toggle("rounded-b-none");
-                      if (settingsContainer.hasChildNodes())
-                        return clearChildren(`edit-${idTest}`);
-                      settingsContainer.append(getTag("button", {
-                        textContent: "Delete",
-                        className: "bg-red-500 flex-1 rounded-xl",
-                        onclick: () => {
-                          delete folder.contents[key];
-                          refs.updateRender();
-                        }
-                      }), getTag("button", {
-                        textContent: "Rename",
-                        className: "bg-green-500 flex-1 rounded-xl",
-                        onclick: () => {
-                          const title = document.querySelector(`#title-${idTest}`);
-                          if (!title)
-                            throw Error("cant find title element");
-                          title.replaceWith(getTag("input", {
-                            id: `rename-${idTest}`,
-                            className: "p-2 border-2 border-blue-600 rounded-xl",
-                            value: key
-                          }));
-                          const renameInput = document.querySelector(`#rename-${idTest}`);
-                          if (!renameInput)
-                            throw Error("cant find rename element");
-                          renameInput.addEventListener("blur", () => {
-                            console.log("trigger blur event");
-                            const newKey = document.querySelector(`#rename-${idTest}`).value;
-                            if (newKey && newKey !== key) {
-                              folder.contents[newKey] = folder.contents[key];
-                              delete folder.contents[key];
-                            }
-                            refs.updateRender();
-                          });
-                          renameInput.focus();
-                        }
-                      }), getTag("button", {
-                        textContent: "Lock",
-                        className: "bg-orange-500 flex-1 rounded-xl",
-                        onclick: async () => {
-                          const dropdownContainer = clearChildren(`edit-${idTest}`);
-                          dropdownContainer.append(getTag("form", {
-                            className: "m-0 flex gap-2",
-                            onsubmit: async (e2) => {
-                              e2.preventDefault();
-                              const form = e2.currentTarget;
-                              const password = form.elements.namedItem("password").value;
-                              const salt = getRandBase64("salt");
-                              const iv = getRandBase64("iv");
-                              const encrypted = await encrypt(JSON.stringify(folder.contents[key]), await getFullKey(password, salt), iv);
-                              console.log("encrypted", encrypted);
-                              const decrypted = await decrypt(encrypted, await getFullKey(password, salt), iv);
-                              console.log("decrypted", decrypted, JSON.parse(decrypted));
-                            }
-                          }, [
-                            getTag("input", {
-                              name: "password",
-                              type: "password",
-                              required: true,
-                              placeholder: "Password",
-                              className: "p-2 border-2 border-blue-600 rounded-xl"
-                            }),
-                            getTag("button", {
-                              type: "submit",
-                              textContent: "Encrypt",
-                              className: "p-2 rounded-xl bg-blue-600 text-white"
-                            })
-                          ]));
-                        }
-                      }));
-                    }
-                  }));
-                } else {
-                  while (dirContents.firstChild)
-                    dirContents.removeChild(dirContents.firstChild);
-                  document.querySelector(`#settings-${idTest}`)?.remove();
-                }
-                hidden = !hidden;
-              }
+      ])
+    ]),
+    getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-tl-none" }),
+    getTag("div", { id: idTest, className: "m-2 mr-0 border-blue-600 folderContents" })
+  ]);
+};
+var renderLockedFolder = function({ idTest, folder, key, refs }) {
+  return getTag("div", {}, [
+    getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
+      getTag("div", {
+        id: `title-${idTest}`,
+        textContent: `${key}`,
+        className: "flex-1 rounded-xl p-2 folder"
+      }),
+      getTag("button", {
+        textContent: "\uD83D\uDD12",
+        className: "border-2 border-orange-600 rounded-xl p-2",
+        onclick: () => {
+          const dropdown = clearChildren(`edit-${idTest}`);
+          dropdown.classList.toggle("p-2");
+          dropdown.append(getTag("form", {
+            className: "w-full m-0 flex gap-2",
+            onsubmit: async (e) => {
+              e.preventDefault();
+              const form = e.currentTarget;
+              const password = form.elements.namedItem(`decrypt-${idTest}`).value;
+              const { data, iv, salt } = folder.contents[key].locked;
+              const fullKey = await getFullKey(password, salt);
+              const decrypted = await decrypt(data, fullKey, iv);
+              console.log("decrypted data", decrypted);
+              folder.contents[key].contents = JSON.parse(decrypted).contents;
+              folder.contents[key].locked.fullKey = fullKey;
+              refs.updateRender();
             }
-          })
-        ])
-      ]),
-      getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-tl-none" }),
-      getTag("div", { id: idTest, className: "m-2 mr-0 border-blue-600 folderContents" })
-    ]);
+          }, [
+            getTag("input", {
+              id: `decrypt-${idTest}`,
+              type: "text",
+              placeholder: "Password",
+              required: true,
+              className: "p-2 rounded-xl"
+            }),
+            getTag("button", {
+              textContent: "Decrypt",
+              type: "submit",
+              className: "p-2 rounded-xl bg-orange-600"
+            })
+          ]));
+          document.querySelector(`#decrypt-${idTest}`).focus();
+        }
+      })
+    ]),
+    getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
+  ]);
+};
+function getVaultList(folder, refs, prefix = [], id = "id") {
+  console.log("folder", folder);
+  return Object.keys(folder.contents).sort().map((key, i) => {
+    const props = {
+      idTest: id + `-${i}`,
+      newPrefix: prefix.concat(key),
+      hidden: true,
+      folder,
+      key,
+      refs
+    };
+    console.log("key", key, folder);
+    return folder.contents[key].url ? renderLink(props) : folder.contents[key].locked && !folder.contents[key].contents ? renderLockedFolder(props) : renderFolder(props);
   });
+}
+
+// src/lib/reduceVault.ts
+function reduceVault(vault) {
+  return Object.keys(vault.contents).reduce((newVault, key) => {
+    if (vault.contents[key].url) {
+      newVault.contents[key] = vault.contents[key];
+    } else if (vault.contents[key].locked) {
+      const { fullKey, ...locked } = vault.contents[key].locked;
+      newVault.contents[key] = { locked };
+    } else {
+      newVault.contents[key] = reduceVault(vault.contents[key]);
+    }
+    return newVault;
+  }, { contents: {} });
 }
 
 // src/index.ts
@@ -257,8 +341,8 @@ var getCurrentFolder = function() {
 var vault = window.localStorage.getItem("vault") ? JSON.parse(window.localStorage.getItem("vault")) : { contents: {} };
 var refs = {
   folderLoc: [],
-  updateRender: () => {
-    window.localStorage.setItem("vault", JSON.stringify(vault));
+  updateRender: async () => {
+    window.localStorage.setItem("vault", JSON.stringify(reduceVault(vault)));
     const dir = clearChildren("directoryContainer");
     dir.append(...getVaultList(vault, refs));
   }
@@ -272,13 +356,18 @@ chrome.tabs.query({ active: true }, (tabs) => {
         className: "p-2 border-2 border-blue-600 rounded-xl",
         value: currentTab.title,
         required: true,
-        id: "title"
+        id: "title",
+        onsubmit: (e) => {
+          e.preventDefault();
+          console.log("submitted");
+        }
       }),
       getTag("button", {
         className: "p-2 rounded-xl border-2 border-blue-600",
         textContent: "\uFF0B",
         type: "submit",
         onclick: (e) => {
+          e.preventDefault();
           console.log("CLICKED THE FUCKIN ADD BUTTON");
           const title = document.querySelector("#title").value;
           if (title && currentTab.url)

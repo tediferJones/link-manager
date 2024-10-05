@@ -1,7 +1,8 @@
 import t from '@/lib/getTag';
 import { clearChildren } from '@/lib/utils';
 import getVaultList from '@/components/getVaultList';
-import type { Vault } from '@/types';
+import type { Refs, Vault } from '@/types';
+import reduceVault from './lib/reduceVault';
 
 // TO-DO
 //
@@ -13,13 +14,11 @@ import type { Vault } from '@/types';
 const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
 
 // Why? Because stuffing these values in an object is the closest thing we have to using references in javascript
-const refs: {
-  folderLoc: string[],
-  updateRender: Function
-} = {
+const refs: Refs = {
     folderLoc: [],
-    updateRender: () => {
-      window.localStorage.setItem('vault', JSON.stringify(vault));
+    updateRender: async () => {
+      // window.localStorage.setItem('vault', JSON.stringify(vault));
+      window.localStorage.setItem('vault', JSON.stringify(reduceVault(vault)));
       const dir = clearChildren('directoryContainer');
       dir.append(...getVaultList(vault, refs))
     }
@@ -47,7 +46,11 @@ chrome.tabs.query({ active: true }, (tabs) => {
           className: 'p-2 border-2 border-blue-600 rounded-xl',
           value: currentTab.title,
           required: true,
-          id: 'title'
+          id: 'title',
+          onsubmit: (e) => {
+            e.preventDefault()
+            console.log('submitted')
+          }
         }),
         t('button', {
           className: 'p-2 rounded-xl border-2 border-blue-600',
@@ -56,6 +59,7 @@ chrome.tabs.query({ active: true }, (tabs) => {
           onclick: (e) => {
             // MAKE SURE TITLE DOESNT ALREADY EXIST IN CURRENT FOLDER
             // If it does, then the previous link will be overwritten
+            e.preventDefault()
 
             console.log('CLICKED THE FUCKIN ADD BUTTON')
             const title = (document.querySelector('#title') as HTMLInputElement).value;
