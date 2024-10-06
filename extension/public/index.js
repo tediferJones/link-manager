@@ -320,18 +320,22 @@ function getVaultList(folder, refs, prefix = [], id = "id") {
 }
 
 // src/lib/reduceVault.ts
-function reduceVault(vault) {
-  return Object.keys(vault.contents).reduce((newVault, key) => {
+async function reduceVault(vault) {
+  return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
+    const newVault = await newVaultPromise;
     if (vault.contents[key].url) {
       newVault.contents[key] = vault.contents[key];
     } else if (vault.contents[key].locked) {
       const { fullKey, ...locked } = vault.contents[key].locked;
+      if (fullKey) {
+        locked.data = await encrypt(JSON.stringify(vault.contents[key]), fullKey, locked.iv);
+      }
       newVault.contents[key] = { locked };
     } else {
-      newVault.contents[key] = reduceVault(vault.contents[key]);
+      newVault.contents[key] = await reduceVault(vault.contents[key]);
     }
     return newVault;
-  }, { contents: {} });
+  }, Promise.resolve({ contents: {} }));
 }
 
 // src/index.ts
@@ -342,7 +346,7 @@ var vault = window.localStorage.getItem("vault") ? JSON.parse(window.localStorag
 var refs = {
   folderLoc: [],
   updateRender: async () => {
-    window.localStorage.setItem("vault", JSON.stringify(reduceVault(vault)));
+    window.localStorage.setItem("vault", JSON.stringify(await reduceVault(vault)));
     const dir = clearChildren("directoryContainer");
     dir.append(...getVaultList(vault, refs));
   }
@@ -380,6 +384,7 @@ chrome.tabs.query({ active: true }, (tabs) => {
         textContent: "\uD83D\uDCC1",
         type: "submit",
         onclick: (e) => {
+          e.preventDefault();
           const title = document.querySelector("#title").value;
           if (title)
             getCurrentFolder().contents[title] = { contents: {} };

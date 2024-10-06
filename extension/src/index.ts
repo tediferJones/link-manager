@@ -18,7 +18,7 @@ const refs: Refs = {
     folderLoc: [],
     updateRender: async () => {
       // window.localStorage.setItem('vault', JSON.stringify(vault));
-      window.localStorage.setItem('vault', JSON.stringify(reduceVault(vault)));
+      window.localStorage.setItem('vault', JSON.stringify(await reduceVault(vault)));
       const dir = clearChildren('directoryContainer');
       dir.append(...getVaultList(vault, refs))
     }
@@ -73,6 +73,7 @@ chrome.tabs.query({ active: true }, (tabs) => {
           textContent: '📁',
           type: 'submit',
           onclick: (e) => {
+            e.preventDefault()
             const title = (document.querySelector('#title') as HTMLInputElement).value;
             if (title) getCurrentFolder().contents[title] = { contents: {} };
             refs.updateRender();
