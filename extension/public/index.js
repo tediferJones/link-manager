@@ -133,7 +133,6 @@ var renderLink = function({ idTest, folder, key, refs }) {
   ]);
 };
 var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
-  console.log("folder name", key);
   return getTag("div", {}, [
     getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
       getTag("div", {}, [
@@ -223,6 +222,7 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
                           }
                         }, [
                           getTag("input", {
+                            id: `encrypt-${idTest}`,
                             name: "password",
                             type: "password",
                             required: true,
@@ -237,6 +237,9 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
                         ]));
                       }
                     }));
+                    setTimeout(() => {
+                      document.querySelector(`#encrypt-${idTest}`).focus();
+                    }, 2000);
                   }
                 }));
               } else {
@@ -277,7 +280,7 @@ var renderLockedFolder = function({ idTest, folder, key, refs }) {
               const { data, iv, salt } = folder.contents[key].locked;
               const fullKey = await getFullKey(password, salt);
               const decrypted = await decrypt(data, fullKey, iv);
-              console.log("decrypted data", decrypted);
+              console.log("decrypted data", JSON.parse(decrypted));
               folder.contents[key].contents = JSON.parse(decrypted).contents;
               folder.contents[key].locked.fullKey = fullKey;
               refs.updateRender();
@@ -304,7 +307,6 @@ var renderLockedFolder = function({ idTest, folder, key, refs }) {
   ]);
 };
 function getVaultList(folder, refs, prefix = [], id = "id") {
-  console.log("folder", folder);
   return Object.keys(folder.contents).sort().map((key, i) => {
     const props = {
       idTest: id + `-${i}`,
@@ -314,7 +316,6 @@ function getVaultList(folder, refs, prefix = [], id = "id") {
       key,
       refs
     };
-    console.log("key", key, folder);
     return folder.contents[key].url ? renderLink(props) : folder.contents[key].locked && !folder.contents[key].contents ? renderLockedFolder(props) : renderFolder(props);
   });
 }
@@ -372,7 +373,6 @@ chrome.tabs.query({ active: true }, (tabs) => {
         type: "submit",
         onclick: (e) => {
           e.preventDefault();
-          console.log("CLICKED THE FUCKIN ADD BUTTON");
           const title = document.querySelector("#title").value;
           if (title && currentTab.url)
             getCurrentFolder().contents[title] = { url: currentTab.url, viewed: false };

@@ -2,8 +2,8 @@ import { expect, test } from 'bun:test';
 import reduceVault from '@/lib/reduceVault';
 import type { Vault } from '@/types';
 
-test('reduce without locked folders', () => {
-  const result = reduceVault({
+test('reduce without locked folders', async () => {
+  const result = await reduceVault({
     contents: {
       'linkName': {
         url: 'this is the link',
@@ -22,8 +22,8 @@ test('reduce without locked folders', () => {
     });
 });
 
-test('reduce with locked folders', () => {
-  const result = reduceVault({
+test('reduce with locked folders', async () => {
+  const result = await reduceVault({
     contents: {
       'linkName': {
         url: 'this is the link',

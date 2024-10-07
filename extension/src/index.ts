@@ -61,7 +61,6 @@ chrome.tabs.query({ active: true }, (tabs) => {
             // If it does, then the previous link will be overwritten
             e.preventDefault()
 
-            console.log('CLICKED THE FUCKIN ADD BUTTON')
             const title = (document.querySelector('#title') as HTMLInputElement).value;
             // console.log(getCurrentFolder())
             if (title && currentTab.url) getCurrentFolder().contents[title] = { url: currentTab.url, viewed: false };

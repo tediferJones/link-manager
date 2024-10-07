@@ -75,7 +75,7 @@ function renderLink({ idTest, folder, key, refs }: Props) {
 }
 
 function renderFolder({ idTest, folder, key, refs, newPrefix, hidden }: Props) {
-  console.log('folder name', key)
+  // console.log('folder name', key)
   return t('div', {}, [
     t('div', { id: `header-${idTest}`, className: 'flex justify-between items-center gap-2' }, [
       t('div', {}, [
@@ -190,6 +190,7 @@ function renderFolder({ idTest, folder, key, refs, newPrefix, hidden }: Props) {
                                 }
                               }, [
                                   t('input', {
+                                    id: `encrypt-${idTest}`,
                                     name: 'password',
                                     type: 'password',
                                     required: true,
@@ -205,7 +206,12 @@ function renderFolder({ idTest, folder, key, refs, newPrefix, hidden }: Props) {
                             )
                           }
                         })
-                      )
+                      );
+                      // console.log(`encrypt-${idTest}`);
+                      // Why does this only work with a timeout of 2 seconds?
+                      setTimeout(() => {
+                        (document.querySelector(`#encrypt-${idTest}`) as HTMLInputElement).focus();
+                      }, 2000)
                     }
                   })
                 )
@@ -251,7 +257,7 @@ function renderLockedFolder({ idTest, folder, key, refs }: Props) {
                 const fullKey = await getFullKey(password, salt)
                 // We need to catch if decrypt throws an error, this means the password was incorrect
                 const decrypted = await decrypt( data, fullKey, iv)
-                console.log('decrypted data', decrypted);
+                console.log('decrypted data', JSON.parse(decrypted));
 
                 (folder.contents[key] as Vault).contents = JSON.parse(decrypted).contents;
                 (folder.contents[key] as Vault).locked!.fullKey = fullKey
@@ -298,7 +304,7 @@ export default function getVaultList(
   prefix: string[] = [],
   id: string = 'id'
 ) {
-  console.log('folder', folder)
+  // console.log('folder', folder)
   return Object.keys(folder.contents).sort().map((key, i) => {
     const props = {
       idTest: id + `-${i}`,
@@ -308,7 +314,7 @@ export default function getVaultList(
       key,
       refs,
     }
-    console.log('key', key, folder)
+    // console.log('key', key, folder)
 
     return (folder.contents[key] as Record).url ? renderLink(props)
       : (folder.contents[key] as Vault).locked && !(folder.contents[key] as Vault).contents ? renderLockedFolder(props)
