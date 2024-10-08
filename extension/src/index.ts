@@ -1,14 +1,12 @@
 import t from '@/lib/getTag';
 import { clearChildren } from '@/lib/utils';
 import getVaultList from '@/components/getVaultList';
+import reduceVault from '@/lib/reduceVault';
 import type { Refs, Vault } from '@/types';
-import reduceVault from './lib/reduceVault';
 
 // TO-DO
 //
-// To implement password protected folders, we can add an attribute to the folder with key = '' and val = someHash
-//  - If folder has '' key, ask for password before viewing
-//  - However this does not really provide much actual security, it would be very easy to just view local storage and find the values that way
+// Rotate salt and iv every time a folder is decrypted
 
 // const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
 const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };

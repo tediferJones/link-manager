@@ -324,16 +324,19 @@ function getVaultList(folder, refs, prefix = [], id = "id") {
 async function reduceVault(vault) {
   return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
     const newVault = await newVaultPromise;
-    if (vault.contents[key].url) {
-      newVault.contents[key] = vault.contents[key];
-    } else if (vault.contents[key].locked) {
-      const { fullKey, ...locked } = vault.contents[key].locked;
-      if (fullKey) {
-        locked.data = await encrypt(JSON.stringify(vault.contents[key]), fullKey, locked.iv);
+    if (vault.contents[key].contents) {
+      const result = await reduceVault(vault.contents[key]);
+      const locked = vault.contents[key].locked;
+      if (locked) {
+        if (locked?.fullKey) {
+          locked.data = await encrypt(JSON.stringify(result), locked.fullKey, locked.iv);
+        }
+        newVault.contents[key] = { locked };
+      } else {
+        newVault.contents[key] = { contents: result.contents };
       }
-      newVault.contents[key] = { locked };
     } else {
-      newVault.contents[key] = await reduceVault(vault.contents[key]);
+      newVault.contents[key] = vault.contents[key];
     }
     return newVault;
   }, Promise.resolve({ contents: {} }));
