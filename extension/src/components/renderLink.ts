@@ -1,8 +1,9 @@
 import t from '@/lib/getTag';
 import { clearChildren } from '@/lib/utils';
+import type VaultManager from '@/lib/VaultManager';
 import type { Props } from '@/types';
 
-export default function renderLink({ idTest, folder, key, refs }: Props) {
+export default function renderLink({ idTest, folder, key }: Props, vaultMan: VaultManager) {
   return t('div', {}, [
     t('div', { className: 'flex justify-between items-center' }, [
       t('a', {
@@ -29,8 +30,9 @@ export default function renderLink({ idTest, folder, key, refs }: Props) {
               textContent: 'Delete',
               className: 'bg-red-500 flex-1 rounded-xl',
               onclick: () => {
-                delete folder.contents[key];
-                refs.updateRender();
+                vaultMan.deleteItem(folder, key)
+                // delete folder.contents[key];
+                // refs.updateRender();
               }
             }),
             t('button', {
@@ -55,7 +57,9 @@ export default function renderLink({ idTest, folder, key, refs }: Props) {
                     folder.contents[newKey] = folder.contents[key];
                     delete folder.contents[key];
                   }
-                  refs.updateRender();
+                  vaultMan.save();
+                  vaultMan.render();
+                  // refs.updateRender();
                 });
                 renameInput.focus();
               }

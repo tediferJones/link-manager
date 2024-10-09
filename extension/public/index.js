@@ -8,16 +8,6 @@ function getTag(type, props, children) {
   return node;
 }
 
-// src/lib/utils.ts
-function clearChildren(id) {
-  const parent = document.querySelector(`#${id}`);
-  if (!parent)
-    throw Error(`failed to find parent container for given id: ${id}`);
-  while (parent.firstChild)
-    parent.removeChild(parent.firstChild);
-  return parent;
-}
-
 // src/lib/security.ts
 var bufferFrom = function(data, encoding) {
   if (encoding === "utf8") {
@@ -68,8 +58,18 @@ function getRandBase64(type) {
   return bufferTo(crypto.getRandomValues(new Uint8Array(length)).buffer, "base64");
 }
 
-// src/components/getVaultList.ts
-var renderLink = function({ idTest, folder, key, refs }) {
+// src/lib/utils.ts
+function clearChildren(id) {
+  const parent = document.querySelector(`#${id}`);
+  if (!parent)
+    throw Error(`failed to find parent container for given id: ${id}`);
+  while (parent.firstChild)
+    parent.removeChild(parent.firstChild);
+  return parent;
+}
+
+// src/components/renderLink.ts
+function renderLink({ idTest, folder, key }, vaultMan) {
   return getTag("div", {}, [
     getTag("div", { className: "flex justify-between items-center" }, [
       getTag("a", {
@@ -96,8 +96,7 @@ var renderLink = function({ idTest, folder, key, refs }) {
             textContent: "Delete",
             className: "bg-red-500 flex-1 rounded-xl",
             onclick: () => {
-              delete folder.contents[key];
-              refs.updateRender();
+              vaultMan.deleteItem(folder, key);
             }
           }), getTag("button", {
             textContent: "Rename",
@@ -121,7 +120,8 @@ var renderLink = function({ idTest, folder, key, refs }) {
                   folder.contents[newKey] = folder.contents[key];
                   delete folder.contents[key];
                 }
-                refs.updateRender();
+                vaultMan.save();
+                vaultMan.render();
               });
               renameInput.focus();
             }
@@ -131,8 +131,55 @@ var renderLink = function({ idTest, folder, key, refs }) {
     ]),
     getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
   ]);
-};
-var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
+}
+
+// src/components/renderLockedFolder.ts
+function renderLockedFolder({ idTest, folder, key }, vaultMan) {
+  return getTag("div", {}, [
+    getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
+      getTag("div", {
+        id: `title-${idTest}`,
+        textContent: `${key}`,
+        className: "flex-1 rounded-xl p-2 folder"
+      }),
+      getTag("button", {
+        textContent: "\uD83D\uDD12",
+        className: "border-2 border-orange-600 rounded-xl p-2",
+        onclick: () => {
+          const dropdown = clearChildren(`edit-${idTest}`);
+          dropdown.classList.toggle("p-2");
+          dropdown.append(getTag("form", {
+            className: "w-full m-0 flex gap-2",
+            onsubmit: async (e) => {
+              e.preventDefault();
+              const form = e.currentTarget;
+              const password = form.elements.namedItem(`decrypt-${idTest}`).value;
+              vaultMan.decryptFolder(folder, key, password);
+            }
+          }, [
+            getTag("input", {
+              id: `decrypt-${idTest}`,
+              type: "text",
+              placeholder: "Password",
+              required: true,
+              className: "p-2 rounded-xl"
+            }),
+            getTag("button", {
+              textContent: "Decrypt",
+              type: "submit",
+              className: "p-2 rounded-xl bg-orange-600"
+            })
+          ]));
+          document.querySelector(`#decrypt-${idTest}`).focus();
+        }
+      })
+    ]),
+    getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
+  ]);
+}
+
+// src/components/renderFolder.ts
+function renderFolder({ idTest, folder, key, newPrefix, hidden }, vaultMan) {
   return getTag("div", {}, [
     getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
       getTag("div", {}, [
@@ -141,8 +188,7 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
           textContent: `${key} (${Object.keys(folder.contents[key].contents).length})`,
           className: "flex-1 rounded-xl p-2 folder",
           onclick: (e) => {
-            refs.folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
-            console.log(refs.folderLoc);
+            vaultMan.folder = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
             const target = e.target;
             target.classList.toggle("bg-blue-600");
             target.classList.toggle("text-white");
@@ -153,7 +199,7 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
             if (dirContents) {
               dirContents.classList.toggle("border-l-2");
               if (hidden) {
-                dirContents.append(...getVaultList(folder.contents[key], refs, newPrefix, idTest));
+                dirContents.append(...vaultMan.getVaultList(folder.contents[key], newPrefix, idTest));
                 document.querySelector(`#header-${idTest}`)?.append(getTag("button", {
                   id: `settings-${idTest}`,
                   textContent: "\u2630",
@@ -167,8 +213,7 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
                       textContent: "Delete",
                       className: "bg-red-500 flex-1 rounded-xl",
                       onclick: () => {
-                        delete folder.contents[key];
-                        refs.updateRender();
+                        vaultMan.deleteItem(folder, key);
                       }
                     }), getTag("button", {
                       textContent: "Rename",
@@ -192,7 +237,8 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
                             folder.contents[newKey] = folder.contents[key];
                             delete folder.contents[key];
                           }
-                          refs.updateRender();
+                          vaultMan.save();
+                          vaultMan.render();
                         });
                         renameInput.focus();
                       }
@@ -207,18 +253,9 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
                             e2.preventDefault();
                             const form = e2.currentTarget;
                             const password = form.elements.namedItem("password").value;
-                            const salt = getRandBase64("salt");
-                            const iv = getRandBase64("iv");
-                            const fullKey = await getFullKey(password, salt);
-                            const encrypted = await encrypt(JSON.stringify(folder.contents[key]), fullKey, iv);
-                            console.log("encrypted", encrypted);
-                            folder.contents[key].locked = {
-                              data: encrypted,
-                              iv,
-                              salt,
-                              fullKey
-                            };
-                            refs.updateRender();
+                            vaultMan.encryptFolder(folder.contents[key], password);
+                            vaultMan.save();
+                            vaultMan.render();
                           }
                         }, [
                           getTag("input", {
@@ -256,105 +293,104 @@ var renderFolder = function({ idTest, folder, key, refs, newPrefix, hidden }) {
     getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-tl-none" }),
     getTag("div", { id: idTest, className: "m-2 mr-0 border-blue-600 folderContents" })
   ]);
-};
-var renderLockedFolder = function({ idTest, folder, key, refs }) {
-  return getTag("div", {}, [
-    getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
-      getTag("div", {
-        id: `title-${idTest}`,
-        textContent: `${key}`,
-        className: "flex-1 rounded-xl p-2 folder"
-      }),
-      getTag("button", {
-        textContent: "\uD83D\uDD12",
-        className: "border-2 border-orange-600 rounded-xl p-2",
-        onclick: () => {
-          const dropdown = clearChildren(`edit-${idTest}`);
-          dropdown.classList.toggle("p-2");
-          dropdown.append(getTag("form", {
-            className: "w-full m-0 flex gap-2",
-            onsubmit: async (e) => {
-              e.preventDefault();
-              const form = e.currentTarget;
-              const password = form.elements.namedItem(`decrypt-${idTest}`).value;
-              const { data, iv, salt } = folder.contents[key].locked;
-              const fullKey = await getFullKey(password, salt);
-              const decrypted = await decrypt(data, fullKey, iv);
-              console.log("decrypted data", JSON.parse(decrypted));
-              folder.contents[key].contents = JSON.parse(decrypted).contents;
-              folder.contents[key].locked.fullKey = fullKey;
-              refs.updateRender();
-            }
-          }, [
-            getTag("input", {
-              id: `decrypt-${idTest}`,
-              type: "text",
-              placeholder: "Password",
-              required: true,
-              className: "p-2 rounded-xl"
-            }),
-            getTag("button", {
-              textContent: "Decrypt",
-              type: "submit",
-              className: "p-2 rounded-xl bg-orange-600"
-            })
-          ]));
-          document.querySelector(`#decrypt-${idTest}`).focus();
-        }
-      })
-    ]),
-    getTag("div", { id: `edit-${idTest}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
-  ]);
-};
-function getVaultList(folder, refs, prefix = [], id = "id") {
-  return Object.keys(folder.contents).sort().map((key, i) => {
-    const props = {
-      idTest: id + `-${i}`,
-      newPrefix: prefix.concat(key),
-      hidden: true,
-      folder,
-      key,
-      refs
-    };
-    return folder.contents[key].url ? renderLink(props) : folder.contents[key].locked && !folder.contents[key].contents ? renderLockedFolder(props) : renderFolder(props);
-  });
 }
 
-// src/lib/reduceVault.ts
-async function reduceVault(vault) {
-  return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
-    const newVault = await newVaultPromise;
-    if (vault.contents[key].contents) {
-      const result = await reduceVault(vault.contents[key]);
-      const locked = vault.contents[key].locked;
-      if (locked) {
-        if (locked?.fullKey) {
-          locked.data = await encrypt(JSON.stringify(result), locked.fullKey, locked.iv);
+// src/lib/VaultManager.ts
+class VaultManager {
+  vault;
+  folder;
+  constructor(vault) {
+    this.vault = vault;
+    this.folder = [];
+  }
+  async save() {
+    window.localStorage.setItem("vault", JSON.stringify(await this.reduceVault()));
+  }
+  render() {
+    clearChildren("directoryContainer").append(...this.getVaultList());
+  }
+  getCurrentFolder() {
+    return this.folder.reduce((currentLoc, key) => currentLoc = currentLoc.contents[key], this.vault);
+  }
+  addLink({ title, url }) {
+    this.getCurrentFolder().contents[title] = { url, viewed: false };
+    this.save();
+    this.render();
+  }
+  addFolder({ title }) {
+    this.getCurrentFolder().contents[title] = { contents: {} };
+    this.save();
+    this.render();
+  }
+  deleteItem(folder, key) {
+    delete folder.contents[key];
+    this.save();
+    this.render();
+  }
+  async encryptFolder(folder, password) {
+    const salt = getRandBase64("salt");
+    const iv = getRandBase64("iv");
+    const fullKey = await getFullKey(password, salt);
+    const folderData = folder.contents;
+    const encrypted = await encrypt(JSON.stringify(folderData), fullKey, iv);
+    console.log("raw content", JSON.stringify(folderData));
+    console.log("encrypted", encrypted);
+    console.log("password", password);
+    folder.locked = {
+      data: encrypted,
+      iv,
+      salt,
+      fullKey
+    };
+    this.save();
+    this.render();
+  }
+  async decryptFolder(folder, key, password) {
+    const { data, iv, salt } = folder.contents[key].locked;
+    const fullKey = await getFullKey(password, salt);
+    const decrypted = await decrypt(data, fullKey, iv);
+    console.log("decrypted data", decrypted);
+    folder.contents[key].contents = JSON.parse(decrypted);
+    folder.contents[key].locked.fullKey = fullKey;
+    this.render();
+  }
+  async reduceVault(vault = this.vault) {
+    return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
+      const newVault = await newVaultPromise;
+      if (vault.contents[key].contents) {
+        const result = await this.reduceVault(vault.contents[key]);
+        const locked = vault.contents[key].locked;
+        if (locked) {
+          if (locked?.fullKey) {
+            locked.data = await encrypt(JSON.stringify(result.contents), locked.fullKey, locked.iv);
+          }
+          newVault.contents[key] = { locked };
+        } else {
+          newVault.contents[key] = { contents: result.contents };
         }
-        newVault.contents[key] = { locked };
       } else {
-        newVault.contents[key] = { contents: result.contents };
+        newVault.contents[key] = vault.contents[key];
       }
-    } else {
-      newVault.contents[key] = vault.contents[key];
-    }
-    return newVault;
-  }, Promise.resolve({ contents: {} }));
+      return newVault;
+    }, Promise.resolve({ contents: {} }));
+  }
+  getVaultList(folder = this.vault, prefix = [], id = "id") {
+    return Object.keys(folder.contents).sort().map((key, i) => {
+      const props = {
+        idTest: id + `-${i}`,
+        newPrefix: prefix.concat(key),
+        hidden: true,
+        folder,
+        key
+      };
+      return folder.contents[key].url ? renderLink(props, this) : folder.contents[key].contents ? renderFolder(props, this) : renderLockedFolder(props, this);
+    });
+  }
 }
 
 // src/index.ts
-var getCurrentFolder = function() {
-  return refs.folderLoc.reduce((currentLoc, key) => currentLoc = currentLoc.contents[key], vault);
-};
 var vault = window.localStorage.getItem("vault") ? JSON.parse(window.localStorage.getItem("vault")) : { contents: {} };
-var refs = {
-  folderLoc: [],
-  updateRender: async () => {
-    window.localStorage.setItem("vault", JSON.stringify(await reduceVault(vault)));
-    const dir = clearChildren("directoryContainer");
-    dir.append(...getVaultList(vault, refs));
-  }
-};
+var vaultMan = new VaultManager(vault);
 document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
 chrome.tabs.query({ active: true }, (tabs) => {
   const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
@@ -376,10 +412,10 @@ chrome.tabs.query({ active: true }, (tabs) => {
         type: "submit",
         onclick: (e) => {
           e.preventDefault();
-          const title = document.querySelector("#title").value;
-          if (title && currentTab.url)
-            getCurrentFolder().contents[title] = { url: currentTab.url, viewed: false };
-          refs.updateRender();
+          const title = document.querySelector("#title")?.value;
+          const { url } = currentTab;
+          if (title && url)
+            vaultMan.addLink({ title, url });
         }
       }),
       getTag("button", {
@@ -389,13 +425,11 @@ chrome.tabs.query({ active: true }, (tabs) => {
         onclick: (e) => {
           e.preventDefault();
           const title = document.querySelector("#title").value;
-          if (title)
-            getCurrentFolder().contents[title] = { contents: {} };
-          refs.updateRender();
+          vaultMan.addFolder({ title });
         }
       })
     ]),
-    getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vault.contents).length ? getVaultList(vault, refs) : [getTag("div", {
+    getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
       textContent: "No vault found",
       className: "p-4 text-center text-xl font-bold text-gray-500"
     })])

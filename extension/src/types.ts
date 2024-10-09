@@ -31,16 +31,10 @@ export interface Record {
   viewed: boolean
 }
 
-export type Refs = {
-  folderLoc: string[],
-  updateRender: Function
-}
-
 export type Props = {
   idTest: string,
   newPrefix: string[],
   hidden: boolean,
   folder: Vault,
   key: string,
-  refs: Refs
 }

@@ -2,8 +2,10 @@ import t from '@/lib/getTag';
 import { clearChildren } from '@/lib/utils';
 import { encrypt, getFullKey, getRandBase64 } from '@/lib/security';
 import type { Props, Vault } from '@/types';
+import type VaultManager from '@/lib/VaultManager';
 
-export default function renderFolder({ idTest, folder, key, refs, newPrefix, hidden }: Props, getVaultList: Function) {
+// export default function renderFolder({ idTest, folder, key, refs, newPrefix, hidden }: Props, getVaultList: Function) {
+export default function renderFolder({ idTest, folder, key, newPrefix, hidden }: Props, vaultMan: VaultManager) {
   // console.log('folder name', key)
   return t('div', {}, [
     t('div', { id: `header-${idTest}`, className: 'flex justify-between items-center gap-2' }, [
@@ -21,8 +23,9 @@ export default function renderFolder({ idTest, folder, key, refs, newPrefix, hid
             //   while (node.firstChild) node.removeChild(node.firstChild);
             // })
 
-            refs.folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
-            console.log(refs.folderLoc)
+            // refs.folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
+            // console.log(refs.folderLoc)
+            vaultMan.folder = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
             const target = e.target as HTMLDivElement;
             target.classList.toggle('bg-blue-600');
             target.classList.toggle('text-white');
@@ -34,7 +37,7 @@ export default function renderFolder({ idTest, folder, key, refs, newPrefix, hid
               dirContents.classList.toggle('border-l-2');
               if (hidden) {
                 // dirContents.append(...getVaultList(folder[key] as Vault, newPrefix));
-                dirContents.append(...getVaultList(folder.contents[key] as Vault, refs, newPrefix, idTest));
+                dirContents.append(...vaultMan.getVaultList(folder.contents[key] as Vault, newPrefix, idTest));
                 document.querySelector(`#header-${idTest}`)?.append(
                   // generateSettingsDropDown(target, settingsContainer, idTest, folder, key)
                   t('button', {
@@ -50,8 +53,11 @@ export default function renderFolder({ idTest, folder, key, refs, newPrefix, hid
                           textContent: 'Delete',
                           className: 'bg-red-500 flex-1 rounded-xl',
                           onclick: () => {
-                            delete folder.contents[key];
-                            refs.updateRender();
+                            vaultMan.deleteItem(folder, key);
+                            // delete folder.contents[key];
+                            // // refs.updateRender();
+                            // vaultMan.save()
+                            // vaultMan.render()
                           }
                         }),
                         t('button', {
@@ -76,7 +82,9 @@ export default function renderFolder({ idTest, folder, key, refs, newPrefix, hid
                                 folder.contents[newKey] = folder.contents[key];
                                 delete folder.contents[key];
                               }
-                              refs.updateRender();
+                              // refs.updateRender();
+                              vaultMan.save()
+                              vaultMan.render()
                             });
                             renameInput.focus();
                           }
@@ -93,29 +101,33 @@ export default function renderFolder({ idTest, folder, key, refs, newPrefix, hid
                                   e.preventDefault();
                                   const form = e.currentTarget as HTMLFormElement;
                                   const password = (form.elements.namedItem('password') as HTMLInputElement).value;
-                                  const salt = getRandBase64('salt');
-                                  const iv = getRandBase64('iv');
-                                  const fullKey = await getFullKey(password, salt);
-                                  const encrypted = await encrypt(
-                                    JSON.stringify(folder.contents[key]),
-                                    fullKey,
-                                    iv,
-                                  );
-                                  console.log('encrypted', encrypted);
+                                  vaultMan.encryptFolder(folder.contents[key] as Vault, password)
 
-                                  // const decrypted = await decrypt(
-                                  //   encrypted,
-                                  //   await getFullKey(password, salt),
-                                  //   iv
+                                  // const salt = getRandBase64('salt');
+                                  // const iv = getRandBase64('iv');
+                                  // const fullKey = await getFullKey(password, salt);
+                                  // const encrypted = await encrypt(
+                                  //   JSON.stringify(folder.contents[key]),
+                                  //   fullKey,
+                                  //   iv,
                                   // );
-                                  // console.log('decrypted', decrypted, JSON.parse(decrypted));
-                                  (folder.contents[key] as Vault).locked = {
-                                    data: encrypted,
-                                    iv,
-                                    salt,
-                                    fullKey,
-                                  }
-                                  refs.updateRender()
+                                  // console.log('encrypted', encrypted);
+
+                                  // // const decrypted = await decrypt(
+                                  // //   encrypted,
+                                  // //   await getFullKey(password, salt),
+                                  // //   iv
+                                  // // );
+                                  // // console.log('decrypted', decrypted, JSON.parse(decrypted));
+                                  // (folder.contents[key] as Vault).locked = {
+                                  //   data: encrypted,
+                                  //   iv,
+                                  //   salt,
+                                  //   fullKey,
+                                  // }
+                                  // refs.updateRender()
+                                  vaultMan.save()
+                                  vaultMan.render()
                                 }
                               }, [
                                   t('input', {
