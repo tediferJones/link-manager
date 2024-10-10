@@ -1,12 +1,9 @@
 import t from '@/lib/getTag';
 import { clearChildren } from '@/lib/utils';
-import { encrypt, getFullKey, getRandBase64 } from '@/lib/security';
 import type { Props, Vault } from '@/types';
 import type VaultManager from '@/lib/VaultManager';
 
-// export default function renderFolder({ idTest, folder, key, refs, newPrefix, hidden }: Props, getVaultList: Function) {
 export default function renderFolder({ idTest, folder, key, newPrefix, hidden }: Props, vaultMan: VaultManager) {
-  // console.log('folder name', key)
   return t('div', {}, [
     t('div', { id: `header-${idTest}`, className: 'flex justify-between items-center gap-2' }, [
       t('div', {}, [
@@ -23,8 +20,6 @@ export default function renderFolder({ idTest, folder, key, newPrefix, hidden }:
             //   while (node.firstChild) node.removeChild(node.firstChild);
             // })
 
-            // refs.folderLoc = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
-            // console.log(refs.folderLoc)
             vaultMan.folder = hidden ? newPrefix : newPrefix.slice(0, newPrefix.length - 1);
             const target = e.target as HTMLDivElement;
             target.classList.toggle('bg-blue-600');
@@ -54,10 +49,6 @@ export default function renderFolder({ idTest, folder, key, newPrefix, hidden }:
                           className: 'bg-red-500 flex-1 rounded-xl',
                           onclick: () => {
                             vaultMan.deleteItem(folder, key);
-                            // delete folder.contents[key];
-                            // // refs.updateRender();
-                            // vaultMan.save()
-                            // vaultMan.render()
                           }
                         }),
                         t('button', {
@@ -82,7 +73,6 @@ export default function renderFolder({ idTest, folder, key, newPrefix, hidden }:
                                 folder.contents[newKey] = folder.contents[key];
                                 delete folder.contents[key];
                               }
-                              // refs.updateRender();
                               vaultMan.save()
                               vaultMan.render()
                             });
@@ -102,32 +92,6 @@ export default function renderFolder({ idTest, folder, key, newPrefix, hidden }:
                                   const form = e.currentTarget as HTMLFormElement;
                                   const password = (form.elements.namedItem('password') as HTMLInputElement).value;
                                   vaultMan.encryptFolder(folder.contents[key] as Vault, password)
-
-                                  // const salt = getRandBase64('salt');
-                                  // const iv = getRandBase64('iv');
-                                  // const fullKey = await getFullKey(password, salt);
-                                  // const encrypted = await encrypt(
-                                  //   JSON.stringify(folder.contents[key]),
-                                  //   fullKey,
-                                  //   iv,
-                                  // );
-                                  // console.log('encrypted', encrypted);
-
-                                  // // const decrypted = await decrypt(
-                                  // //   encrypted,
-                                  // //   await getFullKey(password, salt),
-                                  // //   iv
-                                  // // );
-                                  // // console.log('decrypted', decrypted, JSON.parse(decrypted));
-                                  // (folder.contents[key] as Vault).locked = {
-                                  //   data: encrypted,
-                                  //   iv,
-                                  //   salt,
-                                  //   fullKey,
-                                  // }
-                                  // refs.updateRender()
-                                  vaultMan.save()
-                                  vaultMan.render()
                                 }
                               }, [
                                   t('input', {

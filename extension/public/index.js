@@ -154,7 +154,7 @@ function renderLockedFolder({ idTest, folder, key }, vaultMan) {
               e.preventDefault();
               const form = e.currentTarget;
               const password = form.elements.namedItem(`decrypt-${idTest}`).value;
-              vaultMan.decryptFolder(folder, key, password);
+              vaultMan.decryptFolder(folder.contents[key], password);
             }
           }, [
             getTag("input", {
@@ -254,8 +254,6 @@ function renderFolder({ idTest, folder, key, newPrefix, hidden }, vaultMan) {
                             const form = e2.currentTarget;
                             const password = form.elements.namedItem("password").value;
                             vaultMan.encryptFolder(folder.contents[key], password);
-                            vaultMan.save();
-                            vaultMan.render();
                           }
                         }, [
                           getTag("input", {
@@ -331,9 +329,8 @@ class VaultManager {
     const salt = getRandBase64("salt");
     const iv = getRandBase64("iv");
     const fullKey = await getFullKey(password, salt);
-    const folderData = folder.contents;
-    const encrypted = await encrypt(JSON.stringify(folderData), fullKey, iv);
-    console.log("raw content", JSON.stringify(folderData));
+    const encrypted = await encrypt(JSON.stringify(folder.contents), fullKey, iv);
+    console.log("raw content", JSON.stringify(folder.contents));
     console.log("encrypted", encrypted);
     console.log("password", password);
     folder.locked = {
@@ -345,13 +342,16 @@ class VaultManager {
     this.save();
     this.render();
   }
-  async decryptFolder(folder, key, password) {
-    const { data, iv, salt } = folder.contents[key].locked;
+  async decryptFolder(folder, password) {
+    console.log(folder);
+    if (!folder.locked)
+      throw Error("this folder is not locked");
+    const { data, iv, salt } = folder.locked;
     const fullKey = await getFullKey(password, salt);
     const decrypted = await decrypt(data, fullKey, iv);
     console.log("decrypted data", decrypted);
-    folder.contents[key].contents = JSON.parse(decrypted);
-    folder.contents[key].locked.fullKey = fullKey;
+    folder.contents = JSON.parse(decrypted);
+    folder.locked.fullKey = fullKey;
     this.render();
   }
   async reduceVault(vault = this.vault) {
@@ -400,11 +400,7 @@ chrome.tabs.query({ active: true }, (tabs) => {
         className: "p-2 border-2 border-blue-600 rounded-xl",
         value: currentTab.title,
         required: true,
-        id: "title",
-        onsubmit: (e) => {
-          e.preventDefault();
-          console.log("submitted");
-        }
+        id: "title"
       }),
       getTag("button", {
         className: "p-2 rounded-xl border-2 border-blue-600",

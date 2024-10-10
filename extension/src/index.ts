@@ -1,36 +1,17 @@
 import t from '@/lib/getTag';
-import { clearChildren } from '@/lib/utils';
-import getVaultList from '@/components/getVaultList';
-import reduceVault from '@/lib/reduceVault';
-import type { Refs, Vault } from '@/types';
-import VaultManager from './lib/VaultManager';
+import type { Vault } from '@/types';
+import VaultManager from '@/lib/VaultManager';
 
 // TO-DO
 //
 // Rotate salt and iv every time a folder is decrypted
 
-// const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
 const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
 const vaultMan = new VaultManager(vault)
-
-// Why? Because stuffing these values in an object is the closest thing we have to using references in javascript
-// const refs: Refs = {
-//     folderLoc: [],
-//     updateRender: async () => {
-//       // window.localStorage.setItem('vault', JSON.stringify(vault));
-//       window.localStorage.setItem('vault', JSON.stringify(await reduceVault(vault)));
-//       const dir = clearChildren('directoryContainer');
-//       dir.append(...getVaultList(vault, refs))
-//     }
-//   }
 
 document.body.appendChild(
   t('h1', { textContent: 'LINK MANAGER', className: 'p-4 text-center text-2xl font-bold text-blue-500' })
 )
-
-// function getCurrentFolder() {
-//   return refs.folderLoc.reduce((currentLoc, key) => currentLoc = currentLoc.contents[key] as Vault, vault)
-// }
 
 chrome.tabs.query({ active: true }, (tabs) => {
   const currentTab = (
@@ -47,10 +28,10 @@ chrome.tabs.query({ active: true }, (tabs) => {
           value: currentTab.title,
           required: true,
           id: 'title',
-          onsubmit: (e) => {
-            e.preventDefault()
-            console.log('submitted')
-          }
+          // onsubmit: (e) => {
+          //   e.preventDefault()
+          //   console.log('submitted')
+          // }
         }),
         t('button', {
           className: 'p-2 rounded-xl border-2 border-blue-600',

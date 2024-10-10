@@ -57,19 +57,15 @@ export default class VaultManager {
     const salt = getRandBase64('salt');
     const iv = getRandBase64('iv');
     const fullKey = await getFullKey(password, salt);
-    // const folderData = folder.contents[key]
-    const folderData = folder.contents
     const encrypted = await encrypt(
-      // JSON.stringify(folder.contents[key]),
-      JSON.stringify(folderData),
+      JSON.stringify(folder.contents),
       fullKey,
       iv,
     );
-    console.log('raw content', JSON.stringify(folderData))
+    console.log('raw content', JSON.stringify(folder.contents))
     console.log('encrypted', encrypted);
     console.log('password', password);
 
-    // (folder.contents[key] as Vault).locked = {
     folder.locked = {
       data: encrypted,
       iv,
@@ -80,25 +76,22 @@ export default class VaultManager {
     this.render();
   }
 
-  // There is something going wrong between encryption and decryption
-  // We encrypte { conents: Vault } but when decrypted we just get the Vault
-
-  async decryptFolder(folder: Vault, key: string, password: string) {
-    const { data, iv, salt } = (folder.contents[key] as Vault).locked!
+  async decryptFolder(folder: Vault, password: string) {
+    console.log(folder)
+    if (!folder.locked) throw Error('this folder is not locked')
+    const { data, iv, salt } = folder.locked
     const fullKey = await getFullKey(password, salt)
+
     // We need to catch if decrypt throws an error, this means the password was incorrect
     const decrypted = await decrypt(data, fullKey, iv)
     console.log('decrypted data', decrypted);
 
-    (folder.contents[key] as Vault).contents = JSON.parse(decrypted);
-    (folder.contents[key] as Vault).locked!.fullKey = fullKey
-    // refs.updateRender()
+    folder.contents = JSON.parse(decrypted);
+    folder.locked.fullKey = fullKey
     this.render()
   }
 
   async reduceVault(vault = this.vault) {
-    // return await Object.keys(this.vault.contents).reduce(async (newVaultPromise, key) => {
-    // console.log(vault.contents)
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
       const newVault = await newVaultPromise;
       if ((vault.contents[key] as Vault).contents) {
