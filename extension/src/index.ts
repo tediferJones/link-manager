@@ -23,15 +23,10 @@ chrome.tabs.query({ active: true }, (tabs) => {
     t('div', { className: 'p-4' }, [
       t('form', { className: 'flex gap-2' }, [
         t('input', {
-          // className: 'p-2 text-nowrap m-auto border-2 border-blue-600 rounded-xl',
           className: 'p-2 border-2 border-blue-600 rounded-xl',
           value: currentTab.title,
           required: true,
           id: 'title',
-          // onsubmit: (e) => {
-          //   e.preventDefault()
-          //   console.log('submitted')
-          // }
         }),
         t('button', {
           className: 'p-2 rounded-xl border-2 border-blue-600',
@@ -44,9 +39,6 @@ chrome.tabs.query({ active: true }, (tabs) => {
             const title = (document.querySelector('#title') as HTMLInputElement)?.value;
             const { url } = currentTab
             if (title && url) vaultMan.addLink({ title, url })
-            // console.log(getCurrentFolder())
-            // if (title && currentTab.url) getCurrentFolder().contents[title] = { url: currentTab.url, viewed: false };
-            // refs.updateRender();
           }
         }),
         t('button', {
@@ -57,14 +49,10 @@ chrome.tabs.query({ active: true }, (tabs) => {
             e.preventDefault()
             const title = (document.querySelector('#title') as HTMLInputElement).value;
             vaultMan.addFolder({ title })
-            // if (title) getCurrentFolder().contents[title] = { contents: {} };
-            // refs.updateRender();
           }
         })
       ]),
       t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 py-2' }, 
-        // Object.keys(vault).length ? getVaultList(vault, refs)
-        // Object.keys(vault.contents).length ? getVaultList(vault, refs)
         Object.keys(vault.contents).length ? vaultMan.getVaultList()
           : [ t('div', {
             textContent: 'No vault found',

@@ -59,7 +59,6 @@ export default function renderLink({ idTest, folder, key }: Props, vaultMan: Vau
                   }
                   vaultMan.save();
                   vaultMan.render();
-                  // refs.updateRender();
                 });
                 renameInput.focus();
               }

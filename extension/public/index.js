@@ -136,7 +136,7 @@ function renderLink({ idTest, folder, key }, vaultMan) {
 // src/components/renderLockedFolder.ts
 function renderLockedFolder({ idTest, folder, key }, vaultMan) {
   return getTag("div", {}, [
-    getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2" }, [
+    getTag("div", { id: `header-${idTest}`, className: "flex justify-between items-center gap-2 rounded-t-xl" }, [
       getTag("div", {
         id: `title-${idTest}`,
         textContent: `${key}`,
@@ -144,10 +144,15 @@ function renderLockedFolder({ idTest, folder, key }, vaultMan) {
       }),
       getTag("button", {
         textContent: "\uD83D\uDD12",
-        className: "border-2 border-orange-600 rounded-xl p-2",
+        className: "border-2 border-orange-600 rounded-xl p-2 w-8 h-8 flex justify-center items-center",
         onclick: () => {
-          const dropdown = clearChildren(`edit-${idTest}`);
-          dropdown.classList.toggle("p-2");
+          document.querySelector(`#header-${idTest}`)?.classList.toggle("bg-gray-300");
+          const dropdown = document.querySelector(`#edit-${idTest}`);
+          dropdown?.classList.toggle("p-2");
+          if (!dropdown || dropdown.firstChild)
+            return clearChildren(`edit-${idTest}`);
+          console.log(dropdown);
+          console.log("rendering");
           dropdown.append(getTag("form", {
             className: "w-full m-0 flex gap-2",
             onsubmit: async (e) => {
