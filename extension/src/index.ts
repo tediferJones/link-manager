@@ -5,6 +5,8 @@ import VaultManager from '@/lib/VaultManager';
 // TO-DO
 //
 // Rotate salt and iv every time a folder is decrypted
+// When adding or renaming, make sure new title does not already exist, or this will overwrite the previous entry
+// Delete public/background.js if its not actually needed
 
 const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
 const vaultMan = new VaultManager(vault)
@@ -33,8 +35,6 @@ chrome.tabs.query({ active: true }, (tabs) => {
           textContent: '＋',
           type: 'submit',
           onclick: (e) => {
-            // MAKE SURE TITLE DOESNT ALREADY EXIST IN CURRENT FOLDER
-            // If it does, then the previous link will be overwritten
             e.preventDefault()
             const title = (document.querySelector('#title') as HTMLInputElement)?.value;
             const { url } = currentTab

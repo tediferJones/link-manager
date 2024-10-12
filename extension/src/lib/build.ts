@@ -1,5 +1,5 @@
 await Bun.build({
-  entrypoints: [ 'src/index.ts' ],
+  entrypoints: [ 'src/index.ts', 'src/content.ts' ],
   outdir: 'public/',
   // minify: true,
   // splitting: true,
