@@ -7,6 +7,10 @@ import VaultManager from '@/lib/VaultManager';
 // Rotate salt and iv every time a folder is decrypted
 // When adding or renaming, make sure new title does not already exist, or this will overwrite the previous entry
 // Delete public/background.js if its not actually needed
+// Transition to use chrome.storage.local instead of localstorage
+//  - this allows a single source of truth between the extension and content script
+
+// console.log('chrome storage', chrome.storage.local.get('vaultTest').then(data => console.log(data)))
 
 const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
 const vaultMan = new VaultManager(vault)

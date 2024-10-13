@@ -70,13 +70,14 @@ function clearChildren(id) {
 
 // src/components/renderLink.ts
 function renderLink({ idTest, folder, key }, vaultMan) {
+  console.log("rendering link", folder.contents[key].url);
   return getTag("div", {}, [
     getTag("div", { className: "flex justify-between items-center" }, [
       getTag("a", {
         id: `title-${idTest}`,
         className: "p-2 underline text-blue-600 truncate",
         textContent: key,
-        href: folder.contents[key],
+        href: folder.contents[key].url,
         target: "_blank",
         rel: "noopener noreferrer"
       }),

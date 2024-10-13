@@ -4,13 +4,14 @@ import type VaultManager from '@/lib/VaultManager';
 import type { Props } from '@/types';
 
 export default function renderLink({ idTest, folder, key }: Props, vaultMan: VaultManager) {
+  console.log('rendering link', folder.contents[key].url)
   return t('div', {}, [
     t('div', { className: 'flex justify-between items-center' }, [
       t('a', {
         id: `title-${idTest}`,
         className: 'p-2 underline text-blue-600 truncate',
         textContent: key,
-        href: folder.contents[key],
+        href: folder.contents[key].url,
         target: '_blank',
         rel: 'noopener noreferrer'
       }),
