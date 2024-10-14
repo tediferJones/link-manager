@@ -1,18 +1,25 @@
+// src/types.ts
+function isFolder(item) {
+  return "contents" in item;
+}
+
 // src/content.ts
 var vaultDfs = function(searchUrl, folder) {
   console.log("dfs-ing");
   return Object.values(folder.contents).find((item) => {
-    console.log("checking", item, searchUrl);
-    if (item.contents)
-      return vaultDfs(searchUrl, item);
-    if (item.url)
-      return searchUrl === item.url;
-    console.log("is locked");
+    return isFolder(item) ? vaultDfs(searchUrl, item) : searchUrl === item.url;
   });
 };
-console.log("transpiled from TS");
-console.log(document.title, document.URL);
-chrome.storage.local.get("vaultTest").then((data) => {
-  console.log(JSON.parse(data.vaultTest));
-  console.log("DFS result", vaultDfs(document.URL, JSON.parse(data.vaultTest)));
+chrome.storage.local.get("vault").then(({ vault }) => {
+  const foundEntry = vaultDfs(document.URL, vault);
+  console.log("DFS result", foundEntry);
+  if (foundEntry) {
+    foundEntry.viewCount++;
+    if (document.URL.match("^https?://www.youtube.com")) {
+      window.navigation.addEventListener("navigate", () => {
+        console.log("navigation done navigated");
+      });
+    }
+    chrome.storage.local.set({ vault });
+  }
 });

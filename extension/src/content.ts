@@ -1,39 +1,29 @@
-import VaultManager from "@/lib/VaultManager";
-import type { Record, Vault } from "@/types";
+import { isFolder, type Record, type Vault } from '@/types';
 
-console.log('transpiled from TS')
-
-// const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
-// const vaultMan = new VaultManager(vault)
-
-console.log(document.title, document.URL)
-chrome.storage.local.get('vaultTest').then(data => {
-  console.log(JSON.parse(data.vaultTest))
-  console.log('DFS result', vaultDfs(document.URL, JSON.parse(data.vaultTest)))
-})
-
-// chrome.storage.local.get(['vault'], (data) => {
-//   console.log('extension localstorage', data)
-// })
-
-function vaultDfs(searchUrl: string, folder: Vault): any {
-  // return Object.keys(folder.contents).find(key => {
-  //   const item = folder.contents[key]
-  //   if ((item as Vault).contents) return vaultDfs(searchUrl, item as Vault)
-  //   if ((item as Record).url) return (item as Record).url === searchUrl
-  // })
+function vaultDfs(searchUrl: string, folder: Vault): Record | undefined {
   console.log('dfs-ing')
   return Object.values(folder.contents).find(item => {
-    console.log('checking', item, searchUrl)
-    // @ts-ignore
-    if (item.contents) return vaultDfs(searchUrl, item)
-    // @ts-ignore
-    if (item.url) return searchUrl === item.url
-    console.log('is locked')
-  })
+    return isFolder(item) ? vaultDfs(searchUrl, item) : searchUrl === item.url
+  }) as Record
 }
 
-// if (document.URL.match('^https?://www.youtube.com')) {
-//   // see if url exists anywhere in vault (do depth first search), ignore locked folders
-//   console.log('DFS result', vaultDfs(document.URL))
-// }
+chrome.storage.local.get('vault').then(({ vault }) => {
+  const foundEntry = vaultDfs(document.URL, vault)
+  console.log('DFS result', foundEntry)
+  if (foundEntry) {
+    foundEntry.viewCount++
+    if (document.URL.match('^https?://www.youtube.com')) {
+      // if it's a youtube link, track current watch time and total watch time
+      // See if we can hook into a pause event and URL change event
+      // currentTime only needs to be updated when the video is paused, or navigated away from (tab closes, user clicks on different video, etc...)
+      // console.log('window.navigation', window.navigation)
+
+      // @ts-ignore
+      window.navigation.addEventListener('navigate', () => {
+        console.log('navigation done navigated')
+      })
+    }
+    chrome.storage.local.set({ vault })
+  }
+})
+

@@ -1,9 +1,10 @@
 import t from '@/lib/getTag';
 import { clearChildren } from '@/lib/utils';
 import type VaultManager from '@/lib/VaultManager';
-import type { Props } from '@/types';
+import { isFolder, type Props } from '@/types';
 
 export default function renderLink({ idTest, folder, key }: Props, vaultMan: VaultManager) {
+  if (isFolder(folder.contents[key])) throw Error('this is a folder not a link')
   console.log('rendering link', folder.contents[key].url)
   return t('div', {}, [
     t('div', { className: 'flex justify-between items-center' }, [
@@ -15,6 +16,7 @@ export default function renderLink({ idTest, folder, key }: Props, vaultMan: Vau
         target: '_blank',
         rel: 'noopener noreferrer'
       }),
+      t('p', { textContent: `View count: ${folder.contents[key].viewCount}` }),
       t('button', {
         id: `settings-${idTest}`,
         textContent: '☰',
@@ -32,8 +34,6 @@ export default function renderLink({ idTest, folder, key }: Props, vaultMan: Vau
               className: 'bg-red-500 flex-1 rounded-xl',
               onclick: () => {
                 vaultMan.deleteItem(folder, key)
-                // delete folder.contents[key];
-                // refs.updateRender();
               }
             }),
             t('button', {
@@ -58,8 +58,7 @@ export default function renderLink({ idTest, folder, key }: Props, vaultMan: Vau
                     folder.contents[newKey] = folder.contents[key];
                     delete folder.contents[key];
                   }
-                  vaultMan.save();
-                  vaultMan.render();
+                  vaultMan.saveAndRender();
                 });
                 renameInput.focus();
               }

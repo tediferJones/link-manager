@@ -73,8 +73,9 @@ export default function renderFolder({ idTest, folder, key, newPrefix, hidden }:
                                 folder.contents[newKey] = folder.contents[key];
                                 delete folder.contents[key];
                               }
-                              vaultMan.save()
-                              vaultMan.render()
+                              // vaultMan.save()
+                              // vaultMan.render()
+                              vaultMan.saveAndRender();
                             });
                             renameInput.focus();
                           }

@@ -14,18 +14,23 @@ export default class VaultManager {
     this.folder = [];
   }
 
-  async save() {
-    window.localStorage.setItem(
-      'vault',
-      JSON.stringify(
-        await this.reduceVault()
-      )
-    );
-  }
+  // async save() {
+  //   window.localStorage.setItem(
+  //     'vault',
+  //     JSON.stringify(
+  //       await this.reduceVault()
+  //     )
+  //   );
+  // }
 
   render() {
     clearChildren('directoryContainer')
       .append(...this.getVaultList())
+  }
+
+  async saveAndRender() {
+    await chrome.storage.local.set({ vault: await this.reduceVault() });
+    this.render();
   }
 
   getCurrentFolder() {
@@ -36,21 +41,28 @@ export default class VaultManager {
   }
 
   addLink({ title, url }: { title: string, url: string }) {
-    this.getCurrentFolder().contents[title] = { url, viewed: false };
-    this.save();
-    this.render();
+    this.getCurrentFolder().contents[title] = {
+      url,
+      viewed: false,
+      viewCount: 0,
+    };
+    // this.save();
+    // this.render();
+    this.saveAndRender();
   }
 
   addFolder({ title }: { title: string }) {
     this.getCurrentFolder().contents[title] = { contents: {} };
-    this.save();
-    this.render();
+    // this.save();
+    // this.render();
+    this.saveAndRender();
   }
 
   deleteItem(folder: Vault, key: string) {
     delete folder.contents[key];
-    this.save();
-    this.render();
+    // this.save();
+    // this.render();
+    this.saveAndRender();
   }
 
   async encryptFolder(folder: Vault, password: string) {
@@ -72,8 +84,9 @@ export default class VaultManager {
       salt,
       fullKey,
     }
-    this.save();
-    this.render();
+    // this.save();
+    // this.render();
+    this.saveAndRender();
   }
 
   async decryptFolder(folder: Vault, password: string) {

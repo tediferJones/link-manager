@@ -14,6 +14,14 @@ export interface Vault {
   }
 }
 
+export function isFolder(item: Vault | Record): item is Vault {
+  return 'contents' in item
+}
+
+// export function isLocked(item: Vault | Record) {
+//   return !('contents' in item) && 'locked' in item
+// }
+
 // export type Vault = {
 //   locked: {
 //     data: string,
@@ -28,7 +36,10 @@ export interface Vault {
 
 export interface Record {
   url: string,
-  viewed: boolean
+  viewed: boolean,
+  viewCount: number,
+  totalTime?: number,
+  currentTime?: number,
 }
 
 export type Props = {

@@ -68,8 +68,15 @@ function clearChildren(id) {
   return parent;
 }
 
+// src/types.ts
+function isFolder(item) {
+  return "contents" in item;
+}
+
 // src/components/renderLink.ts
 function renderLink({ idTest, folder, key }, vaultMan) {
+  if (isFolder(folder.contents[key]))
+    throw Error("this is a folder not a link");
   console.log("rendering link", folder.contents[key].url);
   return getTag("div", {}, [
     getTag("div", { className: "flex justify-between items-center" }, [
@@ -81,6 +88,7 @@ function renderLink({ idTest, folder, key }, vaultMan) {
         target: "_blank",
         rel: "noopener noreferrer"
       }),
+      getTag("p", { textContent: `View count: ${folder.contents[key].viewCount}` }),
       getTag("button", {
         id: `settings-${idTest}`,
         textContent: "\u2630",
@@ -121,8 +129,7 @@ function renderLink({ idTest, folder, key }, vaultMan) {
                   folder.contents[newKey] = folder.contents[key];
                   delete folder.contents[key];
                 }
-                vaultMan.save();
-                vaultMan.render();
+                vaultMan.saveAndRender();
               });
               renameInput.focus();
             }
@@ -243,8 +250,7 @@ function renderFolder({ idTest, folder, key, newPrefix, hidden }, vaultMan) {
                             folder.contents[newKey] = folder.contents[key];
                             delete folder.contents[key];
                           }
-                          vaultMan.save();
-                          vaultMan.render();
+                          vaultMan.saveAndRender();
                         });
                         renameInput.focus();
                       }
@@ -307,29 +313,31 @@ class VaultManager {
     this.vault = vault;
     this.folder = [];
   }
-  async save() {
-    window.localStorage.setItem("vault", JSON.stringify(await this.reduceVault()));
-  }
   render() {
     clearChildren("directoryContainer").append(...this.getVaultList());
+  }
+  async saveAndRender() {
+    await chrome.storage.local.set({ vault: await this.reduceVault() });
+    this.render();
   }
   getCurrentFolder() {
     return this.folder.reduce((currentLoc, key) => currentLoc = currentLoc.contents[key], this.vault);
   }
   addLink({ title, url }) {
-    this.getCurrentFolder().contents[title] = { url, viewed: false };
-    this.save();
-    this.render();
+    this.getCurrentFolder().contents[title] = {
+      url,
+      viewed: false,
+      viewCount: 0
+    };
+    this.saveAndRender();
   }
   addFolder({ title }) {
     this.getCurrentFolder().contents[title] = { contents: {} };
-    this.save();
-    this.render();
+    this.saveAndRender();
   }
   deleteItem(folder, key) {
     delete folder.contents[key];
-    this.save();
-    this.render();
+    this.saveAndRender();
   }
   async encryptFolder(folder, password) {
     const salt = getRandBase64("salt");
@@ -345,8 +353,7 @@ class VaultManager {
       salt,
       fullKey
     };
-    this.save();
-    this.render();
+    this.saveAndRender();
   }
   async decryptFolder(folder, password) {
     console.log(folder);
@@ -395,45 +402,47 @@ class VaultManager {
 }
 
 // src/index.ts
-var vault = window.localStorage.getItem("vault") ? JSON.parse(window.localStorage.getItem("vault")) : { contents: {} };
-var vaultMan = new VaultManager(vault);
-document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
-chrome.tabs.query({ active: true }, (tabs) => {
-  const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
-  document.body.append(getTag("div", { className: "p-4" }, [
-    getTag("form", { className: "flex gap-2" }, [
-      getTag("input", {
-        className: "p-2 border-2 border-blue-600 rounded-xl",
-        value: currentTab.title,
-        required: true,
-        id: "title"
-      }),
-      getTag("button", {
-        className: "p-2 rounded-xl border-2 border-blue-600",
-        textContent: "\uFF0B",
-        type: "submit",
-        onclick: (e) => {
-          e.preventDefault();
-          const title = document.querySelector("#title")?.value;
-          const { url } = currentTab;
-          if (title && url)
-            vaultMan.addLink({ title, url });
-        }
-      }),
-      getTag("button", {
-        className: "p-2 rounded-xl border-2 border-blue-600",
-        textContent: "\uD83D\uDCC1",
-        type: "submit",
-        onclick: (e) => {
-          e.preventDefault();
-          const title = document.querySelector("#title").value;
-          vaultMan.addFolder({ title });
-        }
-      })
-    ]),
-    getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
-      textContent: "No vault found",
-      className: "p-4 text-center text-xl font-bold text-gray-500"
-    })])
-  ]));
-});
+(async () => {
+  const vaultMan = new VaultManager((await chrome.storage.local.get("vault")).vault || { contents: {} });
+  console.log(vaultMan.vault);
+  document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
+  chrome.tabs.query({ active: true }, (tabs) => {
+    const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
+    document.body.append(getTag("div", { className: "p-4" }, [
+      getTag("form", { className: "flex gap-2" }, [
+        getTag("input", {
+          className: "p-2 border-2 border-blue-600 rounded-xl",
+          value: currentTab.title,
+          required: true,
+          id: "title"
+        }),
+        getTag("button", {
+          className: "p-2 rounded-xl border-2 border-blue-600",
+          textContent: "\uFF0B",
+          type: "submit",
+          onclick: (e) => {
+            e.preventDefault();
+            const title = document.querySelector("#title")?.value;
+            const { url } = currentTab;
+            if (title && url)
+              vaultMan.addLink({ title, url });
+          }
+        }),
+        getTag("button", {
+          className: "p-2 rounded-xl border-2 border-blue-600",
+          textContent: "\uD83D\uDCC1",
+          type: "submit",
+          onclick: (e) => {
+            e.preventDefault();
+            const title = document.querySelector("#title").value;
+            vaultMan.addFolder({ title });
+          }
+        })
+      ]),
+      getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
+        textContent: "No vault found",
+        className: "p-4 text-center text-xl font-bold text-gray-500"
+      })])
+    ]));
+  });
+})();
