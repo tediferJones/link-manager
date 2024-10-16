@@ -13,10 +13,16 @@ export default function renderLink({ idTest, folder, key }: Props, vaultMan: Vau
         className: 'p-2 underline text-blue-600 truncate',
         textContent: key,
         href: folder.contents[key].url,
+        // href: folder.contents[key].url + `&t=${folder.contents[key].currentTime || 0}s`,
         target: '_blank',
         rel: 'noopener noreferrer'
       }),
       t('p', { textContent: `View count: ${folder.contents[key].viewCount}` }),
+      t('button', {
+        className: 'bg-red-500',
+        textContent: 'log stats',
+        onclick: () => console.log(folder.contents[key])
+      }),
       t('button', {
         id: `settings-${idTest}`,
         textContent: '☰',

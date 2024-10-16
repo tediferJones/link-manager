@@ -90,6 +90,11 @@ function renderLink({ idTest, folder, key }, vaultMan) {
       }),
       getTag("p", { textContent: `View count: ${folder.contents[key].viewCount}` }),
       getTag("button", {
+        className: "bg-red-500",
+        textContent: "log stats",
+        onclick: () => console.log(folder.contents[key])
+      }),
+      getTag("button", {
         id: `settings-${idTest}`,
         textContent: "\u2630",
         className: "w-8 h-8 flex justify-center items-center border-2 border-blue-600 p-2 rounded-xl",

@@ -20,33 +20,53 @@ var setWatchTime = function(entry) {
   entry.totalTime = timeStampToSeconds(document.querySelector(".ytp-time-duration")?.textContent || "");
   entry.currentTime = timeStampToSeconds(document.querySelector(".ytp-time-current")?.textContent || "");
 };
-var timeoutTest;
+var attachListeners = function(vault, entry, attemptCount = 0) {
+  console.log("attempting to find video container");
+  const videoContainer = document.querySelector("video");
+  if (!videoContainer) {
+    if (attemptCount > 10)
+      return console.log("cant find video container");
+    return setTimeout(() => attachListeners(vault, entry, attemptCount + 1), 1000);
+  }
+  console.log("found video container");
+  videoContainer.addEventListener("play", () => {
+    console.log("video play event");
+  });
+  videoContainer.addEventListener("pause", () => {
+    console.log("video pause event");
+    setWatchTime(entry);
+    console.log("set", entry);
+    chrome.storage.local.set({ vault });
+  });
+  videoContainer.addEventListener("change", () => {
+    console.log("video change event");
+  });
+  videoContainer.addEventListener("DOMContentLoaded", () => {
+    console.log("video DOMContentLoaded");
+  });
+  videoContainer.addEventListener("ended", () => console.log("video ended event"));
+  videoContainer.addEventListener("yt-navigate", () => console.log("video yt-navigate event"));
+  videoContainer.addEventListener("yt-navigate-finish", () => console.log("video yt-navigate-finish event"));
+  if (videoContainer) {
+    const observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === "attributes" && mutation.attributeName === "src") {
+          console.log("Video source changed:", mutation.target.src);
+        }
+      }
+    });
+    observer.observe(videoContainer, { attributes: true });
+  } else {
+    console.log("No video element found");
+  }
+};
 chrome.storage.local.get("vault").then(({ vault }) => {
   const foundEntry = vaultDfs(document.URL, vault);
   console.log("DFS result", foundEntry);
   if (foundEntry) {
     foundEntry.viewCount++;
     if (document.URL.match("^https?://www.youtube.com")) {
-      if (timeoutTest) {
-        clearTimeout(timeoutTest);
-        console.log("clearing timeout");
-      }
-      console.log("setting timeout");
-      setTimeout(() => {
-        console.log("is youtube link, attaching listeners");
-        window.navigation.addEventListener("navigate", () => {
-          console.log("navigation done navigated");
-          setWatchTime(foundEntry);
-          console.log("set", foundEntry);
-        });
-        document.querySelector("video")?.addEventListener("pause", () => {
-          console.log("paused, update current time stamp");
-          setWatchTime(foundEntry);
-          console.log("set", foundEntry);
-        });
-        console.log("done");
-      }, 1000);
+      attachListeners(vault, foundEntry);
     }
-    chrome.storage.local.set({ vault });
   }
 });
