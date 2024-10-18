@@ -3,11 +3,12 @@ import { clearChildren } from '@/lib/utils';
 import type VaultManager from '@/lib/VaultManager';
 import type { Props, Vault } from '@/types';
 
-export default function renderLockedFolder({ idTest, folder, key }: Props, vaultMan: VaultManager) {
+export default function renderLockedFolder(id: string, folder: Vault, key: string, vaultMan: VaultManager) {
   return t('div', {}, [
-    t('div', { id: `header-${idTest}`, className: 'flex justify-between items-center gap-2 rounded-t-xl' }, [
+    t('div', { id: `header-${id}`, className: 'flex justify-between items-center gap-2 rounded-t-xl' }, [
+    // t('div', { id: `header-${id}`, className: 'flex justify-between items-center gap-2 rounded-t-xl hover:bg-orange-600 hover:text-white transition-all' }, [
       t('div', {
-        id: `title-${idTest}`,
+        id: `title-${id}`,
         textContent: `${key}`,
         className: 'flex-1 rounded-xl p-2 folder',
       }),
@@ -15,11 +16,11 @@ export default function renderLockedFolder({ idTest, folder, key }: Props, vault
         textContent: '🔒',
         className: 'border-2 border-orange-600 rounded-xl p-2 w-8 h-8 flex justify-center items-center',
         onclick: () => {
-          document.querySelector(`#header-${idTest}`)?.classList.toggle('bg-gray-300')
-          const dropdown = document.querySelector(`#edit-${idTest}`)
+          document.querySelector(`#header-${id}`)?.classList.toggle('bg-gray-300')
+          const dropdown = document.querySelector(`#edit-${id}`)
           dropdown?.classList.toggle('p-2')
-          if (!dropdown || dropdown.firstChild) return clearChildren(`edit-${idTest}`)
-          // const dropdown = clearChildren(`edit-${idTest}`)
+          if (!dropdown || dropdown.firstChild) return clearChildren(`edit-${id}`)
+          // const dropdown = clearChildren(`edit-${id}`)
           console.log(dropdown)
           console.log('rendering')
           dropdown.append(
@@ -28,12 +29,13 @@ export default function renderLockedFolder({ idTest, folder, key }: Props, vault
               onsubmit: async (e) => {
                 e.preventDefault();
                 const form = e.currentTarget as HTMLFormElement;
-                const password = (form.elements.namedItem(`decrypt-${idTest}`) as HTMLInputElement).value;
+                const password = (form.elements.namedItem(`decrypt-${id}`) as HTMLInputElement).value;
                 vaultMan.decryptFolder(folder.contents[key] as Vault, password)
+                // vaultMan.parentLocation = folder
               }
             }, [
                 t('input', {
-                  id: `decrypt-${idTest}`,
+                  id: `decrypt-${id}`,
                   type: 'text',
                   placeholder: 'Password',
                   required: true,
@@ -46,10 +48,10 @@ export default function renderLockedFolder({ idTest, folder, key }: Props, vault
                 })
               ])
           );
-          (document.querySelector(`#decrypt-${idTest}`) as HTMLInputElement).focus()
+          (document.querySelector(`#decrypt-${id}`) as HTMLInputElement).focus()
         }
       })
     ]),
-    t('div', { id: `edit-${idTest}`, className: 'flex gap-2 bg-gray-300 rounded-xl rounded-t-none' }),
+    t('div', { id: `edit-${id}`, className: 'flex gap-2 bg-gray-300 rounded-xl rounded-t-none' }),
   ])
 }

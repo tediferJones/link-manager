@@ -12,6 +12,10 @@ export interface Vault {
   contents: {
     [key: string]: Vault | Record
   }
+  parent: Vault | undefined
+
+  // name should be changed to just 'title', it is not the name of the parent folder, it is the name of the folder that is currently rendered
+  parentTitle: string
 }
 
 export function isFolder(item: Vault | Record): item is Vault {

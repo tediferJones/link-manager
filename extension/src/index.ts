@@ -10,16 +10,24 @@ import VaultManager from '@/lib/VaultManager';
 // Transition to use chrome.storage.local instead of localstorage
 //  - this allows a single source of truth between the extension and content script
 // We want to implement queueing for all links in the same folder
+//  - First make the sorting function:
+//    - In theory we only need to sort when we add or rename something
+//    - Sorted order can be stored in the folder obj (next to contents and locked) as { folders: [keys in alphabetical order], links [keys in order by queue number] }
+// Should probably redesign how we render folders
+//  - get rid of cascading drop downs and this goofy folder tracking
+//  - only render a single folder at a time, use the up arrow thing to navigate to parent folder
 
 // console.log('chrome storage', chrome.storage.local.get('vaultTest').then(data => console.log(data)))
 
 // const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
 // const vaultMan = new VaultManager(vault)
 
+let vaultTest;
 (async () => {
   const vaultMan = new VaultManager(
     (await chrome.storage.local.get('vault')).vault || { contents: {} }
   )
+  vaultTest = vaultMan
   console.log(vaultMan.vault)
 
   document.body.appendChild(
@@ -35,6 +43,21 @@ import VaultManager from '@/lib/VaultManager';
     document.body.append(
       t('div', { className: 'p-4' }, [
         t('form', { className: 'flex gap-2' }, [
+          t('button', {
+            className: 'p-2 border-2 border-blue-600 rounded-xl',
+            textContent: '⬆︎',
+            onclick: (e) => {
+              e.preventDefault();
+              console.log('go to parent dir')
+              console.log(vaultMan.currentLocation)
+              if (vaultMan.currentLocation.parent) {
+                vaultMan.currentLocation = vaultMan.currentLocation.parent
+                vaultMan.render()
+              }
+              // if (vaultMan.parentLocation) vaultMan.currentLocation = vaultMan.parentLocation
+              // vaultMan.render()
+            }
+          }),
           t('input', {
             className: 'p-2 border-2 border-blue-600 rounded-xl',
             value: currentTab.title,
@@ -63,6 +86,11 @@ import VaultManager from '@/lib/VaultManager';
             }
           })
         ]),
+        t('h1', {
+          id: 'folderTitle',
+          className: 'text-center',
+          textContent: 'Root'
+        }),
         t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 py-2' }, 
           Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()
             : [ t('div', {
