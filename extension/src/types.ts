@@ -1,7 +1,3 @@
-// export interface Vault {
-//   [key: string]: Vault | string
-// }
-
 export interface Vault {
   locked?: {
     data: string,
@@ -11,32 +7,11 @@ export interface Vault {
   },
   contents: {
     [key: string]: Vault | Record
-  }
-  parent: Vault | undefined
-
-  // name should be changed to just 'title', it is not the name of the parent folder, it is the name of the folder that is currently rendered
-  parentTitle: string
+  },
+  parent: Vault | undefined,
+  title: string,
+  sortedKeys: string[],
 }
-
-export function isFolder(item: Vault | Record): item is Vault {
-  return 'contents' in item
-}
-
-// export function isLocked(item: Vault | Record) {
-//   return !('contents' in item) && 'locked' in item
-// }
-
-// export type Vault = {
-//   locked: {
-//     data: string,
-//     iv: string,
-//     salt: string,
-//   }
-// } | {
-//   contents: {
-//     [key: string]: Vault | Record
-//   }
-// }
 
 export interface Record {
   url: string,
@@ -44,8 +19,10 @@ export interface Record {
   viewCount: number,
   totalTime?: number,
   currentTime?: number,
+  queuePos: number,
 }
 
+// Can probably delete this
 export type Props = {
   idTest: string,
   newPrefix: string[],

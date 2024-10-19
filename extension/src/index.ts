@@ -16,6 +16,7 @@ import VaultManager from '@/lib/VaultManager';
 // Should probably redesign how we render folders
 //  - get rid of cascading drop downs and this goofy folder tracking
 //  - only render a single folder at a time, use the up arrow thing to navigate to parent folder
+// Replace delete with function with method from VaultManager in renderFolder (and maybe renderLink too)
 
 // console.log('chrome storage', chrome.storage.local.get('vaultTest').then(data => console.log(data)))
 
@@ -70,6 +71,7 @@ let vaultTest;
             type: 'submit',
             onclick: (e) => {
               e.preventDefault()
+              console.log('add link')
               const title = (document.querySelector('#title') as HTMLInputElement)?.value;
               const { url } = currentTab
               if (title && url) vaultMan.addLink({ title, url })
@@ -81,6 +83,7 @@ let vaultTest;
             type: 'submit',
             onclick: (e) => {
               e.preventDefault()
+              console.log('add folder')
               const title = (document.querySelector('#title') as HTMLInputElement).value;
               vaultMan.addFolder({ title })
             }
@@ -89,7 +92,7 @@ let vaultTest;
         t('h1', {
           id: 'folderTitle',
           className: 'text-center',
-          textContent: 'Root'
+          textContent: 'Home'
         }),
         t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 py-2' }, 
           Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()

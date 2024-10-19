@@ -1,4 +1,5 @@
-import { isFolder, type Record, type Vault } from '@/types';
+import type { Record, Vault } from '@/types';
+import { isFolder } from './lib/utils';
 
 // Is tracking watch time really that important?  If we make it to the 'ended' event, we can mark it as watched
 // Otherwise we should be focusing on getting queueing working
@@ -26,7 +27,8 @@ function startService({ vault }: any, attemptCount = 0) {
   // chrome.storage.local.set({ vault })
 }
 
-chrome.storage.local.get('vault').then(startService)
+// This is so borked its not even funny, if you're reading this just delete everything and start over
+// chrome.storage.local.get('vault').then(startService)
 
 // function timeStampToSeconds(time: string) {
 //   return time.split(':').reverse().reduce((total, seg, i) => {

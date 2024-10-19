@@ -8,11 +8,6 @@ function getTag(type, props, children) {
   return node;
 }
 
-// src/types.ts
-function isFolder(item) {
-  return "contents" in item;
-}
-
 // src/lib/security.ts
 var bufferFrom = function(data, encoding) {
   if (encoding === "utf8") {
@@ -72,6 +67,76 @@ function clearChildren(id) {
     parent.removeChild(parent.firstChild);
   return parent;
 }
+function isFolder(item) {
+  return "contents" in item;
+}
+
+// src/components/dropdownContents.ts
+function dropdownContents(vaultMan, folder, key, id) {
+  return [
+    getTag("button", {
+      textContent: "Delete",
+      className: "bg-red-500 flex-1 rounded-xl",
+      onclick: () => {
+        vaultMan.deleteItem(folder, key);
+      }
+    }),
+    getTag("button", {
+      textContent: "Rename",
+      className: "bg-green-500 flex-1 rounded-xl",
+      onclick: () => {
+        const title = document.querySelector(`#title-${id}`);
+        if (!title)
+          throw Error("cant find title element");
+        title.replaceWith(getTag("input", {
+          id: `rename-${id}`,
+          className: "p-2 border-2 border-blue-600 rounded-xl",
+          value: key
+        }));
+        const renameInput = document.querySelector(`#rename-${id}`);
+        if (!renameInput)
+          throw Error("cant find rename element");
+        renameInput.addEventListener("blur", () => {
+          console.log("trigger blur event");
+          const newKey = document.querySelector(`#rename-${id}`).value;
+          vaultMan.renameItem(folder, key, newKey);
+        });
+        renameInput.focus();
+      }
+    }),
+    !folder.contents[key].contents ? undefined : getTag("button", {
+      textContent: folder.contents[key].locked ? "New Pwd" : "Lock",
+      className: "bg-orange-500 flex-1 rounded-xl",
+      onclick: async () => {
+        const dropdownContainer = clearChildren(`edit-${id}`);
+        dropdownContainer.append(getTag("form", {
+          className: "m-0 flex gap-2 w-full",
+          onsubmit: async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const password = form.elements.namedItem("password").value;
+            vaultMan.encryptFolder(folder.contents[key], password);
+          }
+        }, [
+          getTag("input", {
+            id: `encrypt-${id}`,
+            name: "password",
+            type: "password",
+            required: true,
+            placeholder: "Password",
+            className: "p-2 border-2 border-blue-600 rounded-xl w-full"
+          }),
+          getTag("button", {
+            type: "submit",
+            textContent: "Encrypt",
+            className: "p-2 rounded-xl bg-blue-600 text-white"
+          })
+        ]));
+        document.querySelector(`#encrypt-${id}`).focus();
+      }
+    })
+  ].filter((i) => i !== undefined);
+}
 
 // src/components/renderLink.ts
 function renderLink(id, folder, key, vaultMan) {
@@ -101,39 +166,7 @@ function renderLink(id, folder, key, vaultMan) {
           document.querySelector(`#title-${id}`)?.classList.toggle("rounded-b-none");
           if (container.hasChildNodes())
             return clearChildren(`edit-${id}`);
-          container.append(getTag("button", {
-            textContent: "Delete",
-            className: "bg-red-500 flex-1 rounded-xl",
-            onclick: () => {
-              vaultMan.deleteItem(folder, key);
-            }
-          }), getTag("button", {
-            textContent: "Rename",
-            className: "bg-green-500 flex-1 rounded-xl",
-            onclick: () => {
-              const title = document.querySelector(`#title-${id}`);
-              if (!title)
-                throw Error("cant find title element");
-              title.replaceWith(getTag("input", {
-                id: `rename-${id}`,
-                className: "p-2 border-2 border-blue-600 rounded-xl",
-                value: key
-              }));
-              const renameInput = document.querySelector(`#rename-${id}`);
-              if (!renameInput)
-                throw Error("cant find rename element");
-              renameInput.addEventListener("blur", () => {
-                console.log("trigger blur event");
-                const newKey = document.querySelector(`#rename-${id}`).value;
-                if (newKey && newKey !== key) {
-                  folder.contents[newKey] = folder.contents[key];
-                  delete folder.contents[key];
-                }
-                vaultMan.saveAndRender();
-              });
-              renameInput.focus();
-            }
-          }));
+          container.append(...dropdownContents(vaultMan, folder, key, id));
         }
       })
     ]),
@@ -144,7 +177,51 @@ function renderLink(id, folder, key, vaultMan) {
 // src/components/renderLockedFolder.ts
 function renderLockedFolder(id, folder, key, vaultMan) {
   return getTag("div", {}, [
-    getTag("div", { id: `header-${id}`, className: "flex justify-between items-center gap-2 rounded-t-xl" }, [
+    getTag("div", {
+      id: `header-${id}`,
+      className: "flex justify-between items-center gap-2 rounded-xl hover:bg-orange-600 hover:text-white transition-all",
+      onclick: () => {
+        document.querySelector(`#header-${id}`)?.classList.toggle("bg-orange-600");
+        document.querySelector(`#header-${id}`)?.classList.toggle("rounded-b-none");
+        const dropdown = document.querySelector(`#edit-${id}`);
+        dropdown?.classList.toggle("p-2");
+        if (!dropdown || dropdown.firstChild)
+          return clearChildren(`edit-${id}`);
+        dropdown.append(getTag("form", {
+          className: "w-full m-0 flex gap-2",
+          onsubmit: async (e) => {
+            e.preventDefault();
+            const errorContainer = document.querySelector(`#error-${id}`);
+            if (!errorContainer)
+              throw Error("Cant find error container");
+            errorContainer.textContent = "";
+            errorContainer.classList.remove("p-2");
+            const form = e.currentTarget;
+            const password = form.elements.namedItem(`decrypt-${id}`).value;
+            const error = await vaultMan.decryptFolder(folder.contents[key], password);
+            console.log(error);
+            if (error) {
+              errorContainer.textContent = error;
+              errorContainer.classList.add("p-2");
+            }
+          }
+        }, [
+          getTag("input", {
+            id: `decrypt-${id}`,
+            type: "password",
+            placeholder: "Password",
+            required: true,
+            className: "p-2 rounded-xl w-full"
+          }),
+          getTag("button", {
+            textContent: "Decrypt",
+            type: "submit",
+            className: "p-2 rounded-xl bg-orange-600 hover:text-white transition-all"
+          })
+        ]), getTag("p", { id: `error-${id}`, className: "text-center text-red-500 pb-0 font-bold text-lg" }));
+        document.querySelector(`#decrypt-${id}`).focus();
+      }
+    }, [
       getTag("div", {
         id: `title-${id}`,
         textContent: `${key}`,
@@ -152,42 +229,10 @@ function renderLockedFolder(id, folder, key, vaultMan) {
       }),
       getTag("button", {
         textContent: "\uD83D\uDD12",
-        className: "border-2 border-orange-600 rounded-xl p-2 w-8 h-8 flex justify-center items-center",
-        onclick: () => {
-          document.querySelector(`#header-${id}`)?.classList.toggle("bg-gray-300");
-          const dropdown = document.querySelector(`#edit-${id}`);
-          dropdown?.classList.toggle("p-2");
-          if (!dropdown || dropdown.firstChild)
-            return clearChildren(`edit-${id}`);
-          console.log(dropdown);
-          console.log("rendering");
-          dropdown.append(getTag("form", {
-            className: "w-full m-0 flex gap-2",
-            onsubmit: async (e) => {
-              e.preventDefault();
-              const form = e.currentTarget;
-              const password = form.elements.namedItem(`decrypt-${id}`).value;
-              vaultMan.decryptFolder(folder.contents[key], password);
-            }
-          }, [
-            getTag("input", {
-              id: `decrypt-${id}`,
-              type: "text",
-              placeholder: "Password",
-              required: true,
-              className: "p-2 rounded-xl"
-            }),
-            getTag("button", {
-              textContent: "Decrypt",
-              type: "submit",
-              className: "p-2 rounded-xl bg-orange-600"
-            })
-          ]));
-          document.querySelector(`#decrypt-${id}`).focus();
-        }
+        className: "border-2 border-orange-600 rounded-xl p-2 w-8 h-8 flex justify-center items-center"
       })
     ]),
-    getTag("div", { id: `edit-${id}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
+    getTag("div", { id: `edit-${id}`, className: "bg-gray-300 rounded-b-xl" })
   ]);
 }
 
@@ -198,140 +243,91 @@ function renderFolder(id, folder, key, vaultMan) {
     throw Error("this is not a folder");
   let hidden = false;
   return getTag("div", {}, [
-    getTag("div", { id: `header-${id}`, className: "flex justify-between items-center gap-2" }, [
+    getTag("div", { id: `header-${id}`, className: "flex justify-between items-center gap-2 rounded-t-xl transition-all duration-1000" }, [
       getTag("div", {
         id: `title-${id}`,
         textContent: `${key} (${Object.keys(folder.contents[key].contents).length})`,
         className: "flex-1 rounded-xl p-2 folder hover:bg-blue-600 hover:text-white transition-all",
-        onclick: (e) => {
+        onclick: () => {
           vaultMan.currentLocation = item;
           vaultMan.render();
         }
       }),
+      item.locked ? getTag("p", { textContent: "\uD83D\uDD13" }) : undefined,
       getTag("button", {
         id: `settings-${id}`,
         textContent: "\u2630",
         className: "w-8 h-8 flex justify-center items-center border-2 border-blue-600 p-2 rounded-xl",
         onclick: () => {
-          console.log(hidden);
+          document.querySelector(`#header-${id}`).classList.toggle("bg-blue-600");
+          document.querySelector(`#title-${id}`).classList.toggle("text-white");
+          document.querySelector(`#settings-${id}`).classList.toggle("text-white");
           const settingsContainer = clearChildren(`edit-${id}`);
           settingsContainer.classList.toggle("p-2");
           hidden = !hidden;
           if (!hidden)
             return;
-          settingsContainer.append(getTag("button", {
-            textContent: "Delete",
-            className: "bg-red-500 flex-1 rounded-xl",
-            onclick: () => {
-              vaultMan.deleteItem(folder, key);
-            }
-          }), getTag("button", {
-            textContent: "Rename",
-            className: "bg-green-500 flex-1 rounded-xl",
-            onclick: () => {
-              const title = document.querySelector(`#title-${id}`);
-              if (!title)
-                throw Error("cant find title element");
-              title.replaceWith(getTag("input", {
-                id: `rename-${id}`,
-                className: "p-2 border-2 border-blue-600 rounded-xl",
-                value: key
-              }));
-              const renameInput = document.querySelector(`#rename-${id}`);
-              if (!renameInput)
-                throw Error("cant find rename element");
-              renameInput.addEventListener("blur", () => {
-                console.log("trigger blur event");
-                const newKey = document.querySelector(`#rename-${id}`).value;
-                if (newKey && newKey !== key) {
-                  folder.contents[newKey] = folder.contents[key];
-                  delete folder.contents[key];
-                }
-                vaultMan.saveAndRender();
-              });
-              renameInput.focus();
-            }
-          }), getTag("button", {
-            textContent: "Lock",
-            className: "bg-orange-500 flex-1 rounded-xl",
-            onclick: async () => {
-              const dropdownContainer = clearChildren(`edit-${id}`);
-              dropdownContainer.append(getTag("form", {
-                className: "m-0 flex gap-2",
-                onsubmit: async (e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget;
-                  const password = form.elements.namedItem("password").value;
-                  vaultMan.encryptFolder(folder.contents[key], password);
-                }
-              }, [
-                getTag("input", {
-                  id: `encrypt-${id}`,
-                  name: "password",
-                  type: "password",
-                  required: true,
-                  placeholder: "Password",
-                  className: "p-2 border-2 border-blue-600 rounded-xl"
-                }),
-                getTag("button", {
-                  type: "submit",
-                  textContent: "Encrypt",
-                  className: "p-2 rounded-xl bg-blue-600 text-white"
-                })
-              ]));
-            }
-          }));
-          setTimeout(() => {
-            document.querySelector(`#encrypt-${id}`).focus();
-          }, 2000);
+          settingsContainer.append(...dropdownContents(vaultMan, folder, key, id));
         }
       })
     ]),
-    getTag("div", { id: `edit-${id}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-tl-none" }),
-    getTag("div", { id, className: "m-2 mr-0 border-blue-600 folderContents" })
+    getTag("div", { id: `edit-${id}`, className: "flex gap-2 bg-gray-300 rounded-b-xl" })
   ]);
 }
 
 // src/lib/VaultManager.ts
 class VaultManager {
   vault;
-  folder;
   currentLocation;
   constructor(vault) {
     this.vault = vault;
-    this.folder = [];
     this.currentLocation = vault;
-    console.log("constructor", this.buildTree(vault));
+    this.buildTree(vault);
   }
   render() {
-    document.querySelector("#folderTitle").textContent = this.currentLocation.parentTitle || "Root";
+    document.querySelector("#folderTitle").textContent = this.currentLocation.title || "Home";
     clearChildren("directoryContainer").append(...this.getVaultList());
   }
   async saveAndRender() {
     await chrome.storage.local.set({ vault: await this.reduceVault() });
     this.render();
   }
-  getCurrentFolder() {
-    return this.currentLocation;
-  }
   addLink({ title, url }) {
-    this.getCurrentFolder().contents[title] = {
+    this.currentLocation.contents[title] = {
       url,
       viewed: false,
-      viewCount: 0
+      viewCount: 0,
+      queuePos: Infinity
     };
+    this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
   }
   addFolder({ title }) {
-    this.getCurrentFolder().contents[title] = {
+    this.currentLocation.contents[title] = {
       contents: {},
-      parent: this.getCurrentFolder(),
-      parentTitle: title
+      parent: this.currentLocation,
+      title,
+      sortedKeys: []
     };
+    this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
   }
   deleteItem(folder, key) {
     delete folder.contents[key];
+    this.setSortedKeys(this.currentLocation);
+    this.saveAndRender();
+  }
+  renameItem(folder, key, newKey) {
+    if (!newKey)
+      return "cannot find new name";
+    if (newKey === key)
+      return;
+    if (folder.contents[newKey])
+      return "name is already taken";
+    folder.contents[newKey] = folder.contents[key];
+    delete folder.contents[key];
+    console.log("after delete", this.currentLocation);
+    this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
   }
   async encryptFolder(folder, password) {
@@ -339,7 +335,7 @@ class VaultManager {
     const iv = getRandBase64("iv");
     const fullKey = await getFullKey(password, salt);
     const encrypted = await encrypt(JSON.stringify(folder.contents), fullKey, iv);
-    console.log("folder", folder);
+    console.log("raw content", JSON.stringify(folder.contents));
     console.log("encrypted", encrypted);
     console.log("password", password);
     folder.locked = {
@@ -356,8 +352,13 @@ class VaultManager {
       throw Error("this folder is not locked");
     const { data, iv, salt } = folder.locked;
     const fullKey = await getFullKey(password, salt);
-    const decrypted = await decrypt(data, fullKey, iv);
-    console.log("decrypted data", decrypted);
+    let decrypted;
+    try {
+      decrypted = await decrypt(data, fullKey, iv);
+      console.log("decrypted data", decrypted);
+    } catch {
+      return "Wrong Password";
+    }
     folder.contents = JSON.parse(decrypted);
     folder.locked.fullKey = fullKey;
     this.currentLocation = folder;
@@ -368,8 +369,10 @@ class VaultManager {
     console.log("reduce vault", vault);
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
       const newVault = await newVaultPromise;
+      newVault.sortedKeys = vault.sortedKeys;
       if (vault.contents[key].contents) {
         const result = await this.reduceVault(vault.contents[key]);
+        console.log("result", result);
         const locked = vault.contents[key].locked;
         if (locked) {
           if (locked?.fullKey) {
@@ -389,14 +392,30 @@ class VaultManager {
     return Object.keys(folder.contents).forEach((key) => {
       if (isFolder(folder.contents[key])) {
         folder.contents[key].parent = folder;
-        folder.contents[key].parentTitle = key;
+        folder.contents[key].title = key;
         this.buildTree(folder.contents[key]);
       }
     });
   }
-  getVaultList(folder = this.currentLocation, prefix = [], id = "id") {
-    return Object.keys(folder.contents).sort().map((key, i) => {
+  setSortedKeys(folder) {
+    const folders = [];
+    const links = [];
+    Object.keys(folder.contents).forEach((key) => {
+      const item = folder.contents[key];
+      if (item.locked || isFolder(item)) {
+        folders.push(key);
+      } else {
+        links.push(key);
+      }
+    });
+    const sorted = folders.sort().concat(links.sort((a, b) => folder.contents[a].queuePos - folder.contents[b].queuePos));
+    console.log("sorted keys", sorted);
+    folder.sortedKeys = sorted;
+  }
+  getVaultList(folder = this.currentLocation, id = "id") {
+    return folder.sortedKeys.map((key, i) => {
       const tempId = id + `-${i}`;
+      console.log(folder.contents, key);
       return folder.contents[key].url ? renderLink(tempId, folder, key, this) : folder.contents[key].contents ? renderFolder(tempId, folder, key, this) : renderLockedFolder(tempId, folder, key, this);
     });
   }
@@ -438,6 +457,7 @@ var vaultTest;
           type: "submit",
           onclick: (e) => {
             e.preventDefault();
+            console.log("add link");
             const title = document.querySelector("#title")?.value;
             const { url } = currentTab;
             if (title && url)
@@ -450,6 +470,7 @@ var vaultTest;
           type: "submit",
           onclick: (e) => {
             e.preventDefault();
+            console.log("add folder");
             const title = document.querySelector("#title").value;
             vaultMan.addFolder({ title });
           }
@@ -458,7 +479,7 @@ var vaultTest;
       getTag("h1", {
         id: "folderTitle",
         className: "text-center",
-        textContent: "Root"
+        textContent: "Home"
       }),
       getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
         textContent: "No vault found",
