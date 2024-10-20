@@ -18,6 +18,8 @@ import VaultManager from '@/lib/VaultManager';
 //  - only render a single folder at a time, use the up arrow thing to navigate to parent folder
 // Replace delete with function with method from VaultManager in renderFolder (and maybe renderLink too)
 
+// Day robbed by blockhouse assignment
+
 // console.log('chrome storage', chrome.storage.local.get('vaultTest').then(data => console.log(data)))
 
 // const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
