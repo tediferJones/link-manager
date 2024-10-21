@@ -31,7 +31,14 @@ export default class VaultManager {
       url,
       viewed: false,
       viewCount: 0,
-      queuePos: Infinity,
+      // queuePos: Infinity,
+      //
+      // Find greatest queuePos, then set to 1 higher than that
+      queuePos: Object.values(this.currentLocation.contents).reduce((total, val) => {
+        const item = val as Record
+        if (item.queuePos > total) total = item.queuePos
+        return total
+      }, 0) + 1
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
