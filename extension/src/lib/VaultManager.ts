@@ -49,7 +49,11 @@ export default class VaultManager {
       contents: {},
       parent: this.currentLocation,
       title,
-      sortedKeys: [],
+      // sortedKeys: [],
+      sortedKeys: {
+        folders: [],
+        links: []
+      },
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
@@ -118,10 +122,16 @@ export default class VaultManager {
   }
 
   async reduceVault(vault = this.vault) {
-    console.log('reduce vault', vault)
+    // console.log('reduce vault', vault)
+    const newVault = {
+      contents: {},
+      sortedKeys: vault.sortedKeys
+    } as Vault
+    console.log('checking', vault, 'building', newVault)
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
       const newVault = await newVaultPromise;
-      newVault.sortedKeys = vault.sortedKeys;
+      // newVault.sortedKeys = vault.sortedKeys;
+      // console.log('name', key, 'save sorted keys', newVault.sortedKeys, vault.sortedKeys)
       if ((vault.contents[key] as Vault).contents) {
         const result = await this.reduceVault(vault.contents[key] as Vault);
         console.log('result', result)
@@ -136,13 +146,16 @@ export default class VaultManager {
           }
           newVault.contents[key] = { locked } as Vault;
         } else {
-          newVault.contents[key] = { contents: result.contents } as Vault;
+          // newVault.contents[key] = { contents: result.contents } as Vault;
+          newVault.contents[key] = { contents: result.contents, sortedKeys: result.sortedKeys } as Vault;
         }
       } else {
         newVault.contents[key] = vault.contents[key];
       }
+      console.log('Final Result', newVault)
       return newVault;
-    }, Promise.resolve({ contents: {} } as Vault));
+    // }, Promise.resolve({ contents: {} } as Vault));
+    }, Promise.resolve(newVault));
   }
 
   buildTree(folder = this.vault) {
@@ -171,7 +184,8 @@ export default class VaultManager {
       links.sort((a, b) => (folder.contents[a] as Record).queuePos - (folder.contents[b] as Record).queuePos)
     )
     console.log('sorted keys', sorted)
-    folder.sortedKeys = sorted
+    // folder.sortedKeys = sorted
+    folder.sortedKeys = { folders, links }
   }
 
   getVaultList(
@@ -180,13 +194,16 @@ export default class VaultManager {
   ) {
     // return Object.keys(folder.contents).sort().map((key, i) => {
     // console.log('rendering', folder.sortedKeys.map(i => console.log(i)))
-    return folder.sortedKeys.map((key, i) => {
-      const tempId = id + `-${i}`;
-      console.log(folder.contents, key)
-      // return ()
-      return (folder.contents[key] as Record).url ? renderLink(tempId, folder, key, this)
-        : (folder.contents[key] as Vault).contents ? renderFolder(tempId, folder, key, this)
-          : renderLockedFolder(tempId, folder, key, this)
-    })
+    // return folder.sortedKeys.map((key, i) => {
+    return folder.sortedKeys.folders
+      .concat(folder.sortedKeys.links)
+      .map((key, i) => {
+        const tempId = id + `-${i}`;
+        console.log(folder.contents, key)
+        // return ()
+        return (folder.contents[key] as Record).url ? renderLink(tempId, folder, key, this)
+          : (folder.contents[key] as Vault).contents ? renderFolder(tempId, folder, key, this)
+            : renderLockedFolder(tempId, folder, key, this)
+      })
   }
 }

@@ -312,7 +312,10 @@ class VaultManager {
       contents: {},
       parent: this.currentLocation,
       title,
-      sortedKeys: []
+      sortedKeys: {
+        folders: [],
+        links: []
+      }
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
@@ -371,10 +374,13 @@ class VaultManager {
     this.render();
   }
   async reduceVault(vault = this.vault) {
-    console.log("reduce vault", vault);
+    const newVault = {
+      contents: {},
+      sortedKeys: vault.sortedKeys
+    };
+    console.log("checking", vault, "building", newVault);
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
-      const newVault = await newVaultPromise;
-      newVault.sortedKeys = vault.sortedKeys;
+      const newVault2 = await newVaultPromise;
       if (vault.contents[key].contents) {
         const result = await this.reduceVault(vault.contents[key]);
         console.log("result", result);
@@ -383,15 +389,16 @@ class VaultManager {
           if (locked?.fullKey) {
             locked.data = await encrypt(JSON.stringify(result.contents), locked.fullKey, locked.iv);
           }
-          newVault.contents[key] = { locked };
+          newVault2.contents[key] = { locked };
         } else {
-          newVault.contents[key] = { contents: result.contents };
+          newVault2.contents[key] = { contents: result.contents, sortedKeys: result.sortedKeys };
         }
       } else {
-        newVault.contents[key] = vault.contents[key];
+        newVault2.contents[key] = vault.contents[key];
       }
-      return newVault;
-    }, Promise.resolve({ contents: {} }));
+      console.log("Final Result", newVault2);
+      return newVault2;
+    }, Promise.resolve(newVault));
   }
   buildTree(folder = this.vault) {
     return Object.keys(folder.contents).forEach((key) => {
@@ -415,10 +422,10 @@ class VaultManager {
     });
     const sorted = folders.sort().concat(links.sort((a, b) => folder.contents[a].queuePos - folder.contents[b].queuePos));
     console.log("sorted keys", sorted);
-    folder.sortedKeys = sorted;
+    folder.sortedKeys = { folders, links };
   }
   getVaultList(folder = this.currentLocation, id = "id") {
-    return folder.sortedKeys.map((key, i) => {
+    return folder.sortedKeys.folders.concat(folder.sortedKeys.links).map((key, i) => {
       const tempId = id + `-${i}`;
       console.log(folder.contents, key);
       return folder.contents[key].url ? renderLink(tempId, folder, key, this) : folder.contents[key].contents ? renderFolder(tempId, folder, key, this) : renderLockedFolder(tempId, folder, key, this);

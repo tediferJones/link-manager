@@ -10,7 +10,11 @@ export interface Vault {
   },
   parent: Vault | undefined,
   title: string,
-  sortedKeys: string[],
+  // sortedKeys: string[],
+  sortedKeys: {
+    folders: string[],
+    links: string[],
+  },
 }
 
 export interface Record {

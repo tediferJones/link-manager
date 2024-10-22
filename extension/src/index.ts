@@ -6,7 +6,7 @@ import VaultManager from '@/lib/VaultManager';
 //
 // Rotate salt and iv every time a folder is decrypted
 // When adding or renaming, make sure new title does not already exist, or this will overwrite the previous entry
-// Delete public/background.js if its not actually needed
+// Delete background script if its not actually needed
 // Transition to use chrome.storage.local instead of localstorage
 //  - this allows a single source of truth between the extension and content script
 // We want to implement queueing for all links in the same folder
