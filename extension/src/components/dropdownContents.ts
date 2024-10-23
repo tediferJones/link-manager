@@ -1,7 +1,7 @@
 import t from '@/lib/getTag';
 import { clearChildren } from '@/lib/utils';
 import type VaultManager from '@/lib/VaultManager';
-import type { Vault } from '@/types';
+import type { Record, Vault } from '@/types';
 
 export default function dropdownContents(vaultMan: VaultManager, folder: Vault, key: string, id: string) {
   return [
@@ -68,6 +68,17 @@ export default function dropdownContents(vaultMan: VaultManager, folder: Vault, 
         );
         (document.querySelector(`#encrypt-${id}`) as HTMLInputElement).focus();
       }
-    })
+    }),
+    !(folder.contents[key] as Record).url ? undefined : t('form', {
+      className: 'flex gap-2',
+      onsubmit: (e) => {
+        e.preventDefault();
+        const newPos = (document.querySelector(`#newPos-${id}`) as HTMLInputElement).value
+        vaultMan.swapQueuePos(folder.contents[key] as Record, Number(newPos))
+      }
+    }, [
+      t('input', { id: `newPos-${id}`, type: 'number', value: (folder.contents[key] as Record).queuePos, className: 'w-1/5' }),
+      t('button', { type: 'submit', textContent: 'Change Pos', className: 'bg-blue-600 text-white p-2' })
+    ])
   ].filter(i => i !== undefined)
 }

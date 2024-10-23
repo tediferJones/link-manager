@@ -134,7 +134,18 @@ function dropdownContents(vaultMan, folder, key, id) {
         ]));
         document.querySelector(`#encrypt-${id}`).focus();
       }
-    })
+    }),
+    !folder.contents[key].url ? undefined : getTag("form", {
+      className: "flex gap-2",
+      onsubmit: (e) => {
+        e.preventDefault();
+        const newPos = document.querySelector(`#newPos-${id}`).value;
+        vaultMan.swapQueuePos(folder.contents[key], Number(newPos));
+      }
+    }, [
+      getTag("input", { id: `newPos-${id}`, type: "number", value: folder.contents[key].queuePos, className: "w-1/5" }),
+      getTag("button", { type: "submit", textContent: "Change Pos", className: "bg-blue-600 text-white p-2" })
+    ])
   ].filter((i) => i !== undefined);
 }
 
@@ -430,6 +441,24 @@ class VaultManager {
       console.log(folder.contents, key);
       return folder.contents[key].url ? renderLink(tempId, folder, key, this) : folder.contents[key].contents ? renderFolder(tempId, folder, key, this) : renderLockedFolder(tempId, folder, key, this);
     });
+  }
+  swapQueuePos(record, newPos) {
+    const sortedLinkKeys = this.currentLocation.sortedKeys.links;
+    const linkToSwap = sortedLinkKeys[newPos - 1];
+    if (linkToSwap) {
+      this.currentLocation.contents[linkToSwap].queuePos = record.queuePos;
+      record.queuePos = newPos;
+    } else {
+      const fromIndex = record.queuePos;
+      console.log("sliced keys", sortedLinkKeys.slice(fromIndex - 1));
+      sortedLinkKeys.slice(fromIndex - 1).forEach((key) => {
+        console.log(key);
+        this.currentLocation.contents[key].queuePos -= 1;
+      });
+      record.queuePos = this.currentLocation.sortedKeys.links.length;
+    }
+    this.setSortedKeys(this.currentLocation);
+    this.saveAndRender();
   }
 }
 

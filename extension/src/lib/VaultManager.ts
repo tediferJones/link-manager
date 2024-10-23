@@ -206,4 +206,27 @@ export default class VaultManager {
             : renderLockedFolder(tempId, folder, key, this)
       })
   }
+
+  swapQueuePos(record: Record, newPos: number) {
+    // const linkToSwapKey = this.currentLocation.sortedKeys.links
+    // .find(linkKey => (this.currentLocation.contents[linkKey] as Record).queuePos === newPos);
+    // if (!linkToSwapKey) throw Error('Pos too big');
+    // (this.currentLocation.contents[linkToSwapKey] as Record).queuePos = record.queuePos;
+    const sortedLinkKeys = this.currentLocation.sortedKeys.links;
+    const linkToSwap = sortedLinkKeys[newPos - 1];
+    if (linkToSwap) {
+      (this.currentLocation.contents[linkToSwap] as Record).queuePos = record.queuePos
+      record.queuePos = newPos;
+    } else {
+      const fromIndex = record.queuePos
+      console.log('sliced keys', sortedLinkKeys.slice(fromIndex - 1))
+      sortedLinkKeys.slice(fromIndex - 1).forEach(key => {
+        console.log(key);
+        (this.currentLocation.contents[key] as Record).queuePos -= 1
+      })
+      record.queuePos = this.currentLocation.sortedKeys.links.length
+    }
+    this.setSortedKeys(this.currentLocation);
+    this.saveAndRender();
+  }
 }
