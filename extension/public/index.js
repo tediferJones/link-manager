@@ -135,17 +135,24 @@ function dropdownContents(vaultMan, folder, key, id) {
         document.querySelector(`#encrypt-${id}`).focus();
       }
     }),
-    !folder.contents[key].url ? undefined : getTag("form", {
-      className: "flex gap-2",
-      onsubmit: (e) => {
-        e.preventDefault();
-        const newPos = document.querySelector(`#newPos-${id}`).value;
-        vaultMan.swapQueuePos(folder.contents[key], Number(newPos));
+    !folder.contents[key].url ? undefined : getTag("button", {
+      textContent: "\u25B2",
+      className: "text-xl min-h-4 text-white p-2 aspect-square bg-blue-600 rounded-full flex justify-center items-center",
+      onclick: async () => {
+        const item = folder.contents[key];
+        await vaultMan.swapQueuePos(item, item.queuePos - 1);
+        document.querySelector(`#settings-link-${item.queuePos}`).click();
       }
-    }, [
-      getTag("input", { id: `newPos-${id}`, type: "number", value: folder.contents[key].queuePos, className: "w-1/5" }),
-      getTag("button", { type: "submit", textContent: "Change Pos", className: "bg-blue-600 text-white p-2" })
-    ])
+    }),
+    !folder.contents[key].url ? undefined : getTag("button", {
+      textContent: "\u25BC",
+      className: "text-xl min-h-4 text-white p-2 aspect-square bg-blue-600 rounded-full flex justify-center items-center",
+      onclick: async () => {
+        const item = folder.contents[key];
+        await vaultMan.swapQueuePos(item, item.queuePos + 1);
+        document.querySelector(`#settings-link-${item.queuePos}`).click();
+      }
+    })
   ].filter((i) => i !== undefined);
 }
 
@@ -159,7 +166,7 @@ function renderLink(id, folder, key, vaultMan) {
       getTag("a", {
         id: `title-${id}`,
         className: "p-2 underline text-blue-600 truncate",
-        textContent: key,
+        textContent: item.queuePos + ".) " + key,
         href: item.url,
         target: "_blank",
         rel: "noopener noreferrer"
@@ -389,12 +396,10 @@ class VaultManager {
       contents: {},
       sortedKeys: vault.sortedKeys
     };
-    console.log("checking", vault, "building", newVault);
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
       const newVault2 = await newVaultPromise;
       if (vault.contents[key].contents) {
         const result = await this.reduceVault(vault.contents[key]);
-        console.log("result", result);
         const locked = vault.contents[key].locked;
         if (locked) {
           if (locked?.fullKey) {
@@ -407,7 +412,6 @@ class VaultManager {
       } else {
         newVault2.contents[key] = vault.contents[key];
       }
-      console.log("Final Result", newVault2);
       return newVault2;
     }, Promise.resolve(newVault));
   }
@@ -432,17 +436,15 @@ class VaultManager {
       }
     });
     const sorted = folders.sort().concat(links.sort((a, b) => folder.contents[a].queuePos - folder.contents[b].queuePos));
-    console.log("sorted keys", sorted);
     folder.sortedKeys = { folders, links };
   }
   getVaultList(folder = this.currentLocation, id = "id") {
     return folder.sortedKeys.folders.concat(folder.sortedKeys.links).map((key, i) => {
       const tempId = id + `-${i}`;
-      console.log(folder.contents, key);
-      return folder.contents[key].url ? renderLink(tempId, folder, key, this) : folder.contents[key].contents ? renderFolder(tempId, folder, key, this) : renderLockedFolder(tempId, folder, key, this);
+      return folder.contents[key].url ? renderLink(`link-${folder.contents[key].queuePos}`, folder, key, this) : folder.contents[key].contents ? renderFolder(`folder-${i}`, folder, key, this) : renderLockedFolder(`folder-${i}`, folder, key, this);
     });
   }
-  swapQueuePos(record, newPos) {
+  async swapQueuePos(record, newPos) {
     const sortedLinkKeys = this.currentLocation.sortedKeys.links;
     const linkToSwap = sortedLinkKeys[newPos - 1];
     if (linkToSwap) {
@@ -452,13 +454,12 @@ class VaultManager {
       const fromIndex = record.queuePos;
       console.log("sliced keys", sortedLinkKeys.slice(fromIndex - 1));
       sortedLinkKeys.slice(fromIndex - 1).forEach((key) => {
-        console.log(key);
         this.currentLocation.contents[key].queuePos -= 1;
       });
       record.queuePos = this.currentLocation.sortedKeys.links.length;
     }
     this.setSortedKeys(this.currentLocation);
-    this.saveAndRender();
+    await this.saveAndRender();
   }
 }
 
@@ -467,7 +468,7 @@ var vaultTest;
 (async () => {
   const vaultMan = new VaultManager((await chrome.storage.local.get("vault")).vault || { contents: {} });
   vaultTest = vaultMan;
-  console.log(vaultMan.vault);
+  console.log("vault from index.js", vaultMan.vault);
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
   chrome.tabs.query({ active: true }, (tabs) => {
     const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];

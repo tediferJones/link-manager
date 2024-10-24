@@ -69,16 +69,37 @@ export default function dropdownContents(vaultMan: VaultManager, folder: Vault, 
         (document.querySelector(`#encrypt-${id}`) as HTMLInputElement).focus();
       }
     }),
-    !(folder.contents[key] as Record).url ? undefined : t('form', {
-      className: 'flex gap-2',
-      onsubmit: (e) => {
-        e.preventDefault();
-        const newPos = (document.querySelector(`#newPos-${id}`) as HTMLInputElement).value
-        vaultMan.swapQueuePos(folder.contents[key] as Record, Number(newPos))
-      }
-    }, [
-      t('input', { id: `newPos-${id}`, type: 'number', value: (folder.contents[key] as Record).queuePos, className: 'w-1/5' }),
-      t('button', { type: 'submit', textContent: 'Change Pos', className: 'bg-blue-600 text-white p-2' })
-    ])
+    // !(folder.contents[key] as Record).url ? undefined : t('form', {
+    //   className: 'flex gap-2',
+    //   onsubmit: async (e) => {
+    //     e.preventDefault();
+    //     const newPos = (document.querySelector(`#newPos-${id}`) as HTMLInputElement).value
+    //     await vaultMan.swapQueuePos(folder.contents[key] as Record, Number(newPos));
+    //     (document.querySelector(`#settings-link-${newPos}`) as HTMLButtonElement).click();
+    //   }
+    // }, [
+    //   t('input', { id: `newPos-${id}`, type: 'number', value: (folder.contents[key] as Record).queuePos, className: 'w-1/5' }),
+    //   t('button', { type: 'submit', textContent: 'Change Pos', className: 'bg-blue-600 text-white p-2' })
+    // ])
+    !(folder.contents[key] as Record).url ? undefined :
+      t('button', {
+        textContent: '▲',
+        className: 'text-xl min-h-4 text-white p-2 aspect-square bg-blue-600 rounded-full flex justify-center items-center',
+        onclick: async () => {
+          const item = (folder.contents[key] as Record)
+          await vaultMan.swapQueuePos(item, item.queuePos - 1);
+          (document.querySelector(`#settings-link-${item.queuePos}`) as HTMLButtonElement).click();
+        }
+      }),
+    !(folder.contents[key] as Record).url ? undefined :
+      t('button', {
+        textContent: '▼',
+        className: 'text-xl min-h-4 text-white p-2 aspect-square bg-blue-600 rounded-full flex justify-center items-center',
+        onclick: async () => {
+          const item = (folder.contents[key] as Record)
+          await vaultMan.swapQueuePos(item, item.queuePos + 1);
+          (document.querySelector(`#settings-link-${item.queuePos}`) as HTMLButtonElement).click();
+        }
+      }),
   ].filter(i => i !== undefined)
 }

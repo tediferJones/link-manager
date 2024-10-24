@@ -127,14 +127,14 @@ export default class VaultManager {
       contents: {},
       sortedKeys: vault.sortedKeys
     } as Vault
-    console.log('checking', vault, 'building', newVault)
+    // console.log('checking', vault, 'building', newVault)
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
       const newVault = await newVaultPromise;
       // newVault.sortedKeys = vault.sortedKeys;
       // console.log('name', key, 'save sorted keys', newVault.sortedKeys, vault.sortedKeys)
       if ((vault.contents[key] as Vault).contents) {
         const result = await this.reduceVault(vault.contents[key] as Vault);
-        console.log('result', result)
+        // console.log('result', result)
         const locked = (vault.contents[key] as Vault).locked
         if (locked) {
           if (locked?.fullKey) {
@@ -152,7 +152,7 @@ export default class VaultManager {
       } else {
         newVault.contents[key] = vault.contents[key];
       }
-      console.log('Final Result', newVault)
+      // console.log('Final Result', newVault)
       return newVault;
     // }, Promise.resolve({ contents: {} } as Vault));
     }, Promise.resolve(newVault));
@@ -183,7 +183,7 @@ export default class VaultManager {
     const sorted = folders.sort().concat(
       links.sort((a, b) => (folder.contents[a] as Record).queuePos - (folder.contents[b] as Record).queuePos)
     )
-    console.log('sorted keys', sorted)
+    // console.log('sorted keys', sorted)
     // folder.sortedKeys = sorted
     folder.sortedKeys = { folders, links }
   }
@@ -199,34 +199,47 @@ export default class VaultManager {
       .concat(folder.sortedKeys.links)
       .map((key, i) => {
         const tempId = id + `-${i}`;
-        console.log(folder.contents, key)
-        // return ()
-        return (folder.contents[key] as Record).url ? renderLink(tempId, folder, key, this)
-          : (folder.contents[key] as Vault).contents ? renderFolder(tempId, folder, key, this)
-            : renderLockedFolder(tempId, folder, key, this)
+        // console.log(folder.contents, key)
+        // return (folder.contents[key] as Record).url ? renderLink(tempId, folder, key, this)
+        //   : (folder.contents[key] as Vault).contents ? renderFolder(tempId, folder, key, this)
+        //     : renderLockedFolder(tempId, folder, key, this)
+        return (folder.contents[key] as Record).url ? renderLink(`link-${(folder.contents[key] as Record).queuePos}`, folder, key, this)
+          : (folder.contents[key] as Vault).contents ? renderFolder(`folder-${i}`, folder, key, this)
+            : renderLockedFolder(`folder-${i}`, folder, key, this)
       })
   }
 
-  swapQueuePos(record: Record, newPos: number) {
-    // const linkToSwapKey = this.currentLocation.sortedKeys.links
-    // .find(linkKey => (this.currentLocation.contents[linkKey] as Record).queuePos === newPos);
-    // if (!linkToSwapKey) throw Error('Pos too big');
-    // (this.currentLocation.contents[linkToSwapKey] as Record).queuePos = record.queuePos;
+  async swapQueuePos(record: Record, newPos: number) {
     const sortedLinkKeys = this.currentLocation.sortedKeys.links;
     const linkToSwap = sortedLinkKeys[newPos - 1];
     if (linkToSwap) {
-      (this.currentLocation.contents[linkToSwap] as Record).queuePos = record.queuePos
+      (this.currentLocation.contents[linkToSwap] as Record).queuePos = record.queuePos;
       record.queuePos = newPos;
     } else {
       const fromIndex = record.queuePos
       console.log('sliced keys', sortedLinkKeys.slice(fromIndex - 1))
       sortedLinkKeys.slice(fromIndex - 1).forEach(key => {
-        console.log(key);
-        (this.currentLocation.contents[key] as Record).queuePos -= 1
+        (this.currentLocation.contents[key] as Record).queuePos -= 1;
       })
       record.queuePos = this.currentLocation.sortedKeys.links.length
     }
+
+    // Delete this if we done end up using negative queuePos
+    // const sortedLinkKeys = this.currentLocation.sortedKeys.links;
+    // const swapKey = sortedLinkKeys.find(recKey => {
+    //   return (this.currentLocation.contents[recKey] as Record).queuePos === newPos;
+    // })
+
+    // if (swapKey) {
+    //   const swapRec = this.currentLocation.contents[swapKey] as Record
+    //   swapRec.queuePos = record.queuePos;
+    //   record.queuePos = newPos;
+    // } else {
+    //   // no record found
+    //   // if there is no record found we are outside the current bounds of all queue positions
+    // }
+
     this.setSortedKeys(this.currentLocation);
-    this.saveAndRender();
+    await this.saveAndRender();
   }
 }

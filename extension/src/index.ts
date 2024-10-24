@@ -29,7 +29,7 @@ let vaultTest;
     (await chrome.storage.local.get('vault')).vault || { contents: {} }
   )
   vaultTest = vaultMan
-  console.log(vaultMan.vault)
+  console.log('vault from index.js', vaultMan.vault)
 
   document.body.appendChild(
     t('h1', { textContent: 'LINK MANAGER', className: 'p-4 text-center text-2xl font-bold text-blue-500' })

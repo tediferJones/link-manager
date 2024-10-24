@@ -13,7 +13,7 @@ export default function renderLink(id: string, folder: Vault, key: string, vault
       t('a', {
         id: `title-${id}`,
         className: 'p-2 underline text-blue-600 truncate',
-        textContent: key,
+        textContent: item.queuePos + '.) ' + key,
         href: item.url,
         target: '_blank',
         rel: 'noopener noreferrer'
