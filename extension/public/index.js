@@ -267,7 +267,7 @@ function renderFolder(id, folder, key, vaultMan) {
         textContent: `${key} (${Object.keys(folder.contents[key].contents).length})`,
         className: "flex-1 rounded-xl p-2 folder hover:bg-blue-600 hover:text-white transition-all",
         onclick: () => {
-          vaultMan.currentLocation = item;
+          vaultMan.setCurrentFolder(item);
           vaultMan.render();
         }
       }),
@@ -333,7 +333,8 @@ class VaultManager {
       sortedKeys: {
         folders: [],
         links: []
-      }
+      },
+      queueStart: 1
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
@@ -394,7 +395,8 @@ class VaultManager {
   async reduceVault(vault = this.vault) {
     const newVault = {
       contents: {},
-      sortedKeys: vault.sortedKeys
+      sortedKeys: vault.sortedKeys,
+      queueStart: vault.queueStart
     };
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
       const newVault2 = await newVaultPromise;
@@ -461,16 +463,33 @@ class VaultManager {
     this.setSortedKeys(this.currentLocation);
     await this.saveAndRender();
   }
+  setCurrentFolder(folder) {
+    this.currentLocation = folder;
+    console.log(this.reduceVault(this.currentLocation));
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, await this.reduceVault(this.currentLocation), (response) => {
+        console.log("Object sent to content script:", response);
+      });
+    });
+  }
 }
 
 // src/index.ts
 var vaultTest;
 (async () => {
-  const vaultMan = new VaultManager((await chrome.storage.local.get("vault")).vault || { contents: {} });
+  const vaultMan = new VaultManager((await chrome.storage.local.get("vault")).vault || {
+    contents: {},
+    title: "Home",
+    queueStart: 1,
+    sortedKeys: {
+      folders: [],
+      links: []
+    }
+  });
   vaultTest = vaultMan;
   console.log("vault from index.js", vaultMan.vault);
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
-  chrome.tabs.query({ active: true }, (tabs) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
     document.body.append(getTag("div", { className: "p-4" }, [
       getTag("form", { className: "flex gap-2" }, [
@@ -523,6 +542,24 @@ var vaultTest;
         className: "text-center",
         textContent: "Home"
       }),
+      getTag("div", { className: "flex justify-center gap-4 text-2xl" }, [
+        getTag("button", { textContent: "\u23EA" }),
+        getTag("button", {
+          textContent: "\u25B6",
+          onclick: () => {
+            const startIndex = vaultMan.currentLocation.queueStart - 1;
+            const startKey = vaultMan.currentLocation.sortedKeys.links[startIndex];
+            const record = vaultMan.currentLocation.contents[startKey];
+            console.log(startIndex, startKey, record);
+            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs2) => {
+              chrome.tabs.sendMessage(tabs2[0].id, record, (response) => {
+                console.log("Object sent to content script:", response);
+              });
+            });
+          }
+        }),
+        getTag("button", { textContent: "\u23E9" })
+      ]),
       getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
         textContent: "No vault found",
         className: "p-4 text-center text-xl font-bold text-gray-500"

@@ -15,7 +15,8 @@ export default function renderFolder(id: string, folder: Vault, key: string, vau
         textContent: `${key} (${Object.keys((folder.contents[key] as Vault).contents).length})`,
         className: 'flex-1 rounded-xl p-2 folder hover:bg-blue-600 hover:text-white transition-all',
         onclick: () => {
-          vaultMan.currentLocation = item
+          // vaultMan.currentLocation = item
+          vaultMan.setCurrentFolder(item)
           vaultMan.render()
          }
       }),

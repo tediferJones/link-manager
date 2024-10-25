@@ -4,6 +4,48 @@ import { isFolder } from './lib/utils';
 // Is tracking watch time really that important?  If we make it to the 'ended' event, we can mark it as watched
 // Otherwise we should be focusing on getting queueing working
 
+let playing: Record;
+console.log('this is the content script')
+// const vidContainer = document.querySelector('video');
+// console.log('video container', vidContainer)
+// vidContainer?.addEventListener('ended', () => {
+//   console.log('video has ended, fetch next')
+// })
+const observer = new MutationObserver((mutList) => {
+  console.log(mutList)
+  mutList.forEach(mutation => {
+    console.log(mutation.type)
+    if (mutation.type === 'childList') {
+      mutation.addedNodes.forEach((node) => {
+        // @ts-ignore
+        if (node.tagName === 'VIDEO') {
+          node.addEventListener('ended', () => {
+            // Send a message back to the main script, update queueStart there, and return next video
+            console.log('video has ended')
+          })
+        }
+      })
+    }
+  })
+})
+observer.observe(document.body, { childList: true, subtree: true });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log(message)
+  sendResponse({ status: "Object received by content script" });
+  window.location.assign(message.url)
+  // const vidContainer = document.querySelector('video');
+  // console.log('video container', vidContainer)
+  // vidContainer?.addEventListener('ended', () => {
+  //   console.log('video has ended, fetch next')
+  // })
+  // if (message.object) {
+  //   console.log("Received object from main script:", message.object);
+  //   // Process the object here
+  //   sendResponse({ status: "Object received by content script" });
+  // }
+});
+
 function vaultDfs(searchUrl: string, folder: Vault): Record | undefined {
   console.log('dfs-ing')
   return Object.values(folder.contents).find(item => {

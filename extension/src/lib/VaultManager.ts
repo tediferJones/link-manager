@@ -54,6 +54,7 @@ export default class VaultManager {
         folders: [],
         links: []
       },
+      queueStart: 1
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
@@ -121,11 +122,13 @@ export default class VaultManager {
     this.render()
   }
 
+  // This function kinda sucks, it should explicitly remove items instead of implicitly
   async reduceVault(vault = this.vault) {
     // console.log('reduce vault', vault)
     const newVault = {
       contents: {},
-      sortedKeys: vault.sortedKeys
+      sortedKeys: vault.sortedKeys,
+      queueStart: vault.queueStart
     } as Vault
     // console.log('checking', vault, 'building', newVault)
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
@@ -241,5 +244,17 @@ export default class VaultManager {
 
     this.setSortedKeys(this.currentLocation);
     await this.saveAndRender();
+  }
+
+  setCurrentFolder(folder: Vault) {
+    this.currentLocation = folder;
+    console.log(this.reduceVault(this.currentLocation))
+    // What do we actually need to send to the currently open tab?
+    //  - Keep in mind we can have the same url in multiple folders, and the same url multiple times in the same folder
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id!, await this.reduceVault(this.currentLocation), (response) => {
+        console.log("Object sent to content script:", response);
+      });
+    });
   }
 }

@@ -15,6 +15,7 @@ export interface Vault {
     folders: string[],
     links: string[],
   },
+  queueStart: number,
 }
 
 export interface Record {

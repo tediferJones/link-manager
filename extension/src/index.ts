@@ -1,6 +1,7 @@
 import t from '@/lib/getTag';
 // import type { Vault } from '@/types';
 import VaultManager from '@/lib/VaultManager';
+import type { Vault } from './types';
 
 // TO-DO
 //
@@ -26,7 +27,16 @@ import VaultManager from '@/lib/VaultManager';
 let vaultTest;
 (async () => {
   const vaultMan = new VaultManager(
-    (await chrome.storage.local.get('vault')).vault || { contents: {} }
+    // (await chrome.storage.local.get('vault')).vault || { contents: {} }
+    (await chrome.storage.local.get('vault')).vault || {
+      contents: {},
+      title: 'Home',
+      queueStart: 1,
+      sortedKeys: {
+        folders: [],
+        links: []
+      }
+    } satisfies Omit<Vault, 'parent'>
   )
   vaultTest = vaultMan
   console.log('vault from index.js', vaultMan.vault)
@@ -35,7 +45,9 @@ let vaultTest;
     t('h1', { textContent: 'LINK MANAGER', className: 'p-4 text-center text-2xl font-bold text-blue-500' })
   )
 
-  chrome.tabs.query({ active: true }, (tabs) => {
+  // chrome.tabs.query({ active: true }, (tabs) => {
+  // Try this to better detect active window
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = (
       tabs
       .filter(tab => tab.lastAccessed)
@@ -94,6 +106,24 @@ let vaultTest;
           className: 'text-center',
           textContent: 'Home'
         }),
+        t('div', { className: 'flex justify-center gap-4 text-2xl' }, [
+          t('button', { textContent: '⏪' }),
+          t('button', {
+            textContent: '▶',
+            onclick: () => {
+              const startIndex = vaultMan.currentLocation.queueStart - 1;
+              const startKey = vaultMan.currentLocation.sortedKeys.links[startIndex];
+              const record = vaultMan.currentLocation.contents[startKey];
+              console.log(startIndex, startKey, record)
+              chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id!, record, (response) => {
+                  console.log("Object sent to content script:", response);
+                });
+              });
+            }
+          }),
+          t('button', { textContent: '⏩' }),
+        ]),
         t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 py-2' }, 
           Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()
             : [ t('div', {
