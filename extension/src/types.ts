@@ -35,3 +35,16 @@ export type Props = {
   folder: Vault,
   key: string,
 }
+
+// export type MsgActions = 'sendRecord' | 'getNextRecord'
+// 
+// export type ScriptMsg<T extends MsgActions = MsgActions> = {
+//   action: T
+// } & MsgContents[T]
+// 
+// type MsgContents = {
+//   sendRecord: {
+//     record: Record
+//   }
+//   getNextRecord: {}
+// }

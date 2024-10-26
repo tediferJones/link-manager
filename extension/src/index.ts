@@ -45,6 +45,18 @@ let vaultTest;
     t('h1', { textContent: 'LINK MANAGER', className: 'p-4 text-center text-2xl font-bold text-blue-500' })
   )
 
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    let port = chrome.tabs.connect(tabs[0].id!, { name: "main-script" });
+
+    // Send a message through the port
+    port.postMessage({ greeting: "Hello from main script" });
+
+    // Listen for messages from the content script
+    port.onMessage.addListener((message) => {
+      console.log("Message received from content script:", message);
+    });
+  });
+
   // chrome.tabs.query({ active: true }, (tabs) => {
   // Try this to better detect active window
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

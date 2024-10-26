@@ -29,8 +29,12 @@ var observer = new MutationObserver((mutList) => {
   });
 });
 observer.observe(document.body, { childList: true, subtree: true });
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(message);
-  sendResponse({ status: "Object received by content script" });
-  window.location.assign(message.url);
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === "main-script") {
+    console.log("Connected to main script");
+    port.onMessage.addListener((message) => {
+      console.log("Message received from main script:", message);
+      port.postMessage({ response: "Hello from content script" });
+    });
+  }
 });

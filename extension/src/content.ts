@@ -30,21 +30,27 @@ const observer = new MutationObserver((mutList) => {
 })
 observer.observe(document.body, { childList: true, subtree: true });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(message)
-  sendResponse({ status: "Object received by content script" });
-  window.location.assign(message.url)
-  // const vidContainer = document.querySelector('video');
-  // console.log('video container', vidContainer)
-  // vidContainer?.addEventListener('ended', () => {
-  //   console.log('video has ended, fetch next')
-  // })
-  // if (message.object) {
-  //   console.log("Received object from main script:", message.object);
-  //   // Process the object here
-  //   sendResponse({ status: "Object received by content script" });
-  // }
+// Establish a connection with the main script
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === "main-script") {
+    console.log("Connected to main script");
+
+    // Listen for messages from the main script
+    port.onMessage.addListener((message) => {
+      console.log("Message received from main script:", message);
+
+      // Respond back through the port
+      port.postMessage({ response: "Hello from content script" });
+    });
+  }
 });
+
+// WORKING
+// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+//   console.log(message)
+//   sendResponse({ status: "Object received by content script" });
+//   window.location.assign(message.url)
+// });
 
 function vaultDfs(searchUrl: string, folder: Vault): Record | undefined {
   console.log('dfs-ing')

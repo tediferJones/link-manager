@@ -251,6 +251,7 @@ export default class VaultManager {
     console.log(this.reduceVault(this.currentLocation))
     // What do we actually need to send to the currently open tab?
     //  - Keep in mind we can have the same url in multiple folders, and the same url multiple times in the same folder
+    // Couldnt we just get away with using chrome.storage.local to store the current playlist?
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       chrome.tabs.sendMessage(tabs[0].id!, await this.reduceVault(this.currentLocation), (response) => {
         console.log("Object sent to content script:", response);

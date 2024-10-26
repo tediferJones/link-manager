@@ -490,6 +490,13 @@ var vaultTest;
   console.log("vault from index.js", vaultMan.vault);
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    let port = chrome.tabs.connect(tabs[0].id, { name: "main-script" });
+    port.postMessage({ greeting: "Hello from main script" });
+    port.onMessage.addListener((message) => {
+      console.log("Message received from content script:", message);
+    });
+  });
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
     document.body.append(getTag("div", { className: "p-4" }, [
       getTag("form", { className: "flex gap-2" }, [
