@@ -1,27 +1,22 @@
-import type { Record, Vault } from '@/types';
+import type { Playlist, Record, Vault } from '@/types';
 import { isFolder } from './lib/utils';
 
 // Is tracking watch time really that important?  If we make it to the 'ended' event, we can mark it as watched
 // Otherwise we should be focusing on getting queueing working
 
-let playing: Record;
+// let playing: Record;
 console.log('this is the content script')
-// const vidContainer = document.querySelector('video');
-// console.log('video container', vidContainer)
-// vidContainer?.addEventListener('ended', () => {
-//   console.log('video has ended, fetch next')
-// })
 const observer = new MutationObserver((mutList) => {
-  console.log(mutList)
   mutList.forEach(mutation => {
-    console.log(mutation.type)
     if (mutation.type === 'childList') {
       mutation.addedNodes.forEach((node) => {
         // @ts-ignore
         if (node.tagName === 'VIDEO') {
+          console.log('found video container')
           node.addEventListener('ended', () => {
             // Send a message back to the main script, update queueStart there, and return next video
             console.log('video has ended')
+            playNext(true)
           })
         }
       })
@@ -30,20 +25,58 @@ const observer = new MutationObserver((mutList) => {
 })
 observer.observe(document.body, { childList: true, subtree: true });
 
-// Establish a connection with the main script
-chrome.runtime.onConnect.addListener((port) => {
-  if (port.name === "main-script") {
-    console.log("Connected to main script");
+async function playNext(increment = false) {
+  // There is a lot that can go wrong here
+  // 1.) How do we handle end of list, just stop playing?
+  // 2.) the event listener is attached whenever a video element is loaded, which leads to problems if the user manually navigates away
+  //     - e.x. user starts playlist, watches 2 videos, then manually navigates to a third, once this video ends, queuePos will be incremented and page will reload to the next next video in the queue
 
-    // Listen for messages from the main script
-    port.onMessage.addListener((message) => {
-      console.log("Message received from main script:", message);
+  const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
+  if (document.URL !== playlist.links[playlist.queuePos].url) return console.log('not on the right video')
+  if (playlist.queuePos > playlist.links.length) {
+    console.log('nothing to play')
+    // Reset playlist to zero, or do something like that
+    return
+  }
+  console.log('playNext func', playlist)
+  if (increment) {
+    playlist.queuePos++
+    const vault: Vault = (await chrome.storage.local.get('vault') as any).vault
+    const folder = playlist.keys.reduce((folder, key) => folder.contents[key] as Vault, vault)
+    folder.queueStart = playlist.queuePos
+    await chrome.storage.local.set({ vault })
+  }
 
-      // Respond back through the port
-      port.postMessage({ response: "Hello from content script" });
-    });
+  const { links, queuePos } = playlist
+  console.log(links, queuePos, links[queuePos])
+  window.location.assign(links[queuePos - 1].url)
+}
+
+let playlist: Playlist;
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  console.log('this is the message', message)
+  if (message === 'startPlaylist') {
+    sendResponse({ status: 'success' });
+    // playlist = (await chrome.storage.local.get('playlist') as any).playlist
+    // console.log('this is the playlist:', playlist)
+    playNext()
   }
 });
+
+// Establish a connection with the main script
+// chrome.runtime.onConnect.addListener((port) => {
+//   if (port.name === "main-script") {
+//     console.log("Connected to main script");
+// 
+//     // Listen for messages from the main script
+//     port.onMessage.addListener((message) => {
+//       console.log("Message received from main script:", message);
+// 
+//       // Respond back through the port
+//       port.postMessage({ response: "Hello from content script" });
+//     });
+//   }
+// });
 
 // WORKING
 // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -52,28 +85,28 @@ chrome.runtime.onConnect.addListener((port) => {
 //   window.location.assign(message.url)
 // });
 
-function vaultDfs(searchUrl: string, folder: Vault): Record | undefined {
-  console.log('dfs-ing')
-  return Object.values(folder.contents).find(item => {
-    return isFolder(item) ? vaultDfs(searchUrl, item) : searchUrl === item.url
-  }) as Record
-}
-
-function startService({ vault }: any, attemptCount = 0) {
-  // All we want to do is mark a video as viewed when the 'ended' event is triggered
-  // and then, play the next video in the queue
-  console.log('attempting to find video container')
-  const videoContainer = document.querySelector('video')
-  if (!videoContainer) {
-    if (attemptCount > 10) return console.log('cant find video container')
-    return setTimeout(() => startService(attemptCount + 1), 1000)
-  }
-  console.log('found video container')
-  videoContainer.addEventListener('play', () => console.log('video play event'))
-  videoContainer.addEventListener('pause', () => console.log('video pause event'))
-  videoContainer.addEventListener('ended', () => console.log('video ended event'))
-  // chrome.storage.local.set({ vault })
-}
+// function vaultDfs(searchUrl: string, folder: Vault): Record | undefined {
+//   console.log('dfs-ing')
+//   return Object.values(folder.contents).find(item => {
+//     return isFolder(item) ? vaultDfs(searchUrl, item) : searchUrl === item.url
+//   }) as Record
+// }
+// 
+// function startService({ vault }: any, attemptCount = 0) {
+//   // All we want to do is mark a video as viewed when the 'ended' event is triggered
+//   // and then, play the next video in the queue
+//   console.log('attempting to find video container')
+//   const videoContainer = document.querySelector('video')
+//   if (!videoContainer) {
+//     if (attemptCount > 10) return console.log('cant find video container')
+//     return setTimeout(() => startService(attemptCount + 1), 1000)
+//   }
+//   console.log('found video container')
+//   videoContainer.addEventListener('play', () => console.log('video play event'))
+//   videoContainer.addEventListener('pause', () => console.log('video pause event'))
+//   videoContainer.addEventListener('ended', () => console.log('video ended event'))
+//   // chrome.storage.local.set({ vault })
+// }
 
 // This is so borked its not even funny, if you're reading this just delete everything and start over
 // chrome.storage.local.get('vault').then(startService)

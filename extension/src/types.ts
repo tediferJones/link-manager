@@ -36,6 +36,12 @@ export type Props = {
   key: string,
 }
 
+export type Playlist = {
+  keys: string[],
+  links: Record[],
+  queuePos: number,
+}
+
 // export type MsgActions = 'sendRecord' | 'getNextRecord'
 // 
 // export type ScriptMsg<T extends MsgActions = MsgActions> = {

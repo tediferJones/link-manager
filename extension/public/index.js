@@ -267,7 +267,7 @@ function renderFolder(id, folder, key, vaultMan) {
         textContent: `${key} (${Object.keys(folder.contents[key].contents).length})`,
         className: "flex-1 rounded-xl p-2 folder hover:bg-blue-600 hover:text-white transition-all",
         onclick: () => {
-          vaultMan.setCurrentFolder(item);
+          vaultMan.currentLocation = item;
           vaultMan.render();
         }
       }),
@@ -463,13 +463,23 @@ class VaultManager {
     this.setSortedKeys(this.currentLocation);
     await this.saveAndRender();
   }
-  setCurrentFolder(folder) {
-    this.currentLocation = folder;
-    console.log(this.reduceVault(this.currentLocation));
+  async setPlaylist(folder) {
+    const keys = [];
+    let tempVault = folder;
+    while (tempVault?.parent) {
+      console.log(keys);
+      keys.push(folder.title);
+      tempVault = folder.parent;
+    }
+    await chrome.storage.local.set({
+      playlist: {
+        keys: keys.reverse(),
+        links: this.currentLocation.sortedKeys.links.map((linkKey) => folder.contents[linkKey]),
+        queuePos: this.currentLocation.queueStart
+      }
+    });
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, await this.reduceVault(this.currentLocation), (response) => {
-        console.log("Object sent to content script:", response);
-      });
+      chrome.tabs.sendMessage(tabs[0].id, "startPlaylist");
     });
   }
 }
@@ -489,13 +499,6 @@ var vaultTest;
   vaultTest = vaultMan;
   console.log("vault from index.js", vaultMan.vault);
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    let port = chrome.tabs.connect(tabs[0].id, { name: "main-script" });
-    port.postMessage({ greeting: "Hello from main script" });
-    port.onMessage.addListener((message) => {
-      console.log("Message received from content script:", message);
-    });
-  });
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
     document.body.append(getTag("div", { className: "p-4" }, [
@@ -554,15 +557,7 @@ var vaultTest;
         getTag("button", {
           textContent: "\u25B6",
           onclick: () => {
-            const startIndex = vaultMan.currentLocation.queueStart - 1;
-            const startKey = vaultMan.currentLocation.sortedKeys.links[startIndex];
-            const record = vaultMan.currentLocation.contents[startKey];
-            console.log(startIndex, startKey, record);
-            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs2) => {
-              chrome.tabs.sendMessage(tabs2[0].id, record, (response) => {
-                console.log("Object sent to content script:", response);
-              });
-            });
+            vaultMan.setPlaylist(vaultMan.currentLocation);
           }
         }),
         getTag("button", { textContent: "\u23E9" })

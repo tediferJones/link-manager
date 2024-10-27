@@ -18,6 +18,7 @@ import type { Vault } from './types';
 //  - get rid of cascading drop downs and this goofy folder tracking
 //  - only render a single folder at a time, use the up arrow thing to navigate to parent folder
 // Replace delete with function with method from VaultManager in renderFolder (and maybe renderLink too)
+// QueuePos should really be 0 indexed, this would remove a lot of +1s and -1s when dealing with them
 
 // console.log('chrome storage', chrome.storage.local.get('vaultTest').then(data => console.log(data)))
 
@@ -45,17 +46,17 @@ let vaultTest;
     t('h1', { textContent: 'LINK MANAGER', className: 'p-4 text-center text-2xl font-bold text-blue-500' })
   )
 
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    let port = chrome.tabs.connect(tabs[0].id!, { name: "main-script" });
+  // chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  //   let port = chrome.tabs.connect(tabs[0].id!, { name: "main-script" });
 
-    // Send a message through the port
-    port.postMessage({ greeting: "Hello from main script" });
+  //   // Send a message through the port
+  //   port.postMessage({ greeting: "Hello from main script" });
 
-    // Listen for messages from the content script
-    port.onMessage.addListener((message) => {
-      console.log("Message received from content script:", message);
-    });
-  });
+  //   // Listen for messages from the content script
+  //   port.onMessage.addListener((message) => {
+  //     console.log("Message received from content script:", message);
+  //   });
+  // });
 
   // chrome.tabs.query({ active: true }, (tabs) => {
   // Try this to better detect active window
@@ -123,15 +124,16 @@ let vaultTest;
           t('button', {
             textContent: '▶',
             onclick: () => {
-              const startIndex = vaultMan.currentLocation.queueStart - 1;
-              const startKey = vaultMan.currentLocation.sortedKeys.links[startIndex];
-              const record = vaultMan.currentLocation.contents[startKey];
-              console.log(startIndex, startKey, record)
-              chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id!, record, (response) => {
-                  console.log("Object sent to content script:", response);
-                });
-              });
+              vaultMan.setPlaylist(vaultMan.currentLocation)
+              // const startIndex = vaultMan.currentLocation.queueStart - 1;
+              // const startKey = vaultMan.currentLocation.sortedKeys.links[startIndex];
+              // const record = vaultMan.currentLocation.contents[startKey];
+              // console.log(startIndex, startKey, record)
+              // chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+              //   chrome.tabs.sendMessage(tabs[0].id!, record, (response) => {
+              //     console.log("Object sent to content script:", response);
+              //   });
+              // });
             }
           }),
           t('button', { textContent: '⏩' }),

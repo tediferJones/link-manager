@@ -1,4 +1,4 @@
-import type { Record, Vault } from '@/types';
+import type { Playlist, Record, Vault } from '@/types';
 import { decrypt, encrypt, getFullKey, getRandBase64 } from '@/lib/security';
 import { clearChildren, isFolder } from '@/lib/utils';
 import renderLink from '@/components/renderLink';
@@ -246,16 +246,35 @@ export default class VaultManager {
     await this.saveAndRender();
   }
 
-  setCurrentFolder(folder: Vault) {
-    this.currentLocation = folder;
-    console.log(this.reduceVault(this.currentLocation))
-    // What do we actually need to send to the currently open tab?
-    //  - Keep in mind we can have the same url in multiple folders, and the same url multiple times in the same folder
-    // Couldnt we just get away with using chrome.storage.local to store the current playlist?
+  async setPlaylist(folder: Vault) {
+    // this.currentLocation = folder;
+    // console.log(this.reduceVault(this.currentLocation))
+    // // What do we actually need to send to the currently open tab?
+    // //  - Keep in mind we can have the same url in multiple folders, and the same url multiple times in the same folder
+    // // Couldnt we just get away with using chrome.storage.local to store the current playlist?
+    // chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+    //   chrome.tabs.sendMessage(tabs[0].id!, await this.reduceVault(this.currentLocation), (response) => {
+    //     console.log("Object sent to content script:", response);
+    //   });
+    // });
+
+    const keys: string[] = [];
+    let tempVault: Vault | undefined = folder;
+    while (tempVault?.parent) {
+      console.log(keys)
+      keys.push(folder.title)
+      tempVault = folder.parent
+    }
+
+    await chrome.storage.local.set({
+      playlist: {
+        keys: keys.reverse(), // keys that will point to folder
+        links: this.currentLocation.sortedKeys.links.map(linkKey => folder.contents[linkKey]) as Record[], // all records in playlist
+        queuePos: this.currentLocation.queueStart // get star
+      } as Playlist
+    })
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id!, await this.reduceVault(this.currentLocation), (response) => {
-        console.log("Object sent to content script:", response);
-      });
+      chrome.tabs.sendMessage(tabs[0].id!, 'startPlaylist');
     });
   }
 }
