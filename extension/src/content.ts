@@ -25,6 +25,11 @@ const observer = new MutationObserver((mutList) => {
 })
 observer.observe(document.body, { childList: true, subtree: true });
 
+function getUrlParam(url: string, key: string) {
+  const { searchParams } = new URL(url)
+  return searchParams.get(key)
+}
+
 async function playNext(increment = false) {
   // There is a lot that can go wrong here
   // 1.) How do we handle end of list, just stop playing?
@@ -32,27 +37,42 @@ async function playNext(increment = false) {
   //     - e.x. user starts playlist, watches 2 videos, then manually navigates to a third, once this video ends, queuePos will be incremented and page will reload to the next next video in the queue
 
   const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
-  if (document.URL !== playlist.links[playlist.queuePos].url) return console.log('not on the right video')
-  if (playlist.queuePos > playlist.links.length) {
-    console.log('nothing to play')
-    // Reset playlist to zero, or do something like that
-    return
-  }
+  // if (document.URL !== playlist.links[playlist.queuePos].url) return console.log('not on the right video')
+  // if (playlist.queuePos > playlist.links.length) {
+  //   console.log('nothing to play')
+  //   // Reset playlist to zero, or do something like that
+  //   return
+  // }
   console.log('playNext func', playlist)
   if (increment) {
-    playlist.queuePos++
+    const currentUrl = getUrlParam(document.URL, 'v');
+    const queueUrl = getUrlParam(playlist.links[playlist.queuePos - 1].url, 'v')
+    console.log('url compare', currentUrl, queueUrl)
+    if (currentUrl !== queueUrl) {
+      return console.log('not on the right video')
+    }
+    // if (document.URL !== playlist.links[playlist.queuePos - 1].url) return console.log('not on the right video')
+    // playlist.queuePos = playlist.queuePos >= playlist.links.length ? 1 : playlist.queuePos + 1
+    if (playlist.queuePos >= playlist.links.length) {
+      console.log('reset queuePos')
+      playlist.queuePos = 1
+    } else {
+      playlist.queuePos++
+      console.log('increment queuePos', playlist.queuePos)
+    }
     const vault: Vault = (await chrome.storage.local.get('vault') as any).vault
     const folder = playlist.keys.reduce((folder, key) => folder.contents[key] as Vault, vault)
     folder.queueStart = playlist.queuePos
-    await chrome.storage.local.set({ vault })
+    // await chrome.storage.local.set({ vault })
+    await chrome.storage.local.set({ vault, playlist })
   }
 
   const { links, queuePos } = playlist
-  console.log(links, queuePos, links[queuePos])
+  console.log(links, queuePos, links[queuePos - 1])
   window.location.assign(links[queuePos - 1].url)
 }
 
-let playlist: Playlist;
+// let playlist: Playlist;
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   console.log('this is the message', message)
   if (message === 'startPlaylist') {

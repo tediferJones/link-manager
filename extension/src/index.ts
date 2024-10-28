@@ -137,6 +137,12 @@ let vaultTest;
             }
           }),
           t('button', { textContent: '⏩' }),
+          t('button', {
+            textContent: '🔄',
+            onclick: () => {
+              vaultMan.currentLocation.queueStart = 1
+            }
+          })
         ]),
         t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 py-2' }, 
           Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()

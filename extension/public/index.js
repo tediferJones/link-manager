@@ -560,7 +560,13 @@ var vaultTest;
             vaultMan.setPlaylist(vaultMan.currentLocation);
           }
         }),
-        getTag("button", { textContent: "\u23E9" })
+        getTag("button", { textContent: "\u23E9" }),
+        getTag("button", {
+          textContent: "\uD83D\uDD04",
+          onclick: () => {
+            vaultMan.currentLocation.queueStart = 1;
+          }
+        })
       ]),
       getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
         textContent: "No vault found",
