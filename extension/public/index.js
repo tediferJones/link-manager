@@ -161,12 +161,12 @@ function renderLink(id, folder, key, vaultMan) {
   const item = folder.contents[key];
   if (isFolder(item))
     throw Error("this is a folder not a link");
-  return getTag("div", {}, [
+  return getTag("div", { className: `rounded-xl ${item.queuePos === folder.queueStart ? "bg-blue-300" : item.queuePos < folder.queueStart ? "bg-gray-200" : ""}` }, [
     getTag("div", { className: "flex justify-between items-center" }, [
       getTag("a", {
         id: `title-${id}`,
         className: "p-2 underline text-blue-600 truncate",
-        textContent: item.queuePos + ".) " + key,
+        textContent: `${item.queuePos + 1}.) ${key}`,
         href: item.url,
         target: "_blank",
         rel: "noopener noreferrer"
@@ -315,12 +315,7 @@ class VaultManager {
       url,
       viewed: false,
       viewCount: 0,
-      queuePos: Object.values(this.currentLocation.contents).reduce((total, val) => {
-        const item = val;
-        if (item.queuePos > total)
-          total = item.queuePos;
-        return total;
-      }, 0) + 1
+      queuePos: this.currentLocation.sortedKeys.links.length
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
@@ -334,7 +329,7 @@ class VaultManager {
         folders: [],
         links: []
       },
-      queueStart: 1
+      queueStart: 0
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
@@ -564,7 +559,8 @@ var vaultTest;
         getTag("button", {
           textContent: "\uD83D\uDD04",
           onclick: () => {
-            vaultMan.currentLocation.queueStart = 1;
+            vaultMan.currentLocation.queueStart = 0;
+            vaultMan.saveAndRender();
           }
         })
       ]),

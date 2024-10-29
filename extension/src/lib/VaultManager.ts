@@ -34,11 +34,12 @@ export default class VaultManager {
       // queuePos: Infinity,
       //
       // Find greatest queuePos, then set to 1 higher than that
-      queuePos: Object.values(this.currentLocation.contents).reduce((total, val) => {
-        const item = val as Record
-        if (item.queuePos > total) total = item.queuePos
-        return total
-      }, 0) + 1
+      // queuePos: Object.values(this.currentLocation.contents).reduce((total, val) => {
+      //   const item = val as Record
+      //   if (item.queuePos > total) total = item.queuePos
+      //   return total
+      // }, 0) + 1
+      queuePos: this.currentLocation.sortedKeys.links.length
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();
@@ -54,7 +55,7 @@ export default class VaultManager {
         folders: [],
         links: []
       },
-      queueStart: 1
+      queueStart: 0
     };
     this.setSortedKeys(this.currentLocation);
     this.saveAndRender();

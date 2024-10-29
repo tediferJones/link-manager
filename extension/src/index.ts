@@ -8,22 +8,7 @@ import type { Vault } from './types';
 // Rotate salt and iv every time a folder is decrypted
 // When adding or renaming, make sure new title does not already exist, or this will overwrite the previous entry
 // Delete background script if its not actually needed
-// Transition to use chrome.storage.local instead of localstorage
-//  - this allows a single source of truth between the extension and content script
-// We want to implement queueing for all links in the same folder
-//  - First make the sorting function:
-//    - In theory we only need to sort when we add or rename something
-//    - Sorted order can be stored in the folder obj (next to contents and locked) as { folders: [keys in alphabetical order], links [keys in order by queue number] }
-// Should probably redesign how we render folders
-//  - get rid of cascading drop downs and this goofy folder tracking
-//  - only render a single folder at a time, use the up arrow thing to navigate to parent folder
 // Replace delete with function with method from VaultManager in renderFolder (and maybe renderLink too)
-// QueuePos should really be 0 indexed, this would remove a lot of +1s and -1s when dealing with them
-
-// console.log('chrome storage', chrome.storage.local.get('vaultTest').then(data => console.log(data)))
-
-// const vault: Vault = window.localStorage.getItem('vault') ? JSON.parse(window.localStorage.getItem('vault')!) : { contents: {} };
-// const vaultMan = new VaultManager(vault)
 
 let vaultTest;
 (async () => {
@@ -140,7 +125,8 @@ let vaultTest;
           t('button', {
             textContent: '🔄',
             onclick: () => {
-              vaultMan.currentLocation.queueStart = 1
+              vaultMan.currentLocation.queueStart = 0
+              vaultMan.saveAndRender();
             }
           })
         ]),

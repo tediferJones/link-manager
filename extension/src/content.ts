@@ -46,16 +46,16 @@ async function playNext(increment = false) {
   console.log('playNext func', playlist)
   if (increment) {
     const currentUrl = getUrlParam(document.URL, 'v');
-    const queueUrl = getUrlParam(playlist.links[playlist.queuePos - 1].url, 'v')
+    const queueUrl = getUrlParam(playlist.links[playlist.queuePos].url, 'v')
     console.log('url compare', currentUrl, queueUrl)
     if (currentUrl !== queueUrl) {
       return console.log('not on the right video')
     }
     // if (document.URL !== playlist.links[playlist.queuePos - 1].url) return console.log('not on the right video')
     // playlist.queuePos = playlist.queuePos >= playlist.links.length ? 1 : playlist.queuePos + 1
-    if (playlist.queuePos >= playlist.links.length) {
+    if (playlist.queuePos >= playlist.links.length - 1) {
       console.log('reset queuePos')
-      playlist.queuePos = 1
+      playlist.queuePos = 0
     } else {
       playlist.queuePos++
       console.log('increment queuePos', playlist.queuePos)
@@ -68,8 +68,8 @@ async function playNext(increment = false) {
   }
 
   const { links, queuePos } = playlist
-  console.log(links, queuePos, links[queuePos - 1])
-  window.location.assign(links[queuePos - 1].url)
+  console.log(links, queuePos, links[queuePos])
+  window.location.assign(links[queuePos].url)
 }
 
 // let playlist: Playlist;

@@ -8,12 +8,12 @@ import dropdownContents from './dropdownContents';
 export default function renderLink(id: string, folder: Vault, key: string, vaultMan: VaultManager) {
   const item = folder.contents[key]
   if (isFolder(item)) throw Error('this is a folder not a link')
-  return t('div', {}, [
+  return t('div', { className: `rounded-xl ${item.queuePos === folder.queueStart ? 'bg-blue-300' : item.queuePos < folder.queueStart ? 'bg-gray-200' : ''}` }, [
     t('div', { className: 'flex justify-between items-center' }, [
       t('a', {
         id: `title-${id}`,
         className: 'p-2 underline text-blue-600 truncate',
-        textContent: item.queuePos + '.) ' + key,
+        textContent: `${item.queuePos + 1}.) ${key}`,
         href: item.url,
         target: '_blank',
         rel: 'noopener noreferrer'
