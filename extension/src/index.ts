@@ -9,6 +9,8 @@ import type { Vault } from './types';
 // When adding or renaming, make sure new title does not already exist, or this will overwrite the previous entry
 // Delete background script if its not actually needed
 // Replace delete with function with method from VaultManager in renderFolder (and maybe renderLink too)
+// Ideally, we want to navigate between youtube pages without doing a full page refresh, this would eliminate a lot of problems
+//  - For example: if the current video saved to chrome.storage.local.playlist is navigated to manually, the playlist will automatically pick up when the video ends
 
 let vaultTest;
 (async () => {
@@ -52,8 +54,8 @@ let vaultTest;
       .sort((b, a) => a.lastAccessed! - b.lastAccessed!)[0]
     );
     document.body.append(
-      t('div', { className: 'p-4' }, [
-        t('form', { className: 'flex gap-2' }, [
+      t('div', { className: 'p-4 flex flex-col gap-2 w-[360px]' }, [
+        t('form', { className: 'flex gap-2 m-auto' }, [
           t('button', {
             className: 'p-2 border-2 border-blue-600 rounded-xl',
             textContent: '⬆︎',
@@ -130,7 +132,7 @@ let vaultTest;
             }
           })
         ]),
-        t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 py-2' }, 
+        t('div', { id: 'directoryContainer', className: 'flex flex-col' }, 
           Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()
             : [ t('div', {
               textContent: 'No vault found',

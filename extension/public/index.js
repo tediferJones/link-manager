@@ -496,8 +496,8 @@ var vaultTest;
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
-    document.body.append(getTag("div", { className: "p-4" }, [
-      getTag("form", { className: "flex gap-2" }, [
+    document.body.append(getTag("div", { className: "p-4 flex flex-col gap-2 w-[360px]" }, [
+      getTag("form", { className: "flex gap-2 m-auto" }, [
         getTag("button", {
           className: "p-2 border-2 border-blue-600 rounded-xl",
           textContent: "\u2B06\uFE0E",
@@ -564,7 +564,7 @@ var vaultTest;
           }
         })
       ]),
-      getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 py-2" }, Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
+      getTag("div", { id: "directoryContainer", className: "flex flex-col" }, Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList() : [getTag("div", {
         textContent: "No vault found",
         className: "p-4 text-center text-xl font-bold text-gray-500"
       })])

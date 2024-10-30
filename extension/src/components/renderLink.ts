@@ -1,8 +1,8 @@
 import t from '@/lib/getTag';
+import dropdownContents from '@/components/dropdownContents';
 import { clearChildren, isFolder } from '@/lib/utils';
 import type VaultManager from '@/lib/VaultManager';
-import type { Props, Record, Vault } from '@/types';
-import dropdownContents from './dropdownContents';
+import type { Vault } from '@/types';
 
 // export default function renderLink({ id, folder, key }: Props, vaultMan: VaultManager) {
 export default function renderLink(id: string, folder: Vault, key: string, vaultMan: VaultManager) {
