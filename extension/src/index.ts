@@ -2,6 +2,7 @@ import t from '@/lib/getTag';
 // import type { Vault } from '@/types';
 import VaultManager from '@/lib/VaultManager';
 import type { Vault } from './types';
+import queueController from './components/queueController';
 
 // TO-DO
 //
@@ -106,38 +107,15 @@ let vaultTest;
           className: 'text-center',
           textContent: 'Home'
         }),
-        t('div', { className: 'flex justify-center gap-4 text-2xl' }, [
-          t('button', { textContent: '⏪' }),
-          t('button', {
-            textContent: '▶',
-            onclick: () => {
-              vaultMan.setPlaylist(vaultMan.currentLocation)
-              // const startIndex = vaultMan.currentLocation.queueStart - 1;
-              // const startKey = vaultMan.currentLocation.sortedKeys.links[startIndex];
-              // const record = vaultMan.currentLocation.contents[startKey];
-              // console.log(startIndex, startKey, record)
-              // chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-              //   chrome.tabs.sendMessage(tabs[0].id!, record, (response) => {
-              //     console.log("Object sent to content script:", response);
-              //   });
-              // });
-            }
-          }),
-          t('button', { textContent: '⏩' }),
-          t('button', {
-            textContent: '🔄',
-            onclick: () => {
-              vaultMan.currentLocation.queueStart = 0
-              vaultMan.saveAndRender();
-            }
-          })
-        ]),
-        t('div', { id: 'directoryContainer', className: 'flex flex-col' }, 
-          Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()
-            : [ t('div', {
-              textContent: 'No vault found',
-              className: 'p-4 text-center text-xl font-bold text-gray-500'
-            }) ]
+        // vaultMan.currentLocation.sortedKeys.links.length ? queueController(vaultMan) : undefined,
+        queueController(vaultMan),
+        t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 bg-gray-200 p-2 rounded-xl' }, 
+          vaultMan.getVaultList()
+          // Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()
+          //   : [ t('div', {
+          //     textContent: 'No contents found',
+          //     className: 'p-4 text-center text-xl font-bold text-gray-500'
+          //   }) ]
         )
       ])
     )

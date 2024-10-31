@@ -4,6 +4,7 @@ import { clearChildren, isFolder } from '@/lib/utils';
 import renderLink from '@/components/renderLink';
 import renderLockedFolder from '@/components/renderLockedFolder';
 import renderFolder from '@/components/renderFolder';
+import t from '@/lib/getTag';
 
 export default class VaultManager {
   vault: Vault
@@ -192,21 +193,24 @@ export default class VaultManager {
     folder.sortedKeys = { folders, links }
   }
 
-  getVaultList(
-    folder: Vault = this.currentLocation,
-    id: string = 'id'
-  ) {
-    // return Object.keys(folder.contents).sort().map((key, i) => {
-    // console.log('rendering', folder.sortedKeys.map(i => console.log(i)))
-    // return folder.sortedKeys.map((key, i) => {
+  getVaultList(folder: Vault = this.currentLocation) {
+    // return folder.sortedKeys.folders
+    //   .concat(folder.sortedKeys.links)
+    //   .map((key, i) => {
+    //     return (folder.contents[key] as Record).url ? renderLink(`link-${(folder.contents[key] as Record).queuePos}`, folder, key, this)
+    //       : (folder.contents[key] as Vault).contents ? renderFolder(`folder-${i}`, folder, key, this)
+    //         : renderLockedFolder(`folder-${i}`, folder, key, this)
+    //   })
+
+    if (!Object.keys(folder.contents).length) {
+      return [ t('div', {
+        textContent: 'No contents found',
+        className: 'p-4 text-center text-xl font-bold text-gray-500'
+      }) ]
+    }
     return folder.sortedKeys.folders
       .concat(folder.sortedKeys.links)
       .map((key, i) => {
-        const tempId = id + `-${i}`;
-        // console.log(folder.contents, key)
-        // return (folder.contents[key] as Record).url ? renderLink(tempId, folder, key, this)
-        //   : (folder.contents[key] as Vault).contents ? renderFolder(tempId, folder, key, this)
-        //     : renderLockedFolder(tempId, folder, key, this)
         return (folder.contents[key] as Record).url ? renderLink(`link-${(folder.contents[key] as Record).queuePos}`, folder, key, this)
           : (folder.contents[key] as Vault).contents ? renderFolder(`folder-${i}`, folder, key, this)
             : renderLockedFolder(`folder-${i}`, folder, key, this)

@@ -8,7 +8,10 @@ import type { Vault } from '@/types';
 export default function renderLink(id: string, folder: Vault, key: string, vaultMan: VaultManager) {
   const item = folder.contents[key]
   if (isFolder(item)) throw Error('this is a folder not a link')
-  return t('div', { className: `rounded-xl ${item.queuePos === folder.queueStart ? 'bg-blue-300' : item.queuePos < folder.queueStart ? 'bg-gray-200' : ''}` }, [
+  return t('div', {
+    id: `header-${id}`,
+    className: `rounded-xl ${item.queuePos === folder.queueStart ? 'bg-blue-300' : item.queuePos < folder.queueStart ? 'bg-gray-200' : ''}`
+  }, [
     t('div', { className: 'flex justify-between items-center' }, [
       t('a', {
         id: `title-${id}`,
@@ -18,7 +21,7 @@ export default function renderLink(id: string, folder: Vault, key: string, vault
         target: '_blank',
         rel: 'noopener noreferrer'
       }),
-      t('p', { textContent: `View count: ${item.viewCount}` }),
+      // t('p', { textContent: `View count: ${item.viewCount}` }),
       t('button', {
         id: `settings-${id}`,
         textContent: '☰',
@@ -28,8 +31,18 @@ export default function renderLink(id: string, folder: Vault, key: string, vault
           if (!container) throw Error('cant find edit container')
           container.classList.toggle('p-2');
           document.querySelector(`#title-${id}`)?.classList.toggle('rounded-b-none');
+          document.querySelector(`#header-${id}`)!.classList.toggle('bg-gray-300')
           if (container.hasChildNodes()) return clearChildren(`edit-${id}`)
-          container.append(...dropdownContents(vaultMan, folder, key, id))
+          // container.append(...dropdownContents(vaultMan, folder, key, id))
+          container.append(
+            t('div', { className: 'w-full flex flex-col gap-2' }, [
+              t('div', { className: 'flex justify-around items-center border-2 border-gray-400 rounded-xl' }, [
+                t('p', { textContent: `View count: ${item.viewCount}` }),
+                t('p', { textContent: `Queue position: ${item.queuePos + 1}` }),
+              ]),
+              t('div', { className: 'flex gap-2' }, dropdownContents(vaultMan, folder, key, id))
+            ])
+          )
         }
       })
     ]),
