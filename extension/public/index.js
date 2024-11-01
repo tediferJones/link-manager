@@ -163,7 +163,7 @@ function renderLink(id, folder, key, vaultMan) {
     throw Error("this is a folder not a link");
   return getTag("div", {
     id: `header-${id}`,
-    className: `rounded-xl ${item.queuePos === folder.queueStart ? "bg-blue-300" : item.queuePos < folder.queueStart ? "bg-gray-200" : ""}`
+    className: `p-2 rounded-xl ${item.queuePos === folder.queueStart ? "bg-blue-300" : item.queuePos < folder.queueStart ? "bg-gray-200" : ""}`
   }, [
     getTag("div", { className: "flex justify-between items-center" }, [
       getTag("a", {
@@ -188,7 +188,7 @@ function renderLink(id, folder, key, vaultMan) {
           if (container.hasChildNodes())
             return clearChildren(`edit-${id}`);
           container.append(getTag("div", { className: "w-full flex flex-col gap-2" }, [
-            getTag("div", { className: "flex justify-around items-center border-2 border-gray-400 rounded-xl" }, [
+            getTag("div", { className: "p-2 flex justify-around items-center border-2 border-gray-400 rounded-xl" }, [
               getTag("p", { textContent: `View count: ${item.viewCount}` }),
               getTag("p", { textContent: `Queue position: ${item.queuePos + 1}` })
             ]),
@@ -206,7 +206,7 @@ function renderLockedFolder(id, folder, key, vaultMan) {
   return getTag("div", {}, [
     getTag("div", {
       id: `header-${id}`,
-      className: "flex justify-between items-center gap-2 rounded-xl hover:bg-orange-600 hover:text-white transition-all",
+      className: "p-2 flex justify-between items-center gap-2 rounded-xl",
       onclick: () => {
         document.querySelector(`#header-${id}`)?.classList.toggle("bg-orange-600");
         document.querySelector(`#header-${id}`)?.classList.toggle("rounded-b-none");
@@ -252,7 +252,7 @@ function renderLockedFolder(id, folder, key, vaultMan) {
       getTag("div", {
         id: `title-${id}`,
         textContent: `${key}`,
-        className: "flex-1 rounded-xl p-2 folder"
+        className: "flex-1 rounded-xl p-2 hover:bg-orange-600 hover:text-white transition-all folder"
       }),
       getTag("button", {
         textContent: "\uD83D\uDD12",
@@ -270,7 +270,7 @@ function renderFolder(id, folder, key, vaultMan) {
     throw Error("this is not a folder");
   let hidden = false;
   return getTag("div", {}, [
-    getTag("div", { id: `header-${id}`, className: "flex justify-between items-center gap-2 rounded-t-xl transition-all duration-1000" }, [
+    getTag("div", { id: `header-${id}`, className: "p-2 flex justify-between items-center gap-2 rounded-t-xl transition-all duration-1000" }, [
       getTag("div", {
         id: `title-${id}`,
         textContent: `${key} (${Object.keys(folder.contents[key].contents).length})`,
@@ -302,6 +302,25 @@ function renderFolder(id, folder, key, vaultMan) {
   ]);
 }
 
+// src/components/queueController.ts
+function queueController(vaultMan) {
+  return getTag("div", { className: "flex justify-center gap-4 text-2xl" }, [
+    getTag("button", { textContent: "\u23EA" }),
+    getTag("button", {
+      textContent: "\u25B6",
+      onclick: () => vaultMan.setPlaylist(vaultMan.currentLocation)
+    }),
+    getTag("button", { textContent: "\u23E9" }),
+    getTag("button", {
+      textContent: "\uD83D\uDD04",
+      onclick: () => {
+        vaultMan.currentLocation.queueStart = 0;
+        vaultMan.saveAndRender();
+      }
+    })
+  ]);
+}
+
 // src/lib/VaultManager.ts
 class VaultManager {
   vault;
@@ -312,6 +331,10 @@ class VaultManager {
     this.buildTree(vault);
   }
   render() {
+    const queueContainer = clearChildren("queueController");
+    if (this.currentLocation.sortedKeys.links.length > 0) {
+      queueContainer.append(queueController(this));
+    }
     document.querySelector("#folderTitle").textContent = this.currentLocation.title || "Home";
     clearChildren("directoryContainer").append(...this.getVaultList());
   }
@@ -493,25 +516,6 @@ class VaultManager {
   }
 }
 
-// src/components/queueController.ts
-function queueController(vaultMan) {
-  return getTag("div", { className: "flex justify-center gap-4 text-2xl" }, [
-    getTag("button", { textContent: "\u23EA" }),
-    getTag("button", {
-      textContent: "\u25B6",
-      onclick: () => vaultMan.setPlaylist(vaultMan.currentLocation)
-    }),
-    getTag("button", { textContent: "\u23E9" }),
-    getTag("button", {
-      textContent: "\uD83D\uDD04",
-      onclick: () => {
-        vaultMan.currentLocation.queueStart = 0;
-        vaultMan.saveAndRender();
-      }
-    })
-  ]);
-}
-
 // src/index.ts
 var vaultTest;
 (async () => {
@@ -580,8 +584,9 @@ var vaultTest;
         className: "text-center",
         textContent: "Home"
       }),
-      queueController(vaultMan),
-      getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 bg-gray-200 p-2 rounded-xl" }, vaultMan.getVaultList())
+      getTag("div", { id: "queueController" }),
+      getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 bg-gray-200 p-2 rounded-xl" })
     ]));
+    vaultMan.render();
   });
 })();

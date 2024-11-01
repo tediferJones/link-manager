@@ -5,6 +5,7 @@ import renderLink from '@/components/renderLink';
 import renderLockedFolder from '@/components/renderLockedFolder';
 import renderFolder from '@/components/renderFolder';
 import t from '@/lib/getTag';
+import queueController from '@/components/queueController';
 
 export default class VaultManager {
   vault: Vault
@@ -17,6 +18,10 @@ export default class VaultManager {
   }
 
   render() {
+    const queueContainer = clearChildren('queueController');
+    if (this.currentLocation.sortedKeys.links.length > 0) {
+      queueContainer.append(queueController(this))
+    }
     document.querySelector('#folderTitle')!.textContent = this.currentLocation.title || 'Home'
     clearChildren('directoryContainer')
       .append(...this.getVaultList())

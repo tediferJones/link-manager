@@ -108,9 +108,10 @@ let vaultTest;
           textContent: 'Home'
         }),
         // vaultMan.currentLocation.sortedKeys.links.length ? queueController(vaultMan) : undefined,
-        queueController(vaultMan),
+        // queueController(vaultMan),
+        t('div', { id: 'queueController' }),
         t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 bg-gray-200 p-2 rounded-xl' }, 
-          vaultMan.getVaultList()
+          // vaultMan.getVaultList()
           // Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()
           //   : [ t('div', {
           //     textContent: 'No contents found',
@@ -119,5 +120,6 @@ let vaultTest;
         )
       ])
     )
+    vaultMan.render();
   });
 })();

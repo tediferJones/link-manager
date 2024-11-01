@@ -7,7 +7,7 @@ export default function renderLockedFolder(id: string, folder: Vault, key: strin
   return t('div', {}, [
     t('div', {
       id: `header-${id}`,
-      className: 'flex justify-between items-center gap-2 rounded-xl hover:bg-orange-600 hover:text-white transition-all',
+      className: 'p-2 flex justify-between items-center gap-2 rounded-xl',
       onclick: () => {
         document.querySelector(`#header-${id}`)?.classList.toggle('bg-orange-600')
         document.querySelector(`#header-${id}`)?.classList.toggle('rounded-b-none')
@@ -54,7 +54,7 @@ export default function renderLockedFolder(id: string, folder: Vault, key: strin
         t('div', {
           id: `title-${id}`,
           textContent: `${key}`,
-          className: 'flex-1 rounded-xl p-2 folder',
+          className: 'flex-1 rounded-xl p-2 hover:bg-orange-600 hover:text-white transition-all folder',
         }),
         t('button', {
           textContent: '🔒',

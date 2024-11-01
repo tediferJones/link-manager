@@ -9,16 +9,15 @@ export default function renderFolder(id: string, folder: Vault, key: string, vau
   if (!isFolder(item)) throw Error('this is not a folder')
   let hidden = false;
   return t('div', {}, [
-    t('div', { id: `header-${id}`, className: 'flex justify-between items-center gap-2 rounded-t-xl transition-all duration-1000' }, [
+    t('div', { id: `header-${id}`, className: 'p-2 flex justify-between items-center gap-2 rounded-t-xl transition-all duration-1000' }, [
       t('div', {
         id: `title-${id}`,
         textContent: `${key} (${Object.keys((folder.contents[key] as Vault).contents).length})`,
         className: 'flex-1 rounded-xl p-2 folder hover:bg-blue-600 hover:text-white transition-all',
         onclick: () => {
           vaultMan.currentLocation = item
-          // vaultMan.setPlaylist(item)
           vaultMan.render()
-         }
+        }
       }),
       item.locked ? t('p', { textContent: '🔓' }) : undefined,
       t('button', {
