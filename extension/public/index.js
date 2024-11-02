@@ -88,20 +88,22 @@ function dropdownContents(vaultMan, folder, key, id) {
         const title = document.querySelector(`#title-${id}`);
         if (!title)
           throw Error("cant find title element");
-        title.replaceWith(getTag("input", {
-          id: `rename-${id}`,
-          className: "p-2 border-2 border-blue-600 rounded-xl",
-          value: key
-        }));
-        const renameInput = document.querySelector(`#rename-${id}`);
-        if (!renameInput)
-          throw Error("cant find rename element");
-        renameInput.addEventListener("blur", () => {
-          console.log("trigger blur event");
-          const newKey = document.querySelector(`#rename-${id}`).value;
-          vaultMan.renameItem(folder, key, newKey);
-        });
-        renameInput.focus();
+        title.replaceWith(getTag("form", {
+          className: "flex items-center gap-2 m-0",
+          onsubmit: () => {
+            const newKey = document.querySelector(`#rename-${id}`).value;
+            vaultMan.renameItem(folder, key, newKey);
+          }
+        }, [
+          getTag("input", {
+            id: `rename-${id}`,
+            className: "p-2 border-2 border-blue-600 rounded-xl w-full",
+            value: key,
+            required: true
+          }),
+          getTag("button", { type: "submit", textContent: "Rename", className: "p-2 bg-gray-300 rounded-xl flex justify-center items-center" })
+        ]));
+        document.querySelector(`#rename-${id}`).focus();
       }
     }),
     !folder.contents[key].contents ? undefined : getTag("button", {
@@ -533,8 +535,8 @@ var vaultTest;
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
-    document.body.append(getTag("div", { className: "p-4 flex flex-col gap-2 w-[360px]" }, [
-      getTag("form", { className: "flex gap-2 m-auto" }, [
+    document.body.append(getTag("div", { className: "px-4 flex flex-col gap-2 w-[360px]" }, [
+      getTag("form", { className: "flex gap-2 m-0" }, [
         getTag("button", {
           className: "p-2 border-2 border-blue-600 rounded-xl",
           textContent: "\u2B06\uFE0E",
@@ -549,7 +551,7 @@ var vaultTest;
           }
         }),
         getTag("input", {
-          className: "p-2 border-2 border-blue-600 rounded-xl",
+          className: "w-full p-2 rounded-xl border-2 border-blue-600",
           value: currentTab.title,
           required: true,
           id: "title"
@@ -579,12 +581,10 @@ var vaultTest;
           }
         })
       ]),
-      getTag("h1", {
-        id: "folderTitle",
-        className: "text-center",
-        textContent: "Home"
-      }),
-      getTag("div", { id: "queueController" }),
+      getTag("div", { className: "flex flex-wrap justify-around items-center p-2 border-2 border-gray-300 rounded-xl" }, [
+        getTag("h1", { id: "folderTitle", className: "text-center text-lg font-bold" }),
+        getTag("div", { id: "queueController" })
+      ]),
       getTag("div", { id: "directoryContainer", className: "flex flex-col gap-2 bg-gray-200 p-2 rounded-xl" })
     ]));
     vaultMan.render();

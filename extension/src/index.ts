@@ -1,8 +1,6 @@
 import t from '@/lib/getTag';
-// import type { Vault } from '@/types';
 import VaultManager from '@/lib/VaultManager';
-import type { Vault } from './types';
-import queueController from './components/queueController';
+import type { Vault } from '@/types';
 
 // TO-DO
 //
@@ -55,8 +53,8 @@ let vaultTest;
       .sort((b, a) => a.lastAccessed! - b.lastAccessed!)[0]
     );
     document.body.append(
-      t('div', { className: 'p-4 flex flex-col gap-2 w-[360px]' }, [
-        t('form', { className: 'flex gap-2 m-auto' }, [
+      t('div', { className: 'px-4 flex flex-col gap-2 w-[360px]' }, [
+        t('form', { className: 'flex gap-2 m-0' }, [
           t('button', {
             className: 'p-2 border-2 border-blue-600 rounded-xl',
             textContent: '⬆︎',
@@ -73,7 +71,7 @@ let vaultTest;
             }
           }),
           t('input', {
-            className: 'p-2 border-2 border-blue-600 rounded-xl',
+            className: 'w-full p-2 rounded-xl border-2 border-blue-600',
             value: currentTab.title,
             required: true,
             id: 'title',
@@ -102,22 +100,11 @@ let vaultTest;
             }
           })
         ]),
-        t('h1', {
-          id: 'folderTitle',
-          className: 'text-center',
-          textContent: 'Home'
-        }),
-        // vaultMan.currentLocation.sortedKeys.links.length ? queueController(vaultMan) : undefined,
-        // queueController(vaultMan),
-        t('div', { id: 'queueController' }),
-        t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 bg-gray-200 p-2 rounded-xl' }, 
-          // vaultMan.getVaultList()
-          // Object.keys(vaultMan.vault.contents).length ? vaultMan.getVaultList()
-          //   : [ t('div', {
-          //     textContent: 'No contents found',
-          //     className: 'p-4 text-center text-xl font-bold text-gray-500'
-          //   }) ]
-        )
+        t('div', { className: 'flex flex-wrap justify-around items-center p-2 border-2 border-gray-300 rounded-xl' }, [
+          t('h1', { id: 'folderTitle', className: 'text-center text-lg font-bold' }),
+          t('div', { id: 'queueController' }),
+        ]),
+        t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 bg-gray-200 p-2 rounded-xl' }),
       ])
     )
     vaultMan.render();

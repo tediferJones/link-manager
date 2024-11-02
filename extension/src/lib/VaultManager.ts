@@ -4,8 +4,8 @@ import { clearChildren, isFolder } from '@/lib/utils';
 import renderLink from '@/components/renderLink';
 import renderLockedFolder from '@/components/renderLockedFolder';
 import renderFolder from '@/components/renderFolder';
-import t from '@/lib/getTag';
 import queueController from '@/components/queueController';
+import t from '@/lib/getTag';
 
 export default class VaultManager {
   vault: Vault

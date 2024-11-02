@@ -19,21 +19,32 @@ export default function dropdownContents(vaultMan: VaultManager, folder: Vault, 
         const title = document.querySelector(`#title-${id}`) as HTMLInputElement
         if (!title) throw Error('cant find title element')
         title.replaceWith(
-          t('input', {
-            id: `rename-${id}`,
-            className: 'p-2 border-2 border-blue-600 rounded-xl',
-            value: key,
-          })
-        )
-        const renameInput = document.querySelector(`#rename-${id}`) as HTMLInputElement
-        if (!renameInput) throw Error('cant find rename element');
-        // This is absurd, just use a form with a submit button
-        renameInput.addEventListener('blur', () => {
-          console.log('trigger blur event')
-          const newKey = (document.querySelector(`#rename-${id}`) as HTMLInputElement).value;
-          vaultMan.renameItem(folder, key, newKey);
-        });
-        renameInput.focus();
+          t('form', {
+            className: 'flex items-center gap-2 m-0',
+            onsubmit: () => {
+              const newKey = (document.querySelector(`#rename-${id}`) as HTMLInputElement).value;
+              vaultMan.renameItem(folder, key, newKey);
+            }
+          }, [
+            t('input', {
+              id: `rename-${id}`,
+              className: 'p-2 border-2 border-blue-600 rounded-xl w-full',
+              value: key,
+              required: true,
+            }),
+            t('button', { type: 'submit', textContent: 'Rename', className: 'p-2 bg-gray-300 rounded-xl flex justify-center items-center' })
+          ])
+        );
+        (document.querySelector(`#rename-${id}`) as HTMLInputElement).focus()
+        // const renameInput = document.querySelector(`#rename-${id}`) as HTMLInputElement
+        // if (!renameInput) throw Error('cant find rename element');
+        // // This is absurd, just use a form with a submit button
+        // renameInput.addEventListener('blur', () => {
+        //   console.log('trigger blur event')
+        //   const newKey = (document.querySelector(`#rename-${id}`) as HTMLInputElement).value;
+        //   vaultMan.renameItem(folder, key, newKey);
+        // });
+        // renameInput.focus();
       }
     }),
     !(folder.contents[key] as Vault).contents ? undefined : t('button', {
