@@ -4,7 +4,7 @@ console.log('this is the background script')
 // This requires "contextMenus" to be in the "permissions" array in our manifest.json
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
-    id: "yourFunction",
+    id: "yourTabFunction",
     title: "Add this page to Link Manager",
     contexts: ["all"]  // Can also use "page", "selection", "image", "link", etc.
   });
@@ -14,6 +14,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     // Perform action on the tab itself
     console.log("Right-click on tab detected");
     // myTabFunction(tab); // Call your custom function with the tab object
+    chrome.windows.create({
+      url: chrome.runtime.getURL('index.html'),
+      type: 'popup',
+    })
   }
 });
 

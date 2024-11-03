@@ -351,7 +351,7 @@ class VaultManager {
       viewCount: 0,
       queuePos: this.currentLocation.sortedKeys.links.length
     };
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
   addFolder({ title }) {
@@ -365,12 +365,12 @@ class VaultManager {
       },
       queueStart: 0
     };
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
   deleteItem(folder, key) {
     delete folder.contents[key];
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
   renameItem(folder, key, newKey) {
@@ -383,7 +383,7 @@ class VaultManager {
     folder.contents[newKey] = folder.contents[key];
     delete folder.contents[key];
     console.log("after delete", this.currentLocation);
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
   async encryptFolder(folder, password) {
@@ -455,7 +455,7 @@ class VaultManager {
       }
     });
   }
-  setSortedKeys(folder) {
+  setSortedKeys(folder = this.currentLocation) {
     const folders = [];
     const links = [];
     Object.keys(folder.contents).forEach((key) => {
@@ -466,7 +466,8 @@ class VaultManager {
         links.push(key);
       }
     });
-    const sorted = folders.sort().concat(links.sort((a, b) => folder.contents[a].queuePos - folder.contents[b].queuePos));
+    folders.sort();
+    links.sort((a, b) => folder.contents[a].queuePos - folder.contents[b].queuePos);
     folder.sortedKeys = { folders, links };
   }
   getVaultList(folder = this.currentLocation) {
@@ -494,7 +495,7 @@ class VaultManager {
       });
       record.queuePos = this.currentLocation.sortedKeys.links.length;
     }
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     await this.saveAndRender();
   }
   async setPlaylist(folder) {

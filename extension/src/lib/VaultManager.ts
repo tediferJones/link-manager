@@ -37,17 +37,9 @@ export default class VaultManager {
       url,
       viewed: false,
       viewCount: 0,
-      // queuePos: Infinity,
-      //
-      // Find greatest queuePos, then set to 1 higher than that
-      // queuePos: Object.values(this.currentLocation.contents).reduce((total, val) => {
-      //   const item = val as Record
-      //   if (item.queuePos > total) total = item.queuePos
-      //   return total
-      // }, 0) + 1
       queuePos: this.currentLocation.sortedKeys.links.length
     };
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
 
@@ -63,13 +55,13 @@ export default class VaultManager {
       },
       queueStart: 0
     };
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
 
   deleteItem(folder: Vault, key: string) {
     delete folder.contents[key];
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
 
@@ -81,7 +73,7 @@ export default class VaultManager {
     folder.contents[newKey] = folder.contents[key];
     delete folder.contents[key];
     console.log('after delete', this.currentLocation)
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     this.saveAndRender();
   }
 
@@ -131,20 +123,16 @@ export default class VaultManager {
 
   // This function kinda sucks, it should explicitly remove items instead of implicitly
   async reduceVault(vault = this.vault) {
-    // console.log('reduce vault', vault)
     const newVault = {
       contents: {},
       sortedKeys: vault.sortedKeys,
       queueStart: vault.queueStart
     } as Vault
-    // console.log('checking', vault, 'building', newVault)
+
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
       const newVault = await newVaultPromise;
-      // newVault.sortedKeys = vault.sortedKeys;
-      // console.log('name', key, 'save sorted keys', newVault.sortedKeys, vault.sortedKeys)
       if ((vault.contents[key] as Vault).contents) {
         const result = await this.reduceVault(vault.contents[key] as Vault);
-        // console.log('result', result)
         const locked = (vault.contents[key] as Vault).locked
         if (locked) {
           if (locked?.fullKey) {
@@ -156,15 +144,12 @@ export default class VaultManager {
           }
           newVault.contents[key] = { locked } as Vault;
         } else {
-          // newVault.contents[key] = { contents: result.contents } as Vault;
           newVault.contents[key] = { contents: result.contents, sortedKeys: result.sortedKeys } as Vault;
         }
       } else {
         newVault.contents[key] = vault.contents[key];
       }
-      // console.log('Final Result', newVault)
       return newVault;
-    // }, Promise.resolve({ contents: {} } as Vault));
     }, Promise.resolve(newVault));
   }
 
@@ -178,7 +163,7 @@ export default class VaultManager {
     })
   }
 
-  setSortedKeys(folder: Vault) {
+  setSortedKeys(folder: Vault = this.currentLocation) {
     const folders: string[] = [];
     const links: string[] = [];
     Object.keys(folder.contents).forEach(key => {
@@ -189,13 +174,14 @@ export default class VaultManager {
         links.push(key)
       }
     })
+
     // Sort folders alphabetically and sort links by queuePos
-    const sorted = folders.sort().concat(
-      links.sort((a, b) => (folder.contents[a] as Record).queuePos - (folder.contents[b] as Record).queuePos)
-    )
-    // console.log('sorted keys', sorted)
-    // folder.sortedKeys = sorted
+    folders.sort();
+    links.sort((a, b) => (folder.contents[a] as Record).queuePos - (folder.contents[b] as Record).queuePos)
     folder.sortedKeys = { folders, links }
+
+    // const sorted = folders.sort().concat(links.sort((a, b) => (folder.contents[a] as Record).queuePos - (folder.contents[b] as Record).queuePos))
+    // folder.sortedKeys = sorted
   }
 
   getVaultList(folder: Vault = this.currentLocation) {
@@ -252,22 +238,11 @@ export default class VaultManager {
     //   // if there is no record found we are outside the current bounds of all queue positions
     // }
 
-    this.setSortedKeys(this.currentLocation);
+    this.setSortedKeys();
     await this.saveAndRender();
   }
 
   async setPlaylist(folder: Vault) {
-    // this.currentLocation = folder;
-    // console.log(this.reduceVault(this.currentLocation))
-    // // What do we actually need to send to the currently open tab?
-    // //  - Keep in mind we can have the same url in multiple folders, and the same url multiple times in the same folder
-    // // Couldnt we just get away with using chrome.storage.local to store the current playlist?
-    // chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    //   chrome.tabs.sendMessage(tabs[0].id!, await this.reduceVault(this.currentLocation), (response) => {
-    //     console.log("Object sent to content script:", response);
-    //   });
-    // });
-
     const keys: string[] = [];
     let tempVault: Vault | undefined = folder;
     while (tempVault?.parent) {
