@@ -29,27 +29,32 @@ async function playNext(increment = false) {
   console.log(links, queuePos, links[queuePos]);
   window.location.assign(links[queuePos].url);
 }
-console.log("this is the content script");
-var observer = new MutationObserver((mutList) => {
-  mutList.forEach((mutation) => {
-    if (mutation.type === "childList") {
-      mutation.addedNodes.forEach((node) => {
-        if (node.tagName === "VIDEO") {
-          console.log("found video container");
-          node.addEventListener("ended", () => {
-            console.log("video has ended");
-            playNext(true);
+(async () => {
+  chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    console.log("this is the message", message);
+    if (message === "startPlaylist") {
+      sendResponse({ status: "success" });
+      playNext();
+    }
+  });
+  console.log("this is the content script");
+  const playlist = (await chrome.storage.local.get("playlist")).playlist;
+  if (playlist) {
+    const observer = new MutationObserver((mutList) => {
+      mutList.forEach((mutation) => {
+        if (mutation.type === "childList") {
+          mutation.addedNodes.forEach((node) => {
+            if (node.tagName === "VIDEO") {
+              console.log("found video container");
+              node.addEventListener("ended", () => {
+                console.log("video has ended");
+                playNext(true);
+              });
+            }
           });
         }
       });
-    }
-  });
-});
-observer.observe(document.body, { childList: true, subtree: true });
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-  console.log("this is the message", message);
-  if (message === "startPlaylist") {
-    sendResponse({ status: "success" });
-    playNext();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
-});
+})();

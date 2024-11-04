@@ -3,25 +3,45 @@ import type { Playlist, Vault } from '@/types';
 // Is tracking watch time really that important?  If we make it to the 'ended' event, we can mark it as watched
 // Otherwise we should be focusing on getting queueing working
 
-console.log('this is the content script')
-const observer = new MutationObserver((mutList) => {
-  mutList.forEach(mutation => {
-    if (mutation.type === 'childList') {
-      mutation.addedNodes.forEach((node) => {
-        // @ts-ignore
-        if (node.tagName === 'VIDEO') {
-          console.log('found video container')
-          node.addEventListener('ended', () => {
-            // Send a message back to the main script, update queueStart there, and return next video
-            console.log('video has ended')
-            playNext(true)
+
+(async () => {
+  chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    console.log('this is the message', message)
+    if (message === 'startPlaylist') {
+      sendResponse({ status: 'success' });
+      playNext()
+    }
+  });
+  console.log('this is the content script')
+
+  const playlist = (await chrome.storage.local.get('playlist')).playlist as Playlist;
+
+  if (playlist) {
+    // if (document.URL === playlist.links[playlist.queuePos].url) {
+    //   chrome.storage.local.remove('playlist');
+    //   return
+    // }
+
+    const observer = new MutationObserver((mutList) => {
+      mutList.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            // @ts-ignore
+            if (node.tagName === 'VIDEO') {
+              console.log('found video container')
+              node.addEventListener('ended', () => {
+                // Send a message back to the main script, update queueStart there, and return next video
+                console.log('video has ended')
+                playNext(true)
+              })
+            }
           })
         }
       })
-    }
-  })
-})
-observer.observe(document.body, { childList: true, subtree: true });
+    })
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+})()
 
 function getUrlParam(url: string, key: string) {
   const { searchParams } = new URL(url)
@@ -47,6 +67,7 @@ async function playNext(increment = false) {
     const queueUrl = getUrlParam(playlist.links[playlist.queuePos].url, 'v')
     console.log('url compare', currentUrl, queueUrl)
     if (currentUrl !== queueUrl) {
+      // chrome.storage.local.remove('playlist')
       return console.log('not on the right video')
     }
     // if (document.URL !== playlist.links[playlist.queuePos - 1].url) return console.log('not on the right video')
@@ -68,11 +89,3 @@ async function playNext(increment = false) {
   console.log(links, queuePos, links[queuePos])
   window.location.assign(links[queuePos].url)
 }
-
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-  console.log('this is the message', message)
-  if (message === 'startPlaylist') {
-    sendResponse({ status: 'success' });
-    playNext()
-  }
-});

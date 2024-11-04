@@ -306,11 +306,26 @@ function renderFolder(id, folder, key, vaultMan) {
 
 // src/components/queueController.ts
 function queueController(vaultMan) {
+  chrome.storage.local.get("playlist").then(({ playlist }) => {
+    const btn = document.querySelector("#primaryAction");
+    if (playlist) {
+      btn.textContent = "\u23F9";
+      btn.onclick = () => {
+        chrome.storage.local.remove("playlist");
+        vaultMan.render();
+      };
+    } else {
+      btn.textContent = "\u25B6";
+      btn.onclick = () => {
+        vaultMan.setPlaylist(vaultMan.currentLocation);
+        vaultMan.render();
+      };
+    }
+  });
   return getTag("div", { className: "flex justify-center gap-4 text-2xl" }, [
     getTag("button", { textContent: "\u23EA" }),
     getTag("button", {
-      textContent: "\u25B6",
-      onclick: () => vaultMan.setPlaylist(vaultMan.currentLocation)
+      id: "primaryAction"
     }),
     getTag("button", { textContent: "\u23E9" }),
     getTag("button", {
