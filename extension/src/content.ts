@@ -43,6 +43,56 @@ import type { Playlist, Vault } from '@/types';
   }
 })()
 
+// const originalPushState = history.pushState;
+// const originalReplaceState = history.replaceState;
+// 
+// history.pushState = function (...args) {
+//     originalPushState.apply(this, args);
+//     window.dispatchEvent(new Event('urlChange'));
+// };
+// 
+// history.replaceState = function (...args) {
+//     originalReplaceState.apply(this, args);
+//     window.dispatchEvent(new Event('urlChange'));
+// };
+// 
+// // Listen for custom urlChange event
+// window.addEventListener('urlChange', () => {
+//     console.log('URL changed (pushState or replaceState):', window.location.href);
+// });
+
+// // Triggered when history changes (for SPA navigation, back/forward actions)
+// window.addEventListener('popstate', (event) => {
+//     console.log('URL changed (popstate):', window.location.href);
+// });
+// 
+// // Triggered when the URL hash changes
+// window.addEventListener('hashchange', () => {
+//     console.log('URL hash changed:', window.location.href);
+// });
+
+const observer = new MutationObserver(() => {
+    console.log('URL or page content might have changed:', window.location.href);
+});
+
+observer.observe(document.querySelector('title')!, { subtree: true, characterData: true, childList: true });
+
+// function getNewPromise() {
+//   return new Promise<string>((resolve, reject) => {
+//     setTimeout(() => {
+//       console.log(document.URL)
+//       resolve(document.URL)
+//     }, 100)
+//   })
+// }
+// async function watchUrl(promise: Promise<string>) {
+//   await promise;
+//   watchUrl(getNewPromise())
+// }
+// watchUrl(getNewPromise());
+
+console.log('added urlChange event listener')
+
 function getUrlParam(url: string, key: string) {
   const { searchParams } = new URL(url)
   return searchParams.get(key)

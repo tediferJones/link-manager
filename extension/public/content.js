@@ -58,3 +58,8 @@ async function playNext(increment = false) {
     observer.observe(document.body, { childList: true, subtree: true });
   }
 })();
+var observer = new MutationObserver(() => {
+  console.log("URL or page content might have changed:", window.location.href);
+});
+observer.observe(document.querySelector("title"), { subtree: true, characterData: true, childList: true });
+console.log("added urlChange event listener");
