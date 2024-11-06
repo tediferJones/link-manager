@@ -22,8 +22,10 @@ export interface Record {
   url: string,
   viewed: boolean,
   viewCount: number,
-  totalTime?: number,
-  currentTime?: number,
+  // totalTime?: number,
+  // currentTime?: number,
+  totalTime?: string,
+  currentTime?: string,
   queuePos: number,
 }
 

@@ -1,4 +1,11 @@
 // src/content.ts
+var searchFolder = function(folder) {
+  return Object.keys(folder.contents).find((record) => {
+    if (folder.contents[record].url === document.URL) {
+      return true;
+    }
+  });
+};
 var getUrlParam = function(url, key) {
   const { searchParams } = new URL(url);
   return searchParams.get(key);
@@ -22,7 +29,13 @@ async function playNext(increment = false) {
     }
     const vault = (await chrome.storage.local.get("vault")).vault;
     const folder = playlist.keys.reduce((folder2, key) => folder2.contents[key], vault);
+    console.log("folder is:", folder);
     folder.queueStart = playlist.queuePos;
+    const record = folder.contents[searchFolder(folder) || ""];
+    if (record) {
+      record.totalTime = document.querySelector(".ytp-time-duration")?.textContent || undefined;
+      record.currentTime = document.querySelector(".ytp-time-current")?.textContent || undefined;
+    }
     await chrome.storage.local.set({ vault, playlist });
   }
   const { links, queuePos } = playlist;
@@ -50,6 +63,17 @@ async function playNext(increment = false) {
                 console.log("video has ended");
                 playNext(true);
               });
+              node.addEventListener("pause", async () => {
+                const playlist2 = (await chrome.storage.local.get("playlist")).playlist;
+                const vault = (await chrome.storage.local.get("vault")).vault;
+                const folder = playlist2.keys.reduce((folder2, key) => folder2.contents[key], vault);
+                const record = folder.contents[searchFolder(folder) || ""];
+                if (record) {
+                  record.totalTime = document.querySelector(".ytp-time-duration")?.textContent || undefined;
+                  record.currentTime = document.querySelector(".ytp-time-current")?.textContent || undefined;
+                  await chrome.storage.local.set({ vault });
+                }
+              });
             }
           });
         }
@@ -63,3 +87,11 @@ var observer = new MutationObserver(() => {
 });
 observer.observe(document.querySelector("title"), { subtree: true, characterData: true, childList: true });
 console.log("added urlChange event listener");
+(async () => {
+  const playlist = (await chrome.storage.local.get("playlist")).playlist;
+  const vault = (await chrome.storage.local.get("vault")).vault;
+  const folder = playlist.keys.reduce((folder2, key) => folder2.contents[key], vault);
+  const record = folder.contents[searchFolder(folder) || ""];
+  console.log("this is the folder", folder);
+  console.log("this is the record", record);
+})();

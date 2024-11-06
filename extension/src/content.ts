@@ -1,4 +1,4 @@
-import type { Playlist, Vault } from '@/types';
+import type { Playlist, Record, Vault } from '@/types';
 
 // Is tracking watch time really that important?  If we make it to the 'ended' event, we can mark it as watched
 // Otherwise we should be focusing on getting queueing working
@@ -33,6 +33,18 @@ import type { Playlist, Vault } from '@/types';
                 // Send a message back to the main script, update queueStart there, and return next video
                 console.log('video has ended')
                 playNext(true)
+              })
+
+              node.addEventListener('pause', async () => {
+                const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
+                const vault: Vault = (await chrome.storage.local.get('vault') as any).vault
+                const folder = playlist.keys.reduce((folder, key) => folder.contents[key] as Vault, vault)
+                const record = folder.contents[searchFolder(folder) || ''] as Record
+                if (record) {
+                  record.totalTime = document.querySelector('.ytp-time-duration')?.textContent || undefined
+                  record.currentTime = document.querySelector('.ytp-time-current')?.textContent || undefined
+                  await chrome.storage.local.set({ vault })
+                }
               })
             }
           })
@@ -91,7 +103,24 @@ observer.observe(document.querySelector('title')!, { subtree: true, characterDat
 // }
 // watchUrl(getNewPromise());
 
-console.log('added urlChange event listener')
+console.log('added urlChange event listener');
+
+(async () => {
+  const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
+  const vault: Vault = (await chrome.storage.local.get('vault') as any).vault
+  const folder = playlist.keys.reduce((folder, key) => folder.contents[key] as Vault, vault)
+  const record = folder.contents[searchFolder(folder) || '']
+  console.log('this is the folder', folder)
+  console.log('this is the record', record)
+})();
+
+function searchFolder(folder: Vault) {
+  return Object.keys(folder.contents).find(record => {
+    if ((folder.contents[record] as Record).url === document.URL) {
+      return true
+    }
+  })
+}
 
 function getUrlParam(url: string, key: string) {
   const { searchParams } = new URL(url)
@@ -131,7 +160,15 @@ async function playNext(increment = false) {
     }
     const vault: Vault = (await chrome.storage.local.get('vault') as any).vault
     const folder = playlist.keys.reduce((folder, key) => folder.contents[key] as Vault, vault)
+    console.log('folder is:', folder)
     folder.queueStart = playlist.queuePos
+
+    const record = folder.contents[searchFolder(folder) || ''] as Record
+    if (record) {
+      record.totalTime = document.querySelector('.ytp-time-duration')?.textContent || undefined
+      record.currentTime = document.querySelector('.ytp-time-current')?.textContent || undefined
+    }
+
     await chrome.storage.local.set({ vault, playlist })
   }
 

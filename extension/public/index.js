@@ -163,6 +163,21 @@ function renderLink(id, folder, key, vaultMan) {
   const item = folder.contents[key];
   if (isFolder(item))
     throw Error("this is a folder not a link");
+  function timeStampToSeconds(timestamp) {
+    return timestamp.split(":").reverse().reduce((total, part, i) => {
+      if (i === 0)
+        return Number(part);
+      return total + Number(part) * 60 ** i;
+    }, 0);
+  }
+  function getWatchPercent(record) {
+    if (record.currentTime && record.totalTime) {
+      console.log(timeStampToSeconds(record.currentTime) / timeStampToSeconds(record.totalTime));
+      return timeStampToSeconds(record.currentTime) / timeStampToSeconds(record.totalTime) * 100;
+    }
+  }
+  const watchBar = getTag("div", { className: "rounded-xl h-1 bg-red-500 w-[50%]" });
+  watchBar.style.width = `${getWatchPercent(item) || 0}%`;
   return getTag("div", {
     id: `header-${id}`,
     className: `p-2 rounded-xl ${item.queuePos === folder.queueStart ? "bg-blue-300" : item.queuePos < folder.queueStart ? "bg-gray-200" : ""}`
@@ -192,13 +207,15 @@ function renderLink(id, folder, key, vaultMan) {
           container.append(getTag("div", { className: "w-full flex flex-col gap-2" }, [
             getTag("div", { className: "p-2 flex justify-around items-center border-2 border-gray-400 rounded-xl" }, [
               getTag("p", { textContent: `View count: ${item.viewCount}` }),
-              getTag("p", { textContent: `Queue position: ${item.queuePos + 1}` })
+              getTag("p", { textContent: `Queue position: ${item.queuePos + 1}` }),
+              getTag("p", { textContent: `${item.currentTime} / ${item.totalTime}` })
             ]),
             getTag("div", { className: "flex gap-2" }, dropdownContents(vaultMan, folder, key, id))
           ]));
         }
       })
     ]),
+    watchBar,
     getTag("div", { id: `edit-${id}`, className: "flex gap-2 bg-gray-300 rounded-xl rounded-t-none" })
   ]);
 }

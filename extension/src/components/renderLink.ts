@@ -2,12 +2,30 @@ import t from '@/lib/getTag';
 import dropdownContents from '@/components/dropdownContents';
 import { clearChildren, isFolder } from '@/lib/utils';
 import type VaultManager from '@/lib/VaultManager';
-import type { Vault } from '@/types';
+import type { Record, Vault } from '@/types';
 
 // export default function renderLink({ id, folder, key }: Props, vaultMan: VaultManager) {
 export default function renderLink(id: string, folder: Vault, key: string, vaultMan: VaultManager) {
   const item = folder.contents[key]
   if (isFolder(item)) throw Error('this is a folder not a link')
+
+  function timeStampToSeconds(timestamp: string) {
+    return timestamp.split(':').reverse().reduce((total, part, i) => {
+      if (i === 0) return Number(part)
+      return total + Number(part) * 60 ** i
+    }, 0)
+  }
+
+  function getWatchPercent(record: Record) {
+    if (record.currentTime && record.totalTime) {
+      console.log(timeStampToSeconds(record.currentTime) / timeStampToSeconds(record.totalTime))
+      return (timeStampToSeconds(record.currentTime) / timeStampToSeconds(record.totalTime)) * 100
+    }
+  }
+
+  const watchBar = t('div', { className: `rounded-xl h-1 bg-red-500 w-[${50}%]` });
+  watchBar.style.width = `${getWatchPercent(item) || 0}%`
+
   return t('div', {
     id: `header-${id}`,
     className: `p-2 rounded-xl ${item.queuePos === folder.queueStart ? 'bg-blue-300' : item.queuePos < folder.queueStart ? 'bg-gray-200' : ''}`
@@ -39,6 +57,7 @@ export default function renderLink(id: string, folder: Vault, key: string, vault
                 t('div', { className: 'p-2 flex justify-around items-center border-2 border-gray-400 rounded-xl' }, [
                   t('p', { textContent: `View count: ${item.viewCount}` }),
                   t('p', { textContent: `Queue position: ${item.queuePos + 1}` }),
+                  t('p', { textContent: `${item.currentTime} / ${item.totalTime}` })
                 ]),
                 t('div', { className: 'flex gap-2' },
                   dropdownContents(vaultMan, folder, key, id)
@@ -48,6 +67,8 @@ export default function renderLink(id: string, folder: Vault, key: string, vault
           }
         })
       ]),
+      // t('div', { className: `rounded-xl h-1 bg-red-500 w-[${getWatchPercent(item) || 0}%]` }),
+      watchBar,
       t('div', { id: `edit-${id}`, className: 'flex gap-2 bg-gray-300 rounded-xl rounded-t-none' }),
     ])
 }
