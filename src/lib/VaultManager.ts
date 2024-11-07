@@ -255,7 +255,7 @@ export default class VaultManager {
       playlist: {
         keys: keys.reverse(), // keys that will point to folder
         links: this.currentLocation.sortedKeys.links.map(linkKey => folder.contents[linkKey]) as Record[], // all records in playlist
-        queuePos: this.currentLocation.queueStart // get star
+        queuePos: this.currentLocation.queueStart // get start
       } as Playlist
     })
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {

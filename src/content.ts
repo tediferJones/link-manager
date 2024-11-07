@@ -55,34 +55,6 @@ import type { Playlist, Record, Vault } from '@/types';
   }
 })()
 
-// const originalPushState = history.pushState;
-// const originalReplaceState = history.replaceState;
-// 
-// history.pushState = function (...args) {
-//     originalPushState.apply(this, args);
-//     window.dispatchEvent(new Event('urlChange'));
-// };
-// 
-// history.replaceState = function (...args) {
-//     originalReplaceState.apply(this, args);
-//     window.dispatchEvent(new Event('urlChange'));
-// };
-// 
-// // Listen for custom urlChange event
-// window.addEventListener('urlChange', () => {
-//     console.log('URL changed (pushState or replaceState):', window.location.href);
-// });
-
-// // Triggered when history changes (for SPA navigation, back/forward actions)
-// window.addEventListener('popstate', (event) => {
-//     console.log('URL changed (popstate):', window.location.href);
-// });
-// 
-// // Triggered when the URL hash changes
-// window.addEventListener('hashchange', () => {
-//     console.log('URL hash changed:', window.location.href);
-// });
-
 const observer = new MutationObserver(() => {
     console.log('URL or page content might have changed:', window.location.href);
 });
@@ -128,18 +100,7 @@ function getUrlParam(url: string, key: string) {
 }
 
 async function playNext(increment = false) {
-  // There is a lot that can go wrong here
-  // 1.) How do we handle end of list, just stop playing?
-  // 2.) the event listener is attached whenever a video element is loaded, which leads to problems if the user manually navigates away
-  //     - e.x. user starts playlist, watches 2 videos, then manually navigates to a third, once this video ends, queuePos will be incremented and page will reload to the next next video in the queue
-
   const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
-  // if (document.URL !== playlist.links[playlist.queuePos].url) return console.log('not on the right video')
-  // if (playlist.queuePos > playlist.links.length) {
-  //   console.log('nothing to play')
-  //   // Reset playlist to zero, or do something like that
-  //   return
-  // }
   console.log('playNext func', playlist)
   if (increment) {
     const currentUrl = getUrlParam(document.URL, 'v');
@@ -149,8 +110,7 @@ async function playNext(increment = false) {
       // chrome.storage.local.remove('playlist')
       return console.log('not on the right video')
     }
-    // if (document.URL !== playlist.links[playlist.queuePos - 1].url) return console.log('not on the right video')
-    // playlist.queuePos = playlist.queuePos >= playlist.links.length ? 1 : playlist.queuePos + 1
+
     if (playlist.queuePos >= playlist.links.length - 1) {
       console.log('reset queuePos')
       playlist.queuePos = 0
