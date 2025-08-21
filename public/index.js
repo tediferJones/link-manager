@@ -480,10 +480,11 @@ class VaultManager {
   }
   buildTree(folder = this.vault) {
     return Object.keys(folder.contents).forEach((key) => {
-      if (isFolder(folder.contents[key])) {
-        folder.contents[key].parent = folder;
-        folder.contents[key].title = key;
-        this.buildTree(folder.contents[key]);
+      const val = folder.contents[key];
+      if (isFolder(val)) {
+        val.parent = folder;
+        val.title = key;
+        this.buildTree(val);
       }
     });
   }
@@ -552,17 +553,18 @@ class VaultManager {
 }
 
 // src/index.ts
+var newVault = {
+  contents: {},
+  title: "Home",
+  queueStart: 1,
+  sortedKeys: {
+    folders: [],
+    links: []
+  }
+};
 var vaultTest;
 (async () => {
-  const vaultMan = new VaultManager((await chrome.storage.local.get("vault")).vault || {
-    contents: {},
-    title: "Home",
-    queueStart: 1,
-    sortedKeys: {
-      folders: [],
-      links: []
-    }
-  });
+  const vaultMan = new VaultManager((await chrome.storage.local.get("vault")).vault || newVault);
   vaultTest = vaultMan;
   console.log("vault from index.js", vaultMan.vault);
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
@@ -578,6 +580,7 @@ var vaultTest;
             console.log("go to parent dir");
             console.log(vaultMan.currentLocation);
             if (vaultMan.currentLocation.parent) {
+              console.log(vaultMan);
               vaultMan.currentLocation = vaultMan.currentLocation.parent;
               vaultMan.render();
             }
@@ -591,7 +594,7 @@ var vaultTest;
         }),
         getTag("button", {
           className: "p-2 rounded-xl border-2 border-blue-600",
-          textContent: "\uFF0B",
+          textContent: "\u2795",
           type: "submit",
           onclick: (e) => {
             e.preventDefault();

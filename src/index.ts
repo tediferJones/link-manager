@@ -11,20 +11,27 @@ import type { Vault } from '@/types';
 // Ideally, we want to navigate between youtube pages without doing a full page refresh, this would eliminate a lot of problems
 //  - For example: if the current video saved to chrome.storage.local.playlist is navigated to manually, the playlist will automatically pick up when the video ends
 
+// New Ideas:
+// Nesting is good but shouldn't be a priority
+// Queue feature is only need in lists where there are youtube links
+//  - youtube links are really the only thing that the queue needs to see
+
+const newVault = {
+  contents: {},
+  title: 'Home',
+  queueStart: 1,
+  sortedKeys: {
+    folders: [],
+    links: []
+  },
+} satisfies Omit<Vault, 'parent'>
+
 let vaultTest;
 (async () => {
   const vaultMan = new VaultManager(
     // (await chrome.storage.local.get('vault')).vault || { contents: {} }
-    (await chrome.storage.local.get('vault')).vault || {
-      contents: {},
-      title: 'Home',
-      queueStart: 1,
-      sortedKeys: {
-        folders: [],
-        links: []
-      }
-    } satisfies Omit<Vault, 'parent'>
-  )
+    (await chrome.storage.local.get('vault')).vault || newVault
+  );
   vaultTest = vaultMan
   console.log('vault from index.js', vaultMan.vault)
 
@@ -63,8 +70,9 @@ let vaultTest;
               console.log('go to parent dir')
               console.log(vaultMan.currentLocation)
               if (vaultMan.currentLocation.parent) {
-                vaultMan.currentLocation = vaultMan.currentLocation.parent
-                vaultMan.render()
+                console.log(vaultMan)
+                vaultMan.currentLocation = vaultMan.currentLocation.parent;
+                vaultMan.render();
               }
               // if (vaultMan.parentLocation) vaultMan.currentLocation = vaultMan.parentLocation
               // vaultMan.render()
@@ -78,25 +86,25 @@ let vaultTest;
           }),
           t('button', {
             className: 'p-2 rounded-xl border-2 border-blue-600',
-            textContent: '＋',
+            textContent: '➕',
             type: 'submit',
             onclick: (e) => {
               e.preventDefault()
               console.log('add link')
               const title = (document.querySelector('#title') as HTMLInputElement)?.value;
-              const { url } = currentTab
-              if (title && url) vaultMan.addLink({ title, url })
-            }
+              const { url } = currentTab;
+              if (title && url) vaultMan.addLink({ title, url });
+            },
           }),
           t('button', {
             className: 'p-2 rounded-xl border-2 border-blue-600',
             textContent: '📁',
             type: 'submit',
             onclick: (e) => {
-              e.preventDefault()
-              console.log('add folder')
+              e.preventDefault();
+              console.log('add folder');
               const title = (document.querySelector('#title') as HTMLInputElement).value;
-              vaultMan.addFolder({ title })
+              vaultMan.addFolder({ title });
             }
           })
         ]),

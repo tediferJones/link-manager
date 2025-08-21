@@ -155,12 +155,13 @@ export default class VaultManager {
 
   buildTree(folder = this.vault) {
     return Object.keys(folder.contents).forEach(key => {
-      if (isFolder(folder.contents[key])) {
-        folder.contents[key].parent = folder
-        folder.contents[key].title = key
-        this.buildTree(folder.contents[key])
+      const val = folder.contents[key]
+      if (isFolder(val)) {
+        val.parent = folder;
+        val.title = key;
+        this.buildTree(val);
       }
-    })
+    });
   }
 
   setSortedKeys(folder: Vault = this.currentLocation) {
