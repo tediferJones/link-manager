@@ -1,15 +1,28 @@
 import type { Playlist, Record, Vault } from '@/types';
+import { isFolder } from '@/lib/utils';
 
 // Is tracking watch time really that important?  If we make it to the 'ended' event, we can mark it as watched
 // Otherwise we should be focusing on getting queueing working
 
+// This is where the real action is going to take place,
+// Things this script needs to do:
+//  - if url is youtube.com
+//    - attach mutationObserver to time stamp, when currentTime = endTime trigger next item in queue
+//    - if possible try to hook into the youtube client-side router
+//      - this will prevent un-needed fetching from youtube
+//      - not required but would be nice
+//    - when video is done playing, mark as watched
+//    - if clicking off video before video is over save current timestamp
+//      - should resume from time stamp when user comes back to that page
+//        - or at least ask if user wants to resume
 
 (async () => {
+  // Where do these messages come from?
   chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     console.log('this is the message', message)
     if (message === 'startPlaylist') {
       sendResponse({ status: 'success' });
-      playNext()
+      playNext();
     }
   });
   console.log('this is the content script')
@@ -80,6 +93,7 @@ console.log('added urlChange event listener');
 (async () => {
   const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
   const vault: Vault = (await chrome.storage.local.get('vault') as any).vault
+  console.log(playlist)
   const folder = playlist.keys.reduce((folder, key) => folder.contents[key] as Vault, vault)
   const record = folder.contents[searchFolder(folder) || '']
   console.log('this is the folder', folder)
@@ -88,17 +102,17 @@ console.log('added urlChange event listener');
 
 function searchFolder(folder: Vault) {
   return Object.keys(folder.contents).find(record => {
-    if ((folder.contents[record] as Record).url === document.URL) {
-      return true
-    }
-  })
+    const item = folder.contents[record]
+    return !isFolder(item) && item.url === document.URL;
+  });
 }
 
 function getUrlParam(url: string, key: string) {
-  const { searchParams } = new URL(url)
-  return searchParams.get(key)
+  const { searchParams } = new URL(url);
+  return searchParams.get(key);
 }
 
+// this seems awfully complicated
 async function playNext(increment = false) {
   const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
   console.log('playNext func', playlist)

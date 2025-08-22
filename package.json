@@ -11,7 +11,8 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "dev": "bun nodemon"
+    "dev": "bun nodemon",
+    "typeCheck": "npx tsc --noEmit"
   },
   "type": "module"
 }

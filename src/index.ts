@@ -16,6 +16,11 @@ import type { Vault } from '@/types';
 // Queue feature is only need in lists where there are youtube links
 //  - youtube links are really the only thing that the queue needs to see
 
+// Content script runs in the webpage
+// Background script runs behind the scenes, has access to chrome extension APIs
+//  - good for long running tasks (like syncing state to db)
+// See manifest.json for more details about extension
+
 const newVault = {
   contents: {},
   title: 'Home',
@@ -26,10 +31,20 @@ const newVault = {
   },
 } satisfies Omit<Vault, 'parent'>
 
-let vaultTest;
+// function getCurrentTab(tabs: chrome.tabs.Tab[]) {
+//   console.log('getCurrentTab', tabs)
+//   return tabs.filter(tab => tab.lastAccessed)
+//     .sort((a, b) => b.lastAccessed! - a.lastAccessed!)[0];
+// }
+
+function getElement<T extends Element>(selector: string): T | null {
+  return document.querySelector(selector);
+}
+
+let vaultTest; // this exists so we can access vault from browser dev console
+// initialize extension render (i.e. what you see in the pop-up)
 (async () => {
   const vaultMan = new VaultManager(
-    // (await chrome.storage.local.get('vault')).vault || { contents: {} }
     (await chrome.storage.local.get('vault')).vault || newVault
   );
   vaultTest = vaultMan
@@ -54,11 +69,8 @@ let vaultTest;
   // chrome.tabs.query({ active: true }, (tabs) => {
   // Try this to better detect active window
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const currentTab = (
-      tabs
-      .filter(tab => tab.lastAccessed)
-      .sort((b, a) => a.lastAccessed! - b.lastAccessed!)[0]
-    );
+    // currentWindow: true should return an array with only the one active tab
+    const currentTab = tabs[0];
     document.body.append(
       t('div', { className: 'px-4 flex flex-col gap-2 w-[360px]' }, [
         t('form', { className: 'flex gap-2 m-0' }, [
@@ -91,7 +103,7 @@ let vaultTest;
             onclick: (e) => {
               e.preventDefault()
               console.log('add link')
-              const title = (document.querySelector('#title') as HTMLInputElement)?.value;
+              const title = getElement<HTMLInputElement>('#title')?.value;
               const { url } = currentTab;
               if (title && url) vaultMan.addLink({ title, url });
             },
@@ -103,7 +115,8 @@ let vaultTest;
             onclick: (e) => {
               e.preventDefault();
               console.log('add folder');
-              const title = (document.querySelector('#title') as HTMLInputElement).value;
+              const title = getElement<HTMLInputElement>('#title')?.value;
+              if (!title) throw Error('could not find title');
               vaultMan.addFolder({ title });
             }
           })

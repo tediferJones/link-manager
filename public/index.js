@@ -553,6 +553,9 @@ class VaultManager {
 }
 
 // src/index.ts
+var getElement = function(selector) {
+  return document.querySelector(selector);
+};
 var newVault = {
   contents: {},
   title: "Home",
@@ -569,7 +572,7 @@ var vaultTest;
   console.log("vault from index.js", vaultMan.vault);
   document.body.appendChild(getTag("h1", { textContent: "LINK MANAGER", className: "p-4 text-center text-2xl font-bold text-blue-500" }));
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const currentTab = tabs.filter((tab) => tab.lastAccessed).sort((b, a) => a.lastAccessed - b.lastAccessed)[0];
+    const currentTab = tabs[0];
     document.body.append(getTag("div", { className: "px-4 flex flex-col gap-2 w-[360px]" }, [
       getTag("form", { className: "flex gap-2 m-0" }, [
         getTag("button", {
@@ -599,7 +602,7 @@ var vaultTest;
           onclick: (e) => {
             e.preventDefault();
             console.log("add link");
-            const title = document.querySelector("#title")?.value;
+            const title = getElement("#title")?.value;
             const { url } = currentTab;
             if (title && url)
               vaultMan.addLink({ title, url });
@@ -612,7 +615,9 @@ var vaultTest;
           onclick: (e) => {
             e.preventDefault();
             console.log("add folder");
-            const title = document.querySelector("#title").value;
+            const title = getElement("#title")?.value;
+            if (!title)
+              throw Error("could not find title");
             vaultMan.addFolder({ title });
           }
         })

@@ -1,9 +1,21 @@
+// src/lib/utils.ts
+function clearChildren(id) {
+  const parent = document.querySelector(`#${id}`);
+  if (!parent)
+    throw Error(`failed to find parent container for given id: ${id}`);
+  while (parent.firstChild)
+    parent.removeChild(parent.firstChild);
+  return parent;
+}
+function isFolder(item) {
+  return "contents" in item;
+}
+
 // src/content.ts
 var searchFolder = function(folder) {
   return Object.keys(folder.contents).find((record) => {
-    if (folder.contents[record].url === document.URL) {
-      return true;
-    }
+    const item = folder.contents[record];
+    return !isFolder(item) && item.url === document.URL;
   });
 };
 var getUrlParam = function(url, key) {
@@ -90,6 +102,7 @@ console.log("added urlChange event listener");
 (async () => {
   const playlist = (await chrome.storage.local.get("playlist")).playlist;
   const vault = (await chrome.storage.local.get("vault")).vault;
+  console.log(playlist);
   const folder = playlist.keys.reduce((folder2, key) => folder2.contents[key], vault);
   const record = folder.contents[searchFolder(folder) || ""];
   console.log("this is the folder", folder);
