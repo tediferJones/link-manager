@@ -15,6 +15,11 @@ import type { Vault } from '@/types';
 // Nesting is good but shouldn't be a priority
 // Queue feature is only need in lists where there are youtube links
 //  - youtube links are really the only thing that the queue needs to see
+// Consider switching to vite
+//  - provides HMR
+//  - might be able to use JSX without React
+//  - better build process in general
+//  - could drop bun and probably switch back to nodeJS
 
 // Content script runs in the webpage
 // Background script runs behind the scenes, has access to chrome extension APIs
@@ -29,6 +34,7 @@ const newVault = {
     folders: [],
     links: []
   },
+  isPlaylist: false,
 } satisfies Omit<Vault, 'parent'>
 
 // function getCurrentTab(tabs: chrome.tabs.Tab[]) {
@@ -47,12 +53,14 @@ let vaultTest; // this exists so we can access vault from browser dev console
   const vaultMan = new VaultManager(
     (await chrome.storage.local.get('vault')).vault || newVault
   );
-  vaultTest = vaultMan
+  vaultTest = vaultMan;
   console.log('vault from index.js', vaultMan.vault)
 
-  document.body.appendChild(
-    t('h1', { textContent: 'LINK MANAGER', className: 'p-4 text-center text-2xl font-bold text-blue-500' })
-  )
+  const header = t('h1', {
+    textContent: 'LINK MANAGER',
+    className: 'p-4 text-center text-2xl font-bold text-blue-500'
+  });
+  document.body.appendChild(header);
 
   // chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   //   let port = chrome.tabs.connect(tabs[0].id!, { name: "main-script" });
@@ -72,7 +80,7 @@ let vaultTest; // this exists so we can access vault from browser dev console
     // currentWindow: true should return an array with only the one active tab
     const currentTab = tabs[0];
     document.body.append(
-      t('div', { className: 'px-4 flex flex-col gap-2 w-[360px]' }, [
+      t('div', { className: 'px-4 flex flex-col gap-2 w-full max-w-[720px] min-w-[360px] m-auto' }, [
         t('form', { className: 'flex gap-2 m-0' }, [
           t('button', {
             className: 'p-2 border-2 border-blue-600 rounded-xl',
@@ -122,8 +130,20 @@ let vaultTest; // this exists so we can access vault from browser dev console
           })
         ]),
         t('div', { className: 'flex flex-wrap justify-around items-center p-2 border-2 border-gray-300 rounded-xl' }, [
-          t('h1', { id: 'folderTitle', className: 'text-center text-lg font-bold' }),
-          t('div', { id: 'queueController' }),
+          t('h1', { id: 'folderTitle', className: 'text-center text-lg font-bold flex-1' }),
+          t('div', { id: 'queueController', className: 'flex-1' }),
+          t('label', { textContent: 'isPlaylist', className: 'flex-1 flex justify-center items-center gap-2' }, [
+            t('input', {
+              id: 'isPlaylist',
+              type: 'checkbox',
+              checked: vaultMan.currentLocation.isPlaylist,
+              onchange: (e) => {
+                const test = getElement<HTMLInputElement>('#isPlaylist')!;
+                vaultMan.currentLocation.isPlaylist = test.checked;
+                vaultMan.saveAndRender();
+              }
+            }),
+          ]),
         ]),
         t('div', { id: 'directoryContainer', className: 'flex flex-col gap-2 bg-gray-200 p-2 rounded-xl' }),
       ])

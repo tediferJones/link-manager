@@ -50,6 +50,7 @@ import { isFolder } from '@/lib/utils';
 
               node.addEventListener('pause', async () => {
                 const playlist: Playlist = (await chrome.storage.local.get('playlist') as any).playlist
+                if (!playlist) return;
                 const vault: Vault = (await chrome.storage.local.get('vault') as any).vault
                 const folder = playlist.keys.reduce((folder, key) => folder.contents[key] as Vault, vault)
                 const record = folder.contents[searchFolder(folder) || ''] as Record

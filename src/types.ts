@@ -16,6 +16,7 @@ export interface Vault {
     links: string[],
   },
   queueStart: number,
+  isPlaylist: boolean,
 }
 
 export interface Record {

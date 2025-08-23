@@ -19,8 +19,12 @@ export default class VaultManager {
 
   render() {
     const queueContainer = clearChildren('queueController');
-    if (this.currentLocation.sortedKeys.links.length > 0) {
-      queueContainer.append(queueController(this))
+    // if (this.currentLocation.sortedKeys.links.length > 0) {
+    //   queueContainer.append(queueController(this))
+    // }
+    // console.log(this)
+    if (this.currentLocation.isPlaylist) {
+      queueContainer.append(queueController(this));
     }
     document.querySelector('#folderTitle')!.textContent = this.currentLocation.title || 'Home'
     clearChildren('directoryContainer')
@@ -53,6 +57,7 @@ export default class VaultManager {
         folders: [],
         links: []
       },
+      isPlaylist: false,
       queueStart: 0
     };
     this.setSortedKeys();
@@ -126,7 +131,8 @@ export default class VaultManager {
     const newVault = {
       contents: {},
       sortedKeys: vault.sortedKeys,
-      queueStart: vault.queueStart
+      queueStart: vault.queueStart,
+      isPlaylist: vault.isPlaylist,
     } as Vault
 
     return await Object.keys(vault.contents).reduce(async (newVaultPromise, key) => {
