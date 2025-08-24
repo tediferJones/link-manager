@@ -52,12 +52,17 @@ export default function renderLink(id: string, folder: Vault, key: string, vault
             document.querySelector(`#header-${id}`)!.classList.toggle('bg-gray-300')
             if (container.hasChildNodes()) return clearChildren(`edit-${id}`)
             // container.append(...dropdownContents(vaultMan, folder, key, id))
+            console.log('renderLink', item)
             container.append(
               t('div', { className: 'w-full flex flex-col gap-2' }, [
                 t('div', { className: 'p-2 flex justify-around items-center border-2 border-gray-400 rounded-xl' }, [
                   t('p', { textContent: `View count: ${item.viewCount}` }),
                   t('p', { textContent: `Queue position: ${item.queuePos + 1}` }),
-                  t('p', { textContent: `${item.currentTime} / ${item.totalTime}` })
+                  // FIX ME
+                  // @ts-ignore
+                  item.currentTime && item.totalTime && t('p', {
+                    textContent: `${item.currentTime} / ${item.totalTime}`
+                  }),
                 ]),
                 t('div', { className: 'flex gap-2' },
                   dropdownContents(vaultMan, folder, key, id)
