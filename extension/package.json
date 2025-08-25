@@ -1,0 +1,25 @@
+{
+  "name": "link-manager-extension",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.3",
+    "@tailwindcss/postcss": "^4.1.12",
+    "@types/chrome": "^0.1.1",
+    "@types/node": "^24.0.15",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.12",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.5",
+    "vite-plugin-zip-pack": "^1.2.4"
+  },
+  "dependencies": {
+    "jsx-dom": "^8.1.6"
+  }
+}
