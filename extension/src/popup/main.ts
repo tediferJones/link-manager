@@ -1,7 +1,4 @@
-import './style.css';
-import HelloWorld from './tsxTest.tsx';
+import App from '@/app';
+import '@/style.css';
 
-// document.querySelector('#app')!.innerHTML = `
-//   <div class='bg-green-500'>This is the pop up</div>
-// `
-document.querySelector('#app')!.appendChild(HelloWorld());
+document.querySelector('#app')!.appendChild(App());

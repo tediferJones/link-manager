@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+.defaultBorder {
+  @apply rounded-lg;
+  @apply border-blue-500;
+  @apply border-2;
+  @apply p-2;
+}
+
+html, body {
+  @apply min-w-fit;
+}
+
+button {
+  @apply cursor-pointer;
+}
