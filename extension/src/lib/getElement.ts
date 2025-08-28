@@ -1,6 +1,7 @@
-// FIX ME, instead just do document.querySelector<T>()
 export default function getElement<
-  T extends Element
->(selector: string): T | null{
-  return document.querySelector(selector);
+  T extends Element = Element
+>(selector: string) {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw Error(`could not find element: ${selector}`);
+  return element;
 }

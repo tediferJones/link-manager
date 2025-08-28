@@ -2,11 +2,37 @@ import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
 import Vault from '@/lib/Vault';
 
+// TO-DO
+// add keyboard shortcut to open side panel
+
+function handleFormInput() {
+  const title = getElement<HTMLInputElement>('#titleInput').value;
+  const href = getElement<HTMLInputElement>('#hrefInput').value;
+  const submitBtn = getElement<HTMLButtonElement>('#submitItemBtn');
+
+  if (title && href) {
+    submitBtn.innerText = '🔗 Add Link';
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('cursor-not-allowed');
+    submitBtn.classList.remove('opacity-50');
+  } else if (title) {
+    submitBtn.innerText = '📁 Add Folder';
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('cursor-not-allowed');
+    submitBtn.classList.remove('opacity-50');
+  } else {
+    submitBtn.innerText = 'Add';
+    submitBtn.disabled = true;
+    submitBtn.classList.add('cursor-not-allowed');
+    submitBtn.classList.add('opacity-50');
+  }
+}
+
 export default function App() {
   const UserVault = new Vault();
   console.log('vault', UserVault);
   return (
-    <div className='p-4 flex flex-col gap-4 min-w-[360px] max-w-[720px]'>
+    <div className='text-base p-4 flex flex-col gap-4 min-w-[360px] max-w-[720px]'>
       <div className='flex'>
         <h1 className='text-2xl font-bold text-blue-500 m-auto'>
           LINK MANAGER
@@ -14,7 +40,7 @@ export default function App() {
         <div className='relative'>
           <button className='defaultBorder text-xl'
             onClick={() => {
-              const dropdown = getElement<HTMLDivElement>('#settingsDropdown')!;
+              const dropdown = getElement<HTMLDivElement>('#settingsDropdown');
               dropdown.classList.toggle('h-[0%]');
               dropdown.classList.toggle('h-fit');
               dropdown.classList.toggle('defaultBorder');
@@ -29,35 +55,78 @@ export default function App() {
           </div>
         </div>
       </div>
-      <form className='flex gap-4'>
-        <button className='text-xl defaultBorder'
-          title='Go to parent directory'
-        >⬆️</button>
-        <input className='flex-1 text-lg defaultBorder w-[1px]'
-          placeholder='Title'
-          id='titleInput'
-        />
-        <button className='text-xl defaultBorder'
-          title='Add link'
-          type='button'
-          onClick={() => {
-            const title = getElement<HTMLInputElement>('#titleInput')!.value;
-            const href = getElement<HTMLInputElement>('#hrefInput')!.value;
-            UserVault.addLink(title, href);
+      <div className='flex flex-col'>
+        <div className='flex justify-between'>
+          <button className='text-xl defaultBorder'
+            title='Go to parent directory'
+          >⬆️</button>
+          <button className='text-xl defaultBorder'
+            title='Add item'
+            onClick={() => {
+              const form = getElement('#newItemForm');
+              form.classList.toggle('max-h-0');
+              form.classList.toggle('max-h-[9999px]')
+              form.classList.toggle('defaultBorder');
+              form.classList.toggle('mt-4');
+            }}
+          >➕</button>
+        </div>
+        <form className='w-full flex flex-col gap-4 max-h-0 overflow-hidden transition-all duration-300'
+          id='newItemForm'
+          onSubmit={(e) => {
+            e.preventDefault();
+            const titleInput = getElement<HTMLInputElement>('#titleInput');
+            const hrefInput = getElement<HTMLInputElement>('#hrefInput');
+            const title = titleInput.value;
+            const href =  hrefInput.value;
+            if (!title) throw Error('missing title');
+            if (href) {
+              UserVault.addLink(title, href);
+            } else {
+              UserVault.addFolder(title);
+            }
+            titleInput.value = '';
+            hrefInput.value = '';
           }}
-        >➕</button>
-        <button className='text-xl defaultBorder'
-          title='Create folder'
-          type='button'
-          onClick={() => {
-            const title = getElement<HTMLInputElement>('#titleInput')!.value;
-            UserVault.addFolder(title);
-          }}
-        >📁</button>
-      </form>
+        >
+          <input className='defaultBorder flex-1'
+            placeholder='Title'
+            id='titleInput'
+            onInput={handleFormInput}
+          />
+          <input className='defaultBorder flex-1'
+            placeholder='Link'
+            id='hrefInput'
+            onInput={handleFormInput}
+          />
+          <button className='bg-blue-500 p-2 rounded-lg text-white opacity-50'
+            id='submitItemBtn'
+            disabled={true}
+          >Add</button>
+        </form>
+      </div>
       <div className='defaultBorder' id='directoryView'>
-        <DirectoryView contents={UserVault.currentDir.contents} />
+        <DirectoryView contents={UserVault.currentDir?.contents} />
       </div>
     </div>
   )
 }
+
+// <button className='text-xl defaultBorder'
+//   title='Create folder'
+//   type='button'
+//   onClick={() => {
+//     const title = getElement<HTMLInputElement>('#titleInput')!.value;
+//     UserVault.addFolder(title);
+//   }}
+// >📁</button>
+//
+// <button className='text-xl defaultBorder'
+//   title='Add link'
+//   type='button'
+//   onClick={() => {
+//     const title = getElement<HTMLInputElement>('#titleInput')!.value;
+//     const href = getElement<HTMLInputElement>('#hrefInput')!.value;
+//     UserVault.addLink(title, href);
+//   }}
+// >🔗</button>

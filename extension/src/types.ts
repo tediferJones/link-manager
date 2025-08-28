@@ -1,5 +1,7 @@
 type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
+export type FolderContents = (Link | Folder | EncryptedFolder)[]
+
 export type Link = {
   href: string,
   title: string,
@@ -7,7 +9,7 @@ export type Link = {
 
 export type Folder = {
   title: string,
-  contents: (Link | Folder | EncryptedFolder)[],
+  contents: FolderContents,
 }
 
 export interface EncryptedFolder extends Folder {
