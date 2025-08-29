@@ -1,27 +1,36 @@
-type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
+export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
-export type FolderContents = (Link | Folder | EncryptedFolder)[]
+export type FolderContents = { [key: string]: AnyContent }
 
-export type Link = {
-  href: string,
+type ListItem = {
   title: string,
 }
 
-export type Folder = {
-  title: string,
+export interface Link extends ListItem {
+  href: string,
+}
+
+export interface Folder extends ListItem {
+  parent: Content<'folder'> | null,
   contents: FolderContents,
 }
 
-export interface EncryptedFolder extends Folder {
-  encryption: {}
+export interface EncryptedFolder extends ListItem {
+  data: string,
+  salt: string,
+  iv: string,
 }
 
-type GetParams<T extends ContentTypes> = {
+export type Content<T extends ContentTypes = ContentTypes> = {
+  type: T,
+} & {
   link: Link,
   folder: Folder,
   encryptedFolder: EncryptedFolder,
 }[T]
 
-export type Content<T extends ContentTypes> = {
-  type: T,
-} & GetParams<T>
+export type AnyContent = {
+  [K in ContentTypes]: Content<K>
+}[ContentTypes]
+
+export type PackedVault = Omit<Content<'folder'>, 'parent'>

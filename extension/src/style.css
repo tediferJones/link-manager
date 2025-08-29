@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 .defaultBorder {
   @apply rounded-lg;
@@ -9,6 +9,7 @@
 
 html, body {
   @apply min-w-fit;
+  @apply text-base;
 }
 
 button {
