@@ -1,27 +1,32 @@
 export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
-export type FolderContents = { [key: string]: AnyContent }
+export type FolderContents = { [title: string]: AnyContent }
 
 type ListItem = {
   title: string,
 }
 
-export interface Link extends ListItem {
+interface Link extends ListItem {
   href: string,
 }
 
-export interface Folder extends ListItem {
+interface Folder extends ListItem {
   parent: Content<'folder'> | null,
   contents: FolderContents,
+  encryption?: {
+    newKey: string,
+    newSalt: string,
+    newIv: string,
+  }
 }
 
-export interface EncryptedFolder extends ListItem {
+interface EncryptedFolder extends ListItem {
   data: string,
   salt: string,
   iv: string,
 }
 
-export type Content<T extends ContentTypes = ContentTypes> = {
+export type Content<T extends ContentTypes> = {
   type: T,
 } & {
   link: Link,
@@ -33,4 +38,4 @@ export type AnyContent = {
   [K in ContentTypes]: Content<K>
 }[ContentTypes]
 
-export type PackedVault = Omit<Content<'folder'>, 'parent'>
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>

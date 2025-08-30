@@ -1,5 +1,16 @@
 @import 'tailwindcss';
 
+@layer base {
+  :root {
+    @apply bg-slate-50;
+  }
+
+  .dark {
+    @apply bg-slate-900;
+    @apply text-white;
+  }
+}
+
 .defaultBorder {
   @apply rounded-lg;
   @apply border-blue-500;

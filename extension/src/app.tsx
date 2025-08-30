@@ -1,6 +1,7 @@
 import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
 import Vault from '@/lib/Vault';
+import setTheme from './lib/setTheme';
 
 function handleFormInput() {
   const titleElement = getElement<HTMLInputElement>('#titleInput');
@@ -27,8 +28,11 @@ function handleFormInput() {
   }
 }
 
-// FIX ME move this somewhere else
+// FIX ME move these somewhere else
 export const UserVault = new Vault();
+(window as any).vault = UserVault;
+setTheme();
+
 export default function App() {
   console.log('vault', UserVault);
   return (
@@ -37,6 +41,7 @@ export default function App() {
         <div className='flex justify-between gap-2'>
           <button className='text-xl defaultBorder'
             title='Go to parent directory'
+            onClick={() => UserVault.exitDir()}
           >⬆️</button>
           <button className='text-xl defaultBorder'
             title='Add item'
@@ -68,7 +73,12 @@ export default function App() {
             >
               <div>Login Status</div>
               <hr />
-              <div>Dark/Light mode selector</div>
+              <button onClick={() => {
+                const savedTheme = localStorage.getItem('theme');
+                const newTheme = savedTheme === 'light' ? 'dark' : 'light';
+                document.documentElement.className = newTheme;
+                localStorage.setItem('theme', newTheme);
+              }}>Toggle theme</button>
             </div>
           </div>
         </div>
