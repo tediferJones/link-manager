@@ -2,12 +2,25 @@
 
 @layer base {
   :root {
-    @apply bg-slate-50;
+    --bg: theme(colors.slate.50);
+    --fg: theme(colors.slate.900);
   }
 
   .dark {
-    @apply bg-slate-900;
-    @apply text-white;
+    --bg: theme(colors.slate.900);
+    --fg: theme(colors.slate.50);
+  }
+
+  html, body {
+    background-color: var(--bg);
+    color: var(--fg);
+  }
+}
+
+@layer components {
+  .dropdown {
+    background-color: var(--bg);
+    color: var(--fg);
   }
 }
 

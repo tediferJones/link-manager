@@ -1,4 +1,5 @@
 import { UserVault } from '@/app';
+import Breadcrumbs from '@/components/breadcrumbs';
 import { FolderContents } from '@/types';
 
 export default function DirectoryView(
@@ -10,10 +11,16 @@ export default function DirectoryView(
 ) {
   return !contents ? <span>Loading</span> :
     !Object.values(contents).length ?
-      <div className='text-xl font-bold text-gray-500 text-center p-4'>
-        No Contents
-      </div> :
       <>
+        <Breadcrumbs />
+        <hr />
+        <div className='text-xl font-bold text-gray-500 text-center p-4'>
+          No Contents
+        </div>
+      </> :
+      <>
+        <Breadcrumbs />
+        <hr />
         {Object.values(contents).map(item => {
           // FIX ME stick this junk in an object and/or separate into individual components
           if (item.type === 'link') {

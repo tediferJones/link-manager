@@ -11,7 +11,6 @@ interface Link extends ListItem {
 }
 
 interface Folder extends ListItem {
-  parent: Content<'folder'> | null,
   contents: FolderContents,
   encryption?: {
     newKey: string,
@@ -38,4 +37,4 @@ export type AnyContent = {
   [K in ContentTypes]: Content<K>
 }[ContentTypes]
 
-export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type ExpandedDirs = string | ExpandedDirs[]

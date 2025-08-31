@@ -36,9 +36,9 @@ setTheme();
 export default function App() {
   console.log('vault', UserVault);
   return (
-    <div className='p-4 flex flex-col min-w-[360px] max-w-[720px]'>
+    <div className='p-4 flex flex-col min-w-[360px] max-w-[720px] m-auto'>
       <div className='mb-4 flex items-center justify-between gap-4'>
-        <div className='flex justify-between gap-2'>
+        <div className='flex justify-between gap-4'>
           <button className='text-xl defaultBorder'
             title='Go to parent directory'
             onClick={() => UserVault.exitDir()}
@@ -57,9 +57,9 @@ export default function App() {
         <h1 className='text-nowrap text-2xl font-bold text-blue-500 m-auto'>
           LINK MANAGER
         </h1>
-        <div className='relative flex gap-2 ml-auto'>
+        <div className='flex gap-4'>
           <div className='defaultBorder text-xl'>☁️</div>
-          <div>
+          <div className='relative'>
             <button className='defaultBorder text-xl'
               onClick={() => {
                 const dropdown = getElement<HTMLDivElement>('#settingsDropdown');
@@ -68,7 +68,7 @@ export default function App() {
                 dropdown.classList.toggle('defaultBorder');
               }}
             >👤</button>
-            <div className='absolute bg-white right-0 mt-1 z-10 text-nowrap h-[0%] flex flex-col gap-2 transition-all duration-300 overflow-hidden'
+            <div className='absolute dropdown right-0 mt-1 z-10 text-nowrap h-[0%] flex flex-col gap-2 transition-all duration-300 overflow-hidden'
               id='settingsDropdown'
             >
               <div>Login Status</div>
@@ -78,6 +78,7 @@ export default function App() {
                 const newTheme = savedTheme === 'light' ? 'dark' : 'light';
                 document.documentElement.className = newTheme;
                 localStorage.setItem('theme', newTheme);
+                document.documentElement.offsetHeight;
               }}>Toggle theme</button>
             </div>
           </div>
@@ -92,8 +93,10 @@ export default function App() {
           const title = titleInput.value;
           const href =  hrefInput.value;
           if (!title) throw Error('missing title');
-          if (!UserVault.currentDir) throw Error('currentDir is null');
-          if (UserVault.currentDir?.contents[title]) {
+          // if (!UserVault.currentDir) throw Error('currentDir is null');
+          const dir = UserVault.getCurrentDir();
+          if (!dir) throw Error('dir is null');
+          if (dir.contents[title]) {
             // show submit error that name already exists
             console.log('use custom validity message')
             titleInput.setCustomValidity('Name already taken');
@@ -128,7 +131,7 @@ export default function App() {
       <div className='defaultBorder flex flex-col gap-2'
         id='directoryView'
       >
-        <DirectoryView contents={UserVault.currentDir?.contents} />
+        <DirectoryView contents={UserVault.getCurrentDir()?.contents} />
       </div>
     </div>
   )
