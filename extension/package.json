@@ -21,6 +21,7 @@
     "vite-plugin-zip-pack": "^1.2.4"
   },
   "dependencies": {
-    "jsx-dom": "^8.1.6"
+    "jsx-dom": "^8.1.6",
+    "lucide": "^0.542.0"
   }
 }

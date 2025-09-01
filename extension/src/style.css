@@ -1,32 +1,49 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-fg: var(--color-fg);
+  --color-bg: var(--color-bg);
+}
+
 @layer base {
   :root {
-    --bg: theme(colors.slate.50);
-    --fg: theme(colors.slate.900);
+    --color-bg: theme(colors.slate.100);
+    --color-fg: theme(colors.slate.900);
+    /*
+    --color-primary: theme(colors.blue.500);
+* */
+    --color-primary: theme(colors.slate.900);
+    --color-secondary: theme(colors.slate.300);
   }
 
   .dark {
-    --bg: theme(colors.slate.900);
-    --fg: theme(colors.slate.50);
+    --color-bg: theme(colors.slate.900);
+    --color-fg: theme(colors.slate.100);
+    /*
+    --color-primary: theme(colors.blue.500);
+* */
+    --color-primary: theme(colors.slate.100);
+    --color-secondary: theme(colors.slate.700);
   }
 
   html, body {
-    background-color: var(--bg);
-    color: var(--fg);
+    background-color: var(--color-bg);
+    color: var(--color-fg);
   }
 }
 
 @layer components {
   .dropdown {
-    background-color: var(--bg);
-    color: var(--fg);
+    background-color: var(--color-bg);
+    color: var(--color-fg);
   }
 }
 
 .defaultBorder {
   @apply rounded-lg;
-  @apply border-blue-500;
+  @apply border-primary;
   @apply border-2;
   @apply p-2;
 }

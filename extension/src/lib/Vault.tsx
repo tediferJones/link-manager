@@ -13,6 +13,7 @@ export default class Vault {
   // mode: 'extension' | 'webpage';
   vault: Content<'folder'> | null;
   currentDir: string[];
+  // ExpandedDirs type exists in types.ts file
   // expandedDirs: ExpandedDirs
 
   constructor()  {
@@ -90,21 +91,8 @@ export default class Vault {
     this.saveAndRender();
   }
 
-  // see if we can replace enterDir and exitDir with this
   setDir(keys: string[]) {
     this.currentDir = keys;
-    this.saveAndRender();
-  }
-
-  enterDir(key: string) {
-    this.currentDir.push(key);
-    console.log('entering', this.currentDir)
-    this.saveAndRender();
-  }
-
-  exitDir() {
-    this.currentDir.pop();
-    console.log('exiting', this.currentDir)
     this.saveAndRender();
   }
 }
