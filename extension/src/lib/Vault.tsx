@@ -78,17 +78,25 @@ export default class Vault {
   }
 
   addFolder(title: string) {
-    const parent = this.currentDir;
     const newFolder: Content<'folder'> = {
       type: 'folder',
       title,
       contents: {},
     };
-    console.log({ newFolder, parent })
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     dir.contents[title] = newFolder;
     this.saveAndRender();
+  }
+
+  encryptFolder(title: string, password: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    const decrypted = dir.contents[title];
+    if (decrypted.type !== 'folder') {
+      throw Error('only folders can be encrypted');
+    }
+    console.log('encrypt', title, password)
   }
 
   setDir(keys: string[]) {

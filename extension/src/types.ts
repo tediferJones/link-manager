@@ -38,3 +38,5 @@ export type AnyContent = {
 }[ContentTypes]
 
 export type ExpandedDirs = string | ExpandedDirs[]
+
+export type Encodings = 'base64' | 'utf8'
