@@ -2,7 +2,8 @@ import { ChevronUp, CloudUpload, Folder, Link2, Plus, User } from 'lucide';
 import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
 import Icon from '@/components/icon';
-import Vault from '@/lib/Vault';
+import UserVault from '@/lib/userVault';
+import { Modal } from '@/components/modal';
 
 function handleFormInput() {
   const titleElement = getElement<HTMLInputElement>('#titleInput');
@@ -41,18 +42,16 @@ function handleFormInput() {
   }
 }
 
-// FIX ME decide on spacing either 2 or 4,
+// FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
+// create fancy input component (see movie-tracker for example)
+//  - also add ring class to style.css
+// Add link icon to header h1
 
 // might not need tailwind.config.js, we are using tailwindV4
 // https://tailwindcss.com/docs/installation/using-vite
 // https://www.youtube.com/watch?v=bupetqS1SMU
 // see style.css for example primary color definition
-
-// FIX ME move these somewhere else
-// maybe main.ts?
-export const UserVault = new Vault();
-(window as any).vault = UserVault;
 
 export default function App() {
   console.log('vault', UserVault);
@@ -127,6 +126,7 @@ export default function App() {
           // if (!UserVault.currentDir) throw Error('currentDir is null');
           const dir = UserVault.getCurrentDir();
           if (!dir) throw Error('dir is null');
+          if (dir.type !== 'folder') throw Error('dir is encrypted')
           if (dir.contents[title]) {
             // show submit error that name already exists
             console.log('use custom validity message')
@@ -163,8 +163,9 @@ export default function App() {
       <div className='defaultBorder flex flex-col gap-2'
         id='directoryView'
       >
-        <DirectoryView contents={UserVault.getCurrentDir()?.contents} />
+        <DirectoryView />
       </div>
+      <Modal />
     </div>
   )
 }

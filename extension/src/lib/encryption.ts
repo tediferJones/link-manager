@@ -57,7 +57,7 @@ export async function encrypt(plainText: string, key: CryptoKey, iv: string) {
     await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv: getBuffer(iv, 'base64') },
       key,
-      getBuffer(plainText, 'base64'),
+      getBuffer(plainText, 'utf8'),
     ),
     'base64',
   );

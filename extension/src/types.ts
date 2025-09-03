@@ -1,6 +1,6 @@
 export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
-export type FolderContents = { [title: string]: AnyContent }
+type FolderContents = { [title: string]: AnyContent }
 
 type ListItem = {
   title: string,
@@ -13,9 +13,9 @@ interface Link extends ListItem {
 interface Folder extends ListItem {
   contents: FolderContents,
   encryption?: {
-    newKey: string,
-    newSalt: string,
-    newIv: string,
+    key: CryptoKey,
+    salt: string,
+    iv: string,
   }
 }
 
@@ -33,7 +33,8 @@ export type Content<T extends ContentTypes> = {
   encryptedFolder: EncryptedFolder,
 }[T]
 
-export type AnyContent = {
+// FIX ME, try to merge this with Content genric, seems repetative
+type AnyContent = {
   [K in ContentTypes]: Content<K>
 }[ContentTypes]
 
