@@ -61,9 +61,11 @@ export default function App() {
         <div className='flex justify-between gap-4'>
           <button className='text-xl defaultBorder'
             title='Go to parent directory'
-            onClick={() => UserVault.setDir(
-              UserVault.currentDir.slice(0, -1)
-            )}
+            onClick={() => {
+              if (UserVault.currentDir.length) {
+                UserVault.setDir(UserVault.currentDir.slice(0, -1));
+              }
+            }}
           >
             <Icon name={ChevronUp} />
           </button>

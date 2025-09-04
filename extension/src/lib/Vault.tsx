@@ -1,6 +1,6 @@
 import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
-import { encrypt } from '@/lib/encryption';
+import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
 import { Content } from '@/types.ts';
 
 const newVault = {
@@ -35,9 +35,9 @@ export default class Vault {
     this.render();
   }
 
-  getCurrentDir() {
+  getCurrentDir(path = this.currentDir) {
     if (!this.vault) return;
-    return this.currentDir.reduce((folder, title) => {
+    return path.reduce((folder, title) => {
       if (folder.type === 'encryptedFolder') return folder
       const nextItem = folder.contents[title];
       if (!nextItem) {
@@ -74,11 +74,11 @@ export default class Vault {
       return dir;
     } else if (dir.encryption) {
       // re-encrypt, and return
-      const { encryption, title, ...rest } = dir;
+      const { encryption, title, contents } = dir;
       const encrypted: Content<'encryptedFolder'> = {
         type: 'encryptedFolder',
         title,
-        data: await encrypt(JSON.stringify(rest), encryption.key, encryption.iv),
+        data: await encrypt(JSON.stringify(contents), encryption.key, encryption.iv),
         salt: encryption.salt,
         iv: encryption.iv,
       }
@@ -129,20 +129,76 @@ export default class Vault {
     };
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted')
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
     dir.contents[title] = newFolder;
     this.saveAndRender();
   }
 
-  encryptFolder(title: string, password: string) {
+  async encryptFolder(password: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted');
-    const decrypted = dir.contents[title];
-    if (decrypted.type !== 'folder') {
-      throw Error('only folders can be encrypted');
+    if (dir.type !== 'folder') {
+      throw Error('dir is already encrypted');
     }
-    console.log('encrypt', title, password)
+    const iv = getRandomBase64('iv');
+    const salt = getRandomBase64('salt');
+    const key = await getKey(password, salt);
+    dir.encryption = { key, salt, iv };
+    console.log(password, salt, iv)
+  }
+
+  async decryptFolder(password: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'encryptedFolder') {
+      throw Error('dir is already decrypted');
+    }
+    const { iv, salt, data } = dir;
+    console.log(password, salt, iv)
+    const key = await getKey(password, salt);
+    const decryptedContent: Content<'folder'>['contents'] = JSON.parse(
+      await decrypt(data, key, iv)
+    );
+    console.log({ decryptedContent })
+    const newIv = getRandomBase64('iv');
+    const newSalt = getRandomBase64('salt');
+    const newKey = await getKey(password, newSalt);
+    const decryptedFolder: Content<'folder'> = {
+      type: 'folder',
+      title: dir.title,
+      contents: decryptedContent,
+      encryption: {
+        key: newKey,
+        salt: newSalt,
+        iv: newIv,
+      }
+    }
+    const { parentDir, current } = this.getParent();
+    if (!parentDir) throw Error('parent dir is null');
+    if (parentDir.type !== 'folder') throw Error('parent dir is not a folder');
+    parentDir.contents[current] = decryptedFolder;
+    this.render();
+  }
+
+  // if user wants to re-encrypt a folder without closing/refreshing the app
+  async recryptFolder() {}
+
+  delete() {
+    const { parentDir, parentPath, current } = this.getParent();
+    if (!parentDir) throw Error('parent dir is null');
+    if (parentDir.type !== 'folder') throw Error('parent dir is not a folder');
+    delete parentDir.contents[current];
+    if (!this.getCurrentDir()) this.currentDir = parentPath;
+    this.saveAndRender();
+  }
+
+  rename() {}
+
+  getParent() {
+    const parentPath = this.currentDir.slice(0, -1);
+    const [ current ] = this.currentDir.slice(-1);
+    const parentDir = this.getCurrentDir(parentPath);
+    return { parentDir, parentPath, current };
   }
 
   setDir(keys: string[]) {

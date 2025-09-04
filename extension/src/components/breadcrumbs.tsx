@@ -21,6 +21,7 @@ export default function Breadcrumbs() {
           </>
         ))}
       </div>
+      {/* FIX ME move this into directoryView so that each item has it's own settings button and make LinkSettings component */}
       <button className='defaultBorder'
         onClick={() => openModal(
           'Folder Settings',

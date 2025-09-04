@@ -4,6 +4,7 @@ import Breadcrumbs from '@/components/breadcrumbs';
 import Icon from '@/components/icon';
 import Loading from '@/components/loading';
 import { Content, ContentTypes } from '@/types';
+import getElement from '@/lib/getElement';
 
 export default function DirectoryView() {
   const dir = UserVault.getCurrentDir();
@@ -55,6 +56,11 @@ export default function DirectoryView() {
       onSubmit={(e) => {
         e.preventDefault();
         console.log('decrypt folder')
+        const password = getElement<HTMLInputElement>(
+          '#directoryViewPassword'
+        ).value;
+        // FIX ME wrap this in try catch, if error then password is incorrect
+        UserVault.decryptFolder(password);
       }}
     >
       <span>This folder is encrypted, enter your password to continue</span>

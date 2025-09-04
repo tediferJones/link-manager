@@ -24,7 +24,7 @@ function getString(buffer: ArrayBuffer, encoding: Encodings) {
   } else if (encoding === 'base64') {
     const binaryString = Array.from(bytes).map(
       byte => String.fromCharCode(byte)
-    ).join();
+    ).join('');
     return btoa(binaryString);
   } else {
     throw Error(`encoding "${encoding}" is not supported`);
@@ -36,6 +36,12 @@ export async function getKey(password: string, salt: string) {
     {
       name: 'PBKDF2',
       salt: getBuffer(salt, 'base64'),
+      // FIX ME
+      // crank up the iterations
+      // maybe change to SHA-512
+      // also just do more research on encryption in general
+      //  - do salt and iv need to be changed after every encryption
+      //  - do we need to be sure that salt and/or iv does not match any other encrypted folder's salt/iv?
       iterations: 10,
       hash: 'SHA-256',
     },

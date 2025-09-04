@@ -36,17 +36,17 @@ export function Modal() {
     <div className={`fixed top-0 left-0 w-screen h-screen flex justify-center items-center backdrop-blur-lg ${closedClasses.join(' ')}`}
       id='modalContainer'
     >
-      <div className='relative m-auto defaultBorder flex flex-col gap-2'
+      <div className='relative m-auto defaultBorder flex flex-col gap-4 bg-bg'
       >
-        <div className='flex justify-between gap-2'>
+        <div className='flex justify-between gap-4'>
           <div className='flex-1 m-auto text-center font-semibold'
             id='modalTitle'
           ></div>
-          <span className='defaultBorder'
+          <button className='defaultBorder'
             onClick={closeModal}
           >
             <Icon name={X} />
-          </span>
+          </button>
         </div>
         <hr />
         <div id='modalContent'></div>
