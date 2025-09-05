@@ -134,7 +134,7 @@ export default class Vault {
     this.saveAndRender();
   }
 
-  async encryptFolder(password: string) {
+  async encryptFolder(folder: Content<'folder'>, password: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type !== 'folder') {
@@ -143,11 +143,13 @@ export default class Vault {
     const iv = getRandomBase64('iv');
     const salt = getRandomBase64('salt');
     const key = await getKey(password, salt);
-    dir.encryption = { key, salt, iv };
+    folder.encryption = { key, salt, iv };
     console.log(password, salt, iv)
+    this.saveAndRender();
   }
 
   async decryptFolder(password: string) {
+    // FIX ME this is a bit of a mess try to clean it up
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type !== 'encryptedFolder') {
@@ -183,16 +185,23 @@ export default class Vault {
   // if user wants to re-encrypt a folder without closing/refreshing the app
   async recryptFolder() {}
 
-  delete() {
-    const { parentDir, parentPath, current } = this.getParent();
-    if (!parentDir) throw Error('parent dir is null');
-    if (parentDir.type !== 'folder') throw Error('parent dir is not a folder');
-    delete parentDir.contents[current];
-    if (!this.getCurrentDir()) this.currentDir = parentPath;
+  delete(title: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    delete dir.contents[title];
     this.saveAndRender();
   }
 
-  rename() {}
+  rename(title: string, newTitle: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    dir.contents[title].title = newTitle;
+    dir.contents[newTitle] = dir.contents[title];
+    delete dir.contents[title];
+    this.saveAndRender();
+  }
 
   getParent() {
     const parentPath = this.currentDir.slice(0, -1);

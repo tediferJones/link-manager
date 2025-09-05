@@ -14,8 +14,8 @@ export function openModal(title: string, element: Element) {
   getElement('#modalContent').appendChild(element);
 
   const container = getElement('#modalContainer');
-  closedClasses.forEach(className => container.classList.remove(className));
-  openClasses.forEach(className => container.classList.add(className));
+  container.classList.remove(...closedClasses);
+  container.classList.add(...openClasses);
   
   addEventListener('keydown', handleKeyDown);
 }
@@ -25,8 +25,8 @@ export function closeModal() {
   getElement('#modalContent').innerHTML = '';
 
   const container = getElement('#modalContainer');
-  closedClasses.forEach(className => container.classList.add(className));
-  openClasses.forEach(className => container.classList.remove(className));
+  container.classList.remove(...openClasses);
+  container.classList.add(...closedClasses);
 
   removeEventListener('keydown', handleKeyDown);
 }
@@ -35,8 +35,10 @@ export function Modal() {
   return (
     <div className={`fixed top-0 left-0 w-screen h-screen flex justify-center items-center backdrop-blur-lg ${closedClasses.join(' ')}`}
       id='modalContainer'
+      onClick={closeModal}
     >
       <div className='relative m-auto defaultBorder flex flex-col gap-4 bg-bg'
+        onClick={(e) => e.stopPropagation()}
       >
         <div className='flex justify-between gap-4'>
           <div className='flex-1 m-auto text-center font-semibold'

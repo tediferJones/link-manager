@@ -34,7 +34,7 @@ export type Content<T extends ContentTypes> = {
 }[T]
 
 // FIX ME, try to merge this with Content genric, seems repetative
-type AnyContent = {
+export type AnyContent = {
   [K in ContentTypes]: Content<K>
 }[ContentTypes]
 
