@@ -1,3 +1,5 @@
+import { ReactElement } from 'jsx-dom';
+
 export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
 type FolderContents = { [title: string]: AnyContent }
@@ -33,7 +35,7 @@ export type Content<T extends ContentTypes> = {
   encryptedFolder: EncryptedFolder,
 }[T]
 
-// FIX ME, try to merge this with Content genric, seems repetative
+// FIX ME, try to merge this with Content generic, seems repetitive
 export type AnyContent = {
   [K in ContentTypes]: Content<K>
 }[ContentTypes]
@@ -41,3 +43,7 @@ export type AnyContent = {
 export type ExpandedDirs = string | ExpandedDirs[]
 
 export type Encodings = 'base64' | 'utf8'
+
+export type RenderItem = {
+  [K in ContentTypes]: (item: Content<K>) => ReactElement
+}

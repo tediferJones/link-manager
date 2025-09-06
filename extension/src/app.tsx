@@ -55,8 +55,16 @@ function handleFormInput() {
 
 export default function App() {
   console.log('vault', UserVault);
+  
+  addEventListener('keydown', (e) => {
+    if (e.key === '+') {
+      console.log('open add new entry');
+    }
+  });
+
   return (
-    <div className='p-4 flex flex-col min-w-[360px] max-w-[720px] m-auto'>
+    // FIX ME, look at pop up, consider a wider min width (maybe 480px) and settings a min height
+    <div className='p-4 flex flex-col min-w-[360px] max-w-[100vw] md:max-w-[720px] m-auto h-screen'>
       <div className='mb-4 flex items-center justify-between gap-2'>
         <div className='flex justify-between gap-4'>
           <button className='text-xl defaultBorder'
@@ -116,6 +124,11 @@ export default function App() {
           </div>
         </div>
       </div>
+      {/* FIX ME move this into a modal */}
+      {/*
+      Otherwise check what happens if opening dropdown causes list content to overflow,
+      will the scrollbar and its padding appear?
+      */}
       <form className='w-full flex flex-col gap-2 max-h-0 overflow-hidden transition-all duration-300'
         id='newItemForm'
         onSubmit={(e) => {
@@ -125,7 +138,6 @@ export default function App() {
           const title = titleInput.value;
           const href =  hrefInput.value;
           if (!title) throw Error('missing title');
-          // if (!UserVault.currentDir) throw Error('currentDir is null');
           const dir = UserVault.getCurrentDir();
           if (!dir) throw Error('dir is null');
           if (dir.type !== 'folder') throw Error('dir is encrypted')
@@ -145,7 +157,6 @@ export default function App() {
           hrefInput.value = '';
         }}
       >
-        {/* // FIX ME placeholder text color does not update with theme toggle */}
         <input className='defaultBorder flex-1'
           placeholder='Title'
           id='titleInput'
@@ -162,7 +173,7 @@ export default function App() {
           disabled={true}
         >Add</button>
       </form>
-      <div className='defaultBorder flex flex-col gap-2'
+      <div className='defaultBorder flex flex-col gap-2 flex-1 overflow-y-auto'
         id='directoryView'
       >
         <DirectoryView />

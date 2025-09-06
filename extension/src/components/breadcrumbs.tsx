@@ -1,14 +1,19 @@
-import UserVault from '@/lib/userVault';
-import Icon from './icon';
 import { ChevronRight, Home } from 'lucide';
+import Icon from '@/components/icon';
+import UserVault from '@/lib/userVault';
 
 export default function Breadcrumbs() {
   return (
-    // FIX ME this should scroll side to side without a scroll bar
-    // would be nice to add an ellipse to whichever side is overflowing
-    // also maybe change '~' to a little house icon to indicate home
-    // and maybe change '/' to little chevrons
-    <div className='flex gap-2 overflow-hidden font-semibold'>
+    // FIX ME would be nice to add an ellipse to whichever side is overflowing
+    <div className='flex-shrink-0 flex gap-2 overflow-auto font-semibold no-scrollbar'
+      id='breadcrumbs'
+      onWheel={(e) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          e.currentTarget.scrollLeft += e.deltaY;
+        }
+      }}
+    >
       <button onClick={() => UserVault.setDir([])}>
         <Icon name={Home} />
       </button>
@@ -30,14 +35,3 @@ export default function Breadcrumbs() {
     </div>
   )
 }
-
-// <div className='flex gap-2 overflow-hidden font-semibold'>
-//   {[ '~', ...UserVault.currentDir ].map((key, i, arr) => (
-//     <>
-//       <span className='underline cursor-pointer text-primary'
-//         onClick={() => UserVault.setDir(arr.slice(1, i + 1))}
-//       >{key}</span>
-//       <span>/</span>
-//     </>
-//   ))}
-// </div>

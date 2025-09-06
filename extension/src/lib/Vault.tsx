@@ -55,6 +55,8 @@ export default class Vault {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     container.appendChild(<DirectoryView />);
+    const breadcrumbs = getElement('#breadcrumbs');
+    breadcrumbs.scrollLeft = breadcrumbs.scrollWidth;
   }
 
   async save() {
