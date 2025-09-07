@@ -1,6 +1,7 @@
 import { X } from 'lucide';
 import Icon from '@/components/icon';
 import getElement from '@/lib/getElement';
+import { disableHotKeys, enableHotKeys } from '@/lib/hotkeys';
 
 const openClasses = ['pointer-events-auto', 'opacity-100'];
 const closedClasses = ['pointer-events-none', 'opacity-0'];
@@ -18,6 +19,7 @@ export function openModal(title: string, element: Element) {
   container.classList.add(...openClasses);
   
   addEventListener('keydown', handleKeyDown);
+  disableHotKeys();
 }
 
 export function closeModal() {
@@ -29,6 +31,7 @@ export function closeModal() {
   container.classList.add(...closedClasses);
 
   removeEventListener('keydown', handleKeyDown);
+  enableHotKeys();
 }
 
 export function Modal() {
@@ -37,7 +40,7 @@ export function Modal() {
       id='modalContainer'
       onClick={closeModal}
     >
-      <div className='relative m-auto defaultBorder flex flex-col gap-4 bg-bg'
+      <div className='relative m-auto defaultBorder flex flex-col gap-4 bg-bg max-w-[90vw]'
         onClick={(e) => e.stopPropagation()}
       >
         <div className='flex justify-between gap-4'>

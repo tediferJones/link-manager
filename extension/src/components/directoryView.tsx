@@ -1,32 +1,34 @@
-import { Folder, FolderKey, FolderLock, Link2, Settings2 } from 'lucide';
+import { Folder, FolderKey, FolderLock, Link2, Lock, Settings2 } from 'lucide';
 import Breadcrumbs from '@/components/breadcrumbs';
 import Icon from '@/components/icon';
 import Loading from '@/components/loading';
-import FolderSettings from '@/components/folderSettings';
 import DecryptPrompt from '@/components/decryptPrompt';
+import ItemSettings from '@/components/itemSettings';
 import { openModal } from '@/components/modal';
 import UserVault from '@/lib/userVault';
-import getElement from '@/lib/getElement';
 import { Content, ContentTypes, RenderItem } from '@/types';
 
 export default function DirectoryView() {
   const dir = UserVault.getCurrentDir();
 
   // FIX ME seperate into individual components
+  // or just one big meta component
   const renderItem: RenderItem = {
     link: (item) => (
       <div className='flex gap-4 defaultBorder bg-fg text-bg'>
-        <a className='flex-1 flex gap-2'
-          title={item.href}
+        <a className='flex-1 flex gap-2 overflow-hidden'
+          title={`Go to: ${item.href}`}
           href={item.href}
         >
-          <Icon name={Link2} />
-          <span>{item.title}</span>
+          <div className='flex-shrink-0'>
+            <Icon name={Link2} />
+          </div>
+          <span className='truncate'>{item.title}</span>
         </a>
         <button onClick={() => {
           openModal(
             'LinkSettings',
-            <div>Link Settings Go Here</div>
+            <ItemSettings item={item} />
           )
         }}>
           <Icon name={Settings2} />
@@ -35,19 +37,26 @@ export default function DirectoryView() {
     ),
     folder: (item) => (
       <div className='flex gap-4 defaultBorder'>
-        <div className='flex-1 flex gap-2 cursor-pointer'
-          title='Enter folder'
+        <button className='flex-1 flex gap-2 cursor-pointer overflow-hidden'
+          title={`Enter folder: ${item.title}`}
           onClick={() => UserVault.setDir(
             UserVault.currentDir.concat(item.title)
           )}
         >
-          <Icon name={item.encryption ? FolderKey : Folder} />
-          <span>{item.title}</span>
-        </div>
+          <div className='flex-shrink-0'>
+            <Icon name={item.encryption ? FolderKey : Folder} />
+          </div>
+          <span className='truncate'>{item.title}</span>
+        </button>
+        {item.encryption && <button onClick={() => {
+          UserVault.recryptFolder(item.title)
+        }}>
+          <Icon name={Lock} />
+        </button>}
         <button onClick={() => {
           openModal(
             'Folder Settings',
-            <FolderSettings folder={item} />
+            <ItemSettings item={item} />
           )
         }}>
           <Icon name={Settings2} />
@@ -56,19 +65,21 @@ export default function DirectoryView() {
     ),
     encryptedFolder: (item) => (
       <div className='flex gap-4 defaultBorder'>
-        <div className='flex-1 flex gap-2 cursor-pointer'
-          title='Enter folder'
+        <button className='flex-1 flex gap-2 cursor-pointer overflow-hidden'
+          title={`Enter encrypted folder: ${item.title}`}
           onClick={() => UserVault.setDir(
             UserVault.currentDir.concat(item.title)
           )}
         >
-          <Icon name={FolderLock} />
-          <span>{item.title}</span>
-        </div>
+          <div className='flex-shrink-0'>
+            <Icon name={FolderLock} />
+          </div>
+          <span className='truncate'>{item.title}</span>
+        </button>
         <button onClick={() => {
           openModal(
             'Encrypted Folder Settings',
-            <div>Encrypted Folder Settings Go Here</div>
+            <ItemSettings item={item} />
           )
         }}>
           <Icon name={Settings2} />
@@ -82,9 +93,10 @@ export default function DirectoryView() {
   }
 
   // add scrollbar padding only if container is scrollable
+  // FIX ME, could we use transition-all to animate the padding change?
   setTimeout(() => {
-    const container = getElement('#directoryViewItems');
-    if (container.scrollHeight > container.clientHeight) {
+    const container = document.querySelector('#directoryViewItems');
+    if (container && container.scrollHeight > container.clientHeight) {
       container.classList.add('pr-2');
     }
   });

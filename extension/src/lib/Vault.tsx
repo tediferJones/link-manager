@@ -185,7 +185,24 @@ export default class Vault {
   }
 
   // if user wants to re-encrypt a folder without closing/refreshing the app
-  async recryptFolder() {}
+  async recryptFolder(title: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    const folder = dir.contents[title];
+    if (folder.type !== 'folder') throw Error('item is not a folder');
+    if (!folder.encryption) throw Error('folder is not already encrypted');
+    const { encryption, contents } = folder;
+    const encrypted: Content<'encryptedFolder'> = {
+      type: 'encryptedFolder',
+      title,
+      data: await encrypt(JSON.stringify(contents), encryption.key, encryption.iv),
+      salt: encryption.salt,
+      iv: encryption.iv,
+    }
+    dir.contents[title] = encrypted;
+    this.render();
+  }
 
   delete(title: string) {
     const dir = this.getCurrentDir();

@@ -47,3 +47,5 @@ export type Encodings = 'base64' | 'utf8'
 export type RenderItem = {
   [K in ContentTypes]: (item: Content<K>) => ReactElement
 }
+
+export type HotKeyOpts = '+' | 'H' | 'U'
