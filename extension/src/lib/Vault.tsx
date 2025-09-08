@@ -12,14 +12,17 @@ const newVault = {
 export default class Vault {
   // this will make it easier to copy this over to the webpage
   // mode: 'extension' | 'webpage';
+  // vault: Content<'folder'> | null;
   vault: Content<'folder'> | Content<'encryptedFolder'> | null;
   currentDir: string[];
+  savedDir: string[];
   // ExpandedDirs type exists in types.ts file
   // expandedDirs: ExpandedDirs
 
   constructor()  {
     this.vault = null;
     this.currentDir = [];
+    this.savedDir = [];
     // FIX ME, also use localStorage to store vault and currentDir
     // we would need to keep localStorage, chrome.storage.sync, and the database all in sync
     // but then we wouldn't constantly have to check if vault is null
@@ -31,12 +34,14 @@ export default class Vault {
     this.vault = (
       chromeStorage.vault ? JSON.parse(chromeStorage.vault) : newVault
     );
-    this.currentDir = chromeStorage.currentDir || [];
+    // this.currentDir = chromeStorage.currentDir || [];
+    this.savedDir = chromeStorage.savedDir || [];
     this.render();
   }
 
-  getCurrentDir(path = this.currentDir) {
+  getCurrentDir(path = this.savedDir) {
     if (!this.vault) return;
+    this.currentDir = [];
     return path.reduce((folder, title) => {
       if (folder.type === 'encryptedFolder') return folder
       const nextItem = folder.contents[title];
@@ -45,6 +50,7 @@ export default class Vault {
       } else if (nextItem.type === 'link') {
         throw Error(`${title} is not folder`);
       }
+      this.currentDir.push(title);
       return nextItem;
     }, this.vault);
   }
@@ -62,14 +68,19 @@ export default class Vault {
   async save() {
     if (!this.vault || !this.currentDir) return;
     console.log('packed', await this.pack());
-    const packedVault = JSON.stringify(await this.pack());
+    const packedV2 = await this.packV2(this.vault as Content<'folder'>);
+    console.log('packedV2', packedV2);
+    // const packedVault = JSON.stringify(await this.pack());
+    const packedVault = JSON.stringify(packedV2);
     await chrome.storage.sync.set({
       // vault: this.vault,
       vault: packedVault,
-      currentDir: this.currentDir,
+      // currentDir: this.currentDir,
+      savedDir: this.savedDir,
     });
   }
 
+  // this needs to be dfs not bfs in order to encrypt folders nested inside encrypted folders
   async pack(dir = this.vault): Promise<Content<'folder' | 'encryptedFolder'>> {
     if (!dir) throw Error('dir is null');
     if (dir.type === 'encryptedFolder') {
@@ -102,6 +113,41 @@ export default class Vault {
         )
       )
       return { ...dir, contents: packedContent };
+    }
+  }
+
+  // FIX ME, improve types
+  async packV2(folder: Content<'folder'>): Promise<Content<'folder' | 'encryptedFolder'>> {
+    const { encryption, contents, title } = folder;
+    let packedContents = Object.fromEntries(
+      await Promise.all(
+        Object.keys(contents).map(async title => {
+          if (contents[title].type === 'link' || contents[title].type === 'encryptedFolder') {
+            return [ title, contents[title] ];
+          } else {
+            return [ title, await this.packV2(contents[title]) ];
+          }
+        })
+      )
+    );
+    if (encryption) {
+      return {
+        type: 'encryptedFolder',
+        title,
+        data: await encrypt(
+          JSON.stringify(packedContents),
+          encryption.key,
+          encryption.iv
+        ),
+        salt: encryption.salt,
+        iv: encryption.iv,
+      }
+    } else {
+      return {
+        type: encryption ? 'encryptedFolder' : 'folder',
+        title,
+        contents: packedContents,
+      }
     }
   }
 
@@ -231,6 +277,7 @@ export default class Vault {
 
   setDir(keys: string[]) {
     this.currentDir = keys;
+    this.savedDir = keys;
     this.saveAndRender();
   }
 }
