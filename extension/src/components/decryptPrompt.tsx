@@ -18,7 +18,7 @@ export default function DecryptPrompt() {
     getElement<HTMLInputElement>('#directoryViewPassword').focus();
   });
   return (
-    <form className='flex flex-col gap-2 items-center defaultBorder w-min m-auto'
+    <form className='flex flex-col gap-4 items-center defaultBorder w-min m-auto'
       onSubmit={async (e) => {
         e.preventDefault();
         const errorContainer = getElement<HTMLSpanElement>('#decryptError');
@@ -35,10 +35,11 @@ export default function DecryptPrompt() {
         }
       }}
     >
-      <span className='text-center'>
-        This folder is encrypted, enter your password to continue
-      </span>
-      <div className='flex gap-2 items-center'>
+      <div className='text-center'>
+        Entering encrypted folder, please enter your password to continue
+      </div>
+      <span className='font-semibold'>{UserVault.getCurrentDir()?.title}</span>
+      <div className='flex gap-4 items-center'>
         <label htmlFor='directoryViewPassword'>Password</label>
         <input className='defaultBorder'
           id='directoryViewPassword'

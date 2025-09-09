@@ -10,6 +10,7 @@ type ListItem = {
 
 interface Link extends ListItem {
   href: string,
+  tags: string[],
 }
 
 interface Folder extends ListItem {

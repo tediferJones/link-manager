@@ -10,8 +10,12 @@ const newVault = {
 } satisfies Content<'folder'> as Content<'folder'>;
 
 export default class Vault {
+  // FIX ME
   // this will make it easier to copy this over to the webpage
   // mode: 'extension' | 'webpage';
+  // if we decide vault root cannot be encrypted use this
+  // this could also be important for expanding dirs
+  // maybe leave it as is until we have that figured out
   // vault: Content<'folder'> | null;
   vault: Content<'folder'> | Content<'encryptedFolder'> | null;
   currentDir: string[];
@@ -34,7 +38,6 @@ export default class Vault {
     this.vault = (
       chromeStorage.vault ? JSON.parse(chromeStorage.vault) : newVault
     );
-    // this.currentDir = chromeStorage.currentDir || [];
     this.savedDir = chromeStorage.savedDir || [];
     this.render();
   }
@@ -66,66 +69,28 @@ export default class Vault {
   }
 
   async save() {
+    // FIX ME, add package version to saved vault
+    // this way if we make breaking changes to vault structure
+    // we can apply a function to patch old vaults
     if (!this.vault || !this.currentDir) return;
-    console.log('packed', await this.pack());
-    const packedV2 = await this.packV2(this.vault as Content<'folder'>);
-    console.log('packedV2', packedV2);
-    // const packedVault = JSON.stringify(await this.pack());
-    const packedVault = JSON.stringify(packedV2);
+    const packed = await this.pack(this.vault as Content<'folder'>);
+    console.log('packed', packed);
     await chrome.storage.sync.set({
-      // vault: this.vault,
-      vault: packedVault,
-      // currentDir: this.currentDir,
+      vault: JSON.stringify(packed),
       savedDir: this.savedDir,
     });
   }
 
-  // this needs to be dfs not bfs in order to encrypt folders nested inside encrypted folders
-  async pack(dir = this.vault): Promise<Content<'folder' | 'encryptedFolder'>> {
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') {
-      return dir;
-    } else if (dir.encryption) {
-      // re-encrypt, and return
-      const { encryption, title, contents } = dir;
-      const encrypted: Content<'encryptedFolder'> = {
-        type: 'encryptedFolder',
-        title,
-        data: await encrypt(JSON.stringify(contents), encryption.key, encryption.iv),
-        salt: encryption.salt,
-        iv: encryption.iv,
-      }
-      return encrypted;
-    } else {
-      // crawl children
-      const packedContent = Object.fromEntries(
-        await Promise.all(
-          Object.keys(dir.contents).map(async (title) => {
-            if (dir.contents[title].type === 'link') {
-              return [ title, dir.contents[title] ];
-            } else {
-              return [
-                title,
-                await this.pack(dir.contents[title])
-              ]
-            }
-          })
-        )
-      )
-      return { ...dir, contents: packedContent };
-    }
-  }
-
   // FIX ME, improve types
-  async packV2(folder: Content<'folder'>): Promise<Content<'folder' | 'encryptedFolder'>> {
+  async pack(folder: Content<'folder'>): Promise<Content<'folder' | 'encryptedFolder'>> {
     const { encryption, contents, title } = folder;
     let packedContents = Object.fromEntries(
       await Promise.all(
         Object.keys(contents).map(async title => {
-          if (contents[title].type === 'link' || contents[title].type === 'encryptedFolder') {
-            return [ title, contents[title] ];
+          if (contents[title].type === 'folder') {
+            return [ title, await this.pack(contents[title]) ];
           } else {
-            return [ title, await this.packV2(contents[title]) ];
+            return [ title, contents[title] ];
           }
         })
       )
@@ -144,7 +109,7 @@ export default class Vault {
       }
     } else {
       return {
-        type: encryption ? 'encryptedFolder' : 'folder',
+        type: 'folder',
         title,
         contents: packedContents,
       }
@@ -161,6 +126,7 @@ export default class Vault {
       type: 'link',
       title,
       href,
+      tags: [],
     };
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -204,12 +170,10 @@ export default class Vault {
       throw Error('dir is already decrypted');
     }
     const { iv, salt, data } = dir;
-    console.log(password, salt, iv)
     const key = await getKey(password, salt);
     const decryptedContent: Content<'folder'>['contents'] = JSON.parse(
       await decrypt(data, key, iv)
     );
-    console.log({ decryptedContent })
     const newIv = getRandomBase64('iv');
     const newSalt = getRandomBase64('salt');
     const newKey = await getKey(password, newSalt);
@@ -230,7 +194,6 @@ export default class Vault {
     this.render();
   }
 
-  // if user wants to re-encrypt a folder without closing/refreshing the app
   async recryptFolder(title: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -242,7 +205,11 @@ export default class Vault {
     const encrypted: Content<'encryptedFolder'> = {
       type: 'encryptedFolder',
       title,
-      data: await encrypt(JSON.stringify(contents), encryption.key, encryption.iv),
+      data: await encrypt(
+        JSON.stringify(contents),
+        encryption.key,
+        encryption.iv
+      ),
       salt: encryption.salt,
       iv: encryption.iv,
     }
@@ -279,5 +246,29 @@ export default class Vault {
     this.currentDir = keys;
     this.savedDir = keys;
     this.saveAndRender();
+  }
+
+  addTags(title: string, tags: string[]) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    if (dir.contents[title].type !== 'link') {
+      throw Error('target is not a link');
+    }
+    if (dir.contents[title].tags.includes(title)) return;
+    dir.contents[title].tags.push(...tags);
+    this.saveAndRender();
+  }
+
+  removeTags(title: string, tags: string[]) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    if (dir.contents[title].type !== 'link') {
+      throw Error('target is not a link');
+    }
+    dir.contents[title].tags = dir.contents[title].tags.filter(
+      extTag => tags.includes(extTag)
+    );
   }
 }
