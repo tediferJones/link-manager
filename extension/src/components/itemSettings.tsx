@@ -1,13 +1,13 @@
-import { Plus, X } from 'lucide';
+import { X } from 'lucide';
 import { closeModal } from '@/components/modal';
 import DeleteConfirmation from '@/components/deleteConfirmation';
 import Icon from '@/components/icon';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
-import { AnyContent } from '@/types';
+import { AnyContent, Content } from '@/types';
 
-const tags = { add: [] as string[], remove: [] as string[] };
+const tagChanges = { add: [] as string[], remove: [] as string[] };
 
 function handleInputChange(folder: AnyContent) {
   const title = getElement<HTMLInputElement>('#folderSettingsTitle').value;
@@ -15,7 +15,7 @@ function handleInputChange(folder: AnyContent) {
     '#folderSettingsPassword'
   )?.value;
   const submitBtn = getElement<HTMLButtonElement>('#folderSettingsSubmitBtn');
-  const disableBtn = !(title !== folder.title || pwd || tags.add.length || tags.remove.length);
+  const disableBtn = !(title !== folder.title || pwd || tagChanges.add.length || tagChanges.remove.length);
   submitBtn.disabled = disableBtn;
   const { enabled, disabled } = btnClassNames;
   if (disableBtn) {
@@ -27,19 +27,37 @@ function handleInputChange(folder: AnyContent) {
   }
 }
 
-// function TagsDisplay({ link }: { link: Content<'link'> }) {
-//   console.log('tags', link.tags.concat(tags.add).filter(tag => !tags.remove.includes(tag)))
-//   return link.tags.concat(tags.add).filter(tag => tags.remove.includes(tag)).map(tag => (
-//     <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>
-//       {tag}
-//       <button type='button'
-//         onClick={() => tags.remove.push(tag)}
-//       >
-//         <Icon name={X} />
-//       </button>
-//     </span>
-//   ));
-// }
+function TagsDisplay({ item }: { item: Content<'link'> }) {
+  const currentTags = item.tags.concat(tagChanges.add).filter(
+    tag => !tagChanges.remove.includes(tag)
+  );
+  console.log(item.tags, tagChanges, currentTags)
+  return (
+    <>
+      {currentTags.map(tag => (
+        <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>
+          {tag}
+          <button type='button'
+            onClick={() => {
+              console.log('triggered delete')
+              tagChanges.remove.push(tag);
+              const tagContainer = getElement('#tagsDisplayContainer');
+              tagContainer.innerHTML = '';
+              tagContainer.append(<TagsDisplay item={item} />);
+              handleInputChange(item);
+            }}
+          >
+            <Icon name={X} />
+          </button>
+        </span>
+      ))}
+    </>
+  )
+}
+
+setInterval(() => {
+  console.log('tagChanges', tagChanges)
+}, 5000)
 
 // FIX ME autofocus modal when opened
 export default function ItemSettings({ item }: { item: AnyContent }) {
@@ -60,12 +78,14 @@ export default function ItemSettings({ item }: { item: AnyContent }) {
                 await UserVault.encryptFolder(item, password);
               }
               if (title !== item.title) UserVault.rename(item.title, title);
-              if (tags.add.length) {
-                UserVault.addTags(item.title, tags.add);
+              if (tagChanges.add.length) {
+                UserVault.addTags(item.title, tagChanges.add);
               }
-              if (tags.remove.length) {
-                UserVault.addTags(item.title, tags.remove);
+              if (tagChanges.remove.length) {
+                UserVault.removeTags(item.title, tagChanges.remove);
               }
+              tagChanges.add = [];
+              tagChanges.remove = [];
               closeModal();
             }}
           >
@@ -94,63 +114,38 @@ export default function ItemSettings({ item }: { item: AnyContent }) {
               </>
             )}
             {item.type === 'link' && (
-              <>
-                {/*
+              // FIX ME
+              // add auto-complete for easier tag matching (see vault.getExistingTags)
+              // consider moving input inside of tagsDisplayContainer
+              // also consider moving tagsDisplay to its own component
+              <form className='col-span-full grid grid-cols-3 gap-4'
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const newTagInput = getElement<HTMLInputElement>(
+                    '#newTagInput'
+                  );
+                  if (!newTagInput.value) return;
+                  tagChanges.add.push(newTagInput.value);
+                  newTagInput.value = '';
+                  const tagContainer = getElement('#tagsDisplayContainer');
+                  tagContainer.innerHTML = '';
+                  tagContainer.append(<TagsDisplay item={item} />);
+                  handleInputChange(item);
+                }}>
                 <label className='m-auto'
-                  htmlFor='addTag'
-                >Tag</label>
+                  htmlFor='newTagInput'
+                >New Tag</label>
                 <input className='defaultBorder col-span-2'
+                  id='newTagInput'
                   type='text'
                 />
-                */}
-                <div className='defaultBorder col-span-full flex flex-wrap gap-2'>
-                  {item.tags.map(tag => (
-                    <span className='bg-fg text-bg p-1 rounded-lg flex items-center w-min'>
-                      <span>{tag}</span>
-                      <button>
-                        <Icon name={X} />
-                      </button>
-                    </span>
-                  ))}
-                  <button type='button'>
-                    <Icon name={Plus}/>
-                  </button>
+                <div className='defaultBorder col-span-full flex flex-wrap gap-2'
+                  id='tagsDisplayContainer'
+                >
+                  <TagsDisplay item={item} />
                 </div>
-              </>
+              </form>
             )}
-            {/*
-            {item.type === 'link' && (
-              <div className='defaultBorder col-span-3 flex flex-wrap gap-2 items-center'
-                id='tagForm'
-              >
-                <TagsDisplay link={item} />
-                <button
-                  id='tagAddBtn'
-                  type='button'
-                  onClick={() => {
-                    getElement('#tagForm').appendChild(
-                      <form onSubmit={(e) => {
-                        e.preventDefault();
-                        const addTagInput = getElement<HTMLInputElement>(
-                          '#addTagInput'
-                        );
-                        tags.add.push(addTagInput.value);
-                        handleInputChange(item);
-                        addTagInput.value = '';
-                        const tagForm = getElement('#tagForm')
-                        tagForm.querySelectorAll('.tag').forEach(e => e.remove());
-                        tagForm.prepend(<TagsDisplay link={item} />);
-                      }}>
-                        <input id='addTagInput' autoFocus />
-                      </form>
-                    );
-                    getElement<HTMLInputElement>('#addTagInput').focus();
-                  }}>
-                  <Icon name={Plus} />
-                </button>
-              </div>
-            )}
-            */}
             <button className={`bg-fg text-bg col-span-3 rounded-lg p-2 ${inline('animate')} ${inline('disabled')}`}
               id='folderSettingsSubmitBtn'
               type='submit'

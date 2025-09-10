@@ -255,8 +255,10 @@ export default class Vault {
     if (dir.contents[title].type !== 'link') {
       throw Error('target is not a link');
     }
-    if (dir.contents[title].tags.includes(title)) return;
-    dir.contents[title].tags.push(...tags);
+    const existingTags = dir.contents[title].tags;
+    existingTags.push(
+      ...tags.filter(newTag => !existingTags.includes(newTag))
+    );
     this.saveAndRender();
   }
 
@@ -267,8 +269,28 @@ export default class Vault {
     if (dir.contents[title].type !== 'link') {
       throw Error('target is not a link');
     }
+    console.log('after removing', dir.contents[title].tags.filter(
+      extTag => !tags.includes(extTag)
+    ))
+    console.log(dir.contents[title].tags, tags)
     dir.contents[title].tags = dir.contents[title].tags.filter(
-      extTag => tags.includes(extTag)
+      extTag => !tags.includes(extTag)
     );
+    this.saveAndRender();
+  }
+
+  // use for auto-complete of new tags
+  getExistingTags(parent = this.vault, tags = new Set<string>()) {
+    if (!parent) throw Error('vault is null');
+    if (parent.type === 'encryptedFolder') return;
+    Object.keys(parent.contents).forEach(title => {
+      const item = parent.contents[title];
+      if (item.type === 'link') {
+        item.tags.forEach(tag => tags.add(tag));
+      } else if (item.type === 'folder') {
+        this.getExistingTags(item, tags);
+      }
+    });
+    return [ ...tags ];
   }
 }
