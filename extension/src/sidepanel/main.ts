@@ -1,8 +1,3 @@
-import App from '@/app';
-import setTheme from '@/lib/setTheme';
-import { enableHotKeys } from '@/lib/hotkeys';
-import '@/style.css';
+import start from '@/lib/start';
 
-setTheme();
-enableHotKeys();
-document.querySelector('#app')!.appendChild(App());
+start('sidepanel');

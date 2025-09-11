@@ -1,8 +1,8 @@
 import { Folder, Link2 } from 'lucide';
 import Icon from '@/components/icon';
+import { closeModal } from '@/components/modal';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
-import { closeModal } from './modal';
 
 function handleFormInput() {
   const titleElement = getElement<HTMLInputElement>('#titleInput');
@@ -42,6 +42,7 @@ function handleFormInput() {
 }
 
 export default function AddItem() {
+  setTimeout(() => getElement<HTMLInputElement>('#titleInput').focus());
   return (
     <form className='w-full grid grid-cols-3 gap-4 transition-all duration-300'
       id='newItemForm'

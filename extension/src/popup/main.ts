@@ -1,4 +1,3 @@
-import App from '@/app';
-import '@/style.css';
+import start from '@/lib/start';
 
-document.querySelector('#app')!.appendChild(App());
+start('popup');

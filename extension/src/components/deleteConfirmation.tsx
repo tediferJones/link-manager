@@ -12,6 +12,7 @@ export default function DeleteConfirmation({ item }: { item: AnyContent }) {
         closeModal();
       }}
     >
+      {/* FIX ME input ring is cut off */}
       <input className='defaultBorder'
         type='text'
         placeholder='Enter title to confirm deletion'
@@ -33,7 +34,6 @@ export default function DeleteConfirmation({ item }: { item: AnyContent }) {
       />
       <button className={`bg-red-500 p-2 rounded-lg ${inline('animate')} ${inline('disabled')}`}
         id='deleteConfirmationSubmitBtn'
-        type='button'
         disabled={true}
       >Delete</button>
     </form>

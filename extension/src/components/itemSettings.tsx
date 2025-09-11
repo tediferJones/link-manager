@@ -1,11 +1,10 @@
-import { X } from 'lucide';
 import { closeModal } from '@/components/modal';
 import DeleteConfirmation from '@/components/deleteConfirmation';
-import Icon from '@/components/icon';
+import TagManager from '@/components/tagManager';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
-import { AnyContent, Content } from '@/types';
+import { AnyContent } from '@/types';
 
 const tagChanges = { add: [] as string[], remove: [] as string[] };
 
@@ -27,37 +26,37 @@ function handleInputChange(folder: AnyContent) {
   }
 }
 
-function TagsDisplay({ item }: { item: Content<'link'> }) {
-  const currentTags = item.tags.concat(tagChanges.add).filter(
-    tag => !tagChanges.remove.includes(tag)
-  );
-  console.log(item.tags, tagChanges, currentTags)
-  return (
-    <>
-      {currentTags.map(tag => (
-        <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>
-          {tag}
-          <button type='button'
-            onClick={() => {
-              console.log('triggered delete')
-              tagChanges.remove.push(tag);
-              const tagContainer = getElement('#tagsDisplayContainer');
-              tagContainer.innerHTML = '';
-              tagContainer.append(<TagsDisplay item={item} />);
-              handleInputChange(item);
-            }}
-          >
-            <Icon name={X} />
-          </button>
-        </span>
-      ))}
-    </>
-  )
-}
+// function TagsDisplay({ item }: { item: Content<'link'> }) {
+//   const currentTags = item.tags.concat(tagChanges.add).filter(
+//     tag => !tagChanges.remove.includes(tag)
+//   );
+//   console.log(item.tags, tagChanges, currentTags)
+//   return (
+//     <>
+//       {currentTags.map(tag => (
+//         <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>
+//           {tag}
+//           <button type='button'
+//             onClick={() => {
+//               console.log('triggered delete')
+//               tagChanges.remove.push(tag);
+//               const tagContainer = getElement('#tagsDisplayContainer');
+//               tagContainer.innerHTML = '';
+//               tagContainer.append(<TagsDisplay item={item} />);
+//               handleInputChange(item);
+//             }}
+//           >
+//             <Icon name={X} />
+//           </button>
+//         </span>
+//       ))}
+//     </>
+//   )
+// }
 
-setInterval(() => {
-  console.log('tagChanges', tagChanges)
-}, 5000)
+// setInterval(() => {
+//   console.log('tagChanges', tagChanges)
+// }, 5000)
 
 // FIX ME autofocus modal when opened
 export default function ItemSettings({ item }: { item: AnyContent }) {
@@ -113,6 +112,7 @@ export default function ItemSettings({ item }: { item: AnyContent }) {
                 />
               </>
             )}
+            {/*
             {item.type === 'link' && (
               // FIX ME
               // add auto-complete for easier tag matching (see vault.getExistingTags)
@@ -146,6 +146,7 @@ export default function ItemSettings({ item }: { item: AnyContent }) {
                 </div>
               </form>
             )}
+            */}
             <button className={`bg-fg text-bg col-span-3 rounded-lg p-2 ${inline('animate')} ${inline('disabled')}`}
               id='folderSettingsSubmitBtn'
               type='submit'
@@ -153,6 +154,12 @@ export default function ItemSettings({ item }: { item: AnyContent }) {
             >Save</button>
           </form>
           <hr className='col-span-3' />
+          {item.type === 'link' && (
+            <>
+              <TagManager item={item} />
+              <hr className='col-span-3' />
+            </>
+          )}
         </>
       )}
       <span className='text-center font-semibold truncate'>

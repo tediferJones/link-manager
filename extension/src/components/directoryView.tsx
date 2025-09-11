@@ -109,7 +109,7 @@ export default function DirectoryView() {
     >
       {dir.type === 'encryptedFolder' ? <DecryptPrompt /> : 
         !Object.keys(dir.contents).length ? 
-        <div className='text-xl font-bold text-gray-500 text-center m-auto'>
+        <div className='text-xl font-bold text-slate-500 text-center m-auto'>
           No Contents
         </div>
         : Object.values(dir.contents).map(typeSafeRender)

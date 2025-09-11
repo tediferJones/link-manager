@@ -50,3 +50,5 @@ export type RenderItem = {
 }
 
 export type HotKeyOpts = '+' | 'H' | 'U'
+
+export type SizeTypes = 'sidepanel' | 'popup' | 'website'

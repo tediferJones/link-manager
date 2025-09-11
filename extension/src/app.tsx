@@ -5,24 +5,44 @@ import AddItem from '@/components/addItem';
 import Icon from '@/components/icon';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
+import { SizeTypes } from '@/types';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
 // create fancy input component (see movie-tracker for example)
 //  - also add ring class to style.css
-// Add link icon to header h1
+// Create start.ts file in utils
+//  - This should perform the same actions as main.ts
+//    - but this way we only have modify one file and everything stays in sync
+// Add type prop to App ('sidepanel', 'popup', 'website')
+//  - and then give each type size classes to best fit their use case
 
+// FIX ME
 // might not need tailwind.config.js, we are using tailwindV4
 // https://tailwindcss.com/docs/installation/using-vite
 // https://www.youtube.com/watch?v=bupetqS1SMU
 // see style.css for example primary color definition
 
-export default function App() {
+// CHECKLIST
+// Add tags to folders
+// Get view sortings working
+//  - folders should be sorted alphabetically
+//  - links should be sorted by priority
+//    - might as well add watched attribute when doing priority
+// Address FIX ME comments
+
+export default function App({ type }: { type: SizeTypes }) {
   console.log('vault', UserVault);
+
+  const typeClasses: { [K in SizeTypes]: string } = {
+    sidepanel: 'w-[100vw] h-screen',
+    popup: 'w-[480px] max-h-[480px]',
+    website: 'max-w-[720px] h-screen',
+  }
   
   return (
     // FIX ME, look at pop up, consider a wider min width (maybe 480px) and settings a min height
-    <div className='p-4 flex flex-col min-w-[360px] max-w-[100vw] md:max-w-[720px] m-auto h-screen'>
+    <div className={`p-4 flex flex-col m-auto ${typeClasses[type]}`}>
       <div className='mb-4 flex items-center justify-between gap-2'>
         <div className='flex justify-between gap-4'>
           <button className='text-xl defaultBorder'
@@ -37,6 +57,7 @@ export default function App() {
           </button>
           <button className='text-xl defaultBorder'
             title='Add item'
+            // FIX ME
             // instead of having hotkeys programmatically click this button
             // consider just copying the onClick function into hotKeys.ts
             id='addItemBtn'

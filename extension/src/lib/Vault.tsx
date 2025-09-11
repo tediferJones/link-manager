@@ -72,6 +72,10 @@ export default class Vault {
     // FIX ME, add package version to saved vault
     // this way if we make breaking changes to vault structure
     // we can apply a function to patch old vaults
+    // also add date
+    //  - this way we can tell which data is the latest
+    //    - if client data is latest push to db
+    //    - if server data is latest pull from db
     if (!this.vault || !this.currentDir) return;
     const packed = await this.pack(this.vault as Content<'folder'>);
     console.log('packed', packed);
@@ -248,6 +252,9 @@ export default class Vault {
     this.saveAndRender();
   }
 
+  // FIX ME
+  // if we never actually pass multiple strings to addTags or removeTags just make it a single string
+  // while we're at it, rename to addTag and removeTag
   addTags(title: string, tags: string[]) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -269,10 +276,6 @@ export default class Vault {
     if (dir.contents[title].type !== 'link') {
       throw Error('target is not a link');
     }
-    console.log('after removing', dir.contents[title].tags.filter(
-      extTag => !tags.includes(extTag)
-    ))
-    console.log(dir.contents[title].tags, tags)
     dir.contents[title].tags = dir.contents[title].tags.filter(
       extTag => !tags.includes(extTag)
     );

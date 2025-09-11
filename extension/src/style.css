@@ -45,6 +45,7 @@
   }
 }
 
+/* FIX ME try to make a class called 'border' that will do this */
 .defaultBorder {
   @apply rounded-lg;
   @apply border-primary;
@@ -80,5 +81,6 @@ button {
 }
 
 input::placeholder {
+  /* FIX ME this should be a custom class like primary/secondary, call it 'muted' */
   @apply text-slate-500;
 }
