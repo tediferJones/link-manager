@@ -26,38 +26,6 @@ function handleInputChange(folder: AnyContent) {
   }
 }
 
-// function TagsDisplay({ item }: { item: Content<'link'> }) {
-//   const currentTags = item.tags.concat(tagChanges.add).filter(
-//     tag => !tagChanges.remove.includes(tag)
-//   );
-//   console.log(item.tags, tagChanges, currentTags)
-//   return (
-//     <>
-//       {currentTags.map(tag => (
-//         <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>
-//           {tag}
-//           <button type='button'
-//             onClick={() => {
-//               console.log('triggered delete')
-//               tagChanges.remove.push(tag);
-//               const tagContainer = getElement('#tagsDisplayContainer');
-//               tagContainer.innerHTML = '';
-//               tagContainer.append(<TagsDisplay item={item} />);
-//               handleInputChange(item);
-//             }}
-//           >
-//             <Icon name={X} />
-//           </button>
-//         </span>
-//       ))}
-//     </>
-//   )
-// }
-
-// setInterval(() => {
-//   console.log('tagChanges', tagChanges)
-// }, 5000)
-
 // FIX ME autofocus modal when opened
 export default function ItemSettings({ item }: { item: AnyContent }) {
   return (
@@ -112,41 +80,6 @@ export default function ItemSettings({ item }: { item: AnyContent }) {
                 />
               </>
             )}
-            {/*
-            {item.type === 'link' && (
-              // FIX ME
-              // add auto-complete for easier tag matching (see vault.getExistingTags)
-              // consider moving input inside of tagsDisplayContainer
-              // also consider moving tagsDisplay to its own component
-              <form className='col-span-full grid grid-cols-3 gap-4'
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const newTagInput = getElement<HTMLInputElement>(
-                    '#newTagInput'
-                  );
-                  if (!newTagInput.value) return;
-                  tagChanges.add.push(newTagInput.value);
-                  newTagInput.value = '';
-                  const tagContainer = getElement('#tagsDisplayContainer');
-                  tagContainer.innerHTML = '';
-                  tagContainer.append(<TagsDisplay item={item} />);
-                  handleInputChange(item);
-                }}>
-                <label className='m-auto'
-                  htmlFor='newTagInput'
-                >New Tag</label>
-                <input className='defaultBorder col-span-2'
-                  id='newTagInput'
-                  type='text'
-                />
-                <div className='defaultBorder col-span-full flex flex-wrap gap-2'
-                  id='tagsDisplayContainer'
-                >
-                  <TagsDisplay item={item} />
-                </div>
-              </form>
-            )}
-            */}
             <button className={`bg-fg text-bg col-span-3 rounded-lg p-2 ${inline('animate')} ${inline('disabled')}`}
               id='folderSettingsSubmitBtn'
               type='submit'
@@ -154,12 +87,8 @@ export default function ItemSettings({ item }: { item: AnyContent }) {
             >Save</button>
           </form>
           <hr className='col-span-3' />
-          {item.type === 'link' && (
-            <>
-              <TagManager item={item} />
-              <hr className='col-span-3' />
-            </>
-          )}
+          <TagManager item={item} />
+          <hr className='col-span-3' />
         </>
       )}
       <span className='text-center font-semibold truncate'>

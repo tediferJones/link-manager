@@ -29,6 +29,12 @@ import { SizeTypes } from '@/types';
 //  - folders should be sorted alphabetically
 //  - links should be sorted by priority
 //    - might as well add watched attribute when doing priority
+// Add dates to all items (just created at dates)
+// Add watch attribute to links
+//  - also add button to link list item to toggle/indicate watch status
+// Add functionality for items to be moved from one dir to another
+//  - with this add this functionality when creating a new item
+//    - that way users don't have to manually navigate to the desired destination directory just to create an item
 // Address FIX ME comments
 
 export default function App({ type }: { type: SizeTypes }) {
@@ -94,7 +100,7 @@ export default function App({ type }: { type: SizeTypes }) {
             <div className='absolute dropdown right-0 mt-1 z-10 text-nowrap h-[0%] flex flex-col gap-2 transition-all duration-300 overflow-hidden'
               id='settingsDropdown'
             >
-              <div>Login Status</div>
+              <button>Login</button>
               <hr />
               <button onClick={() => {
                 const savedTheme = localStorage.getItem('theme');
@@ -103,6 +109,10 @@ export default function App({ type }: { type: SizeTypes }) {
                 localStorage.setItem('theme', newTheme);
                 document.documentElement.offsetHeight;
               }}>Toggle theme</button>
+              <hr />
+              <button>About</button>
+              <hr />
+              <button>FAQ</button>
             </div>
           </div>
         </div>

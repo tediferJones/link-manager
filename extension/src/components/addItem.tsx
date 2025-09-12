@@ -47,6 +47,7 @@ export default function AddItem() {
     <form className='w-full grid grid-cols-3 gap-4 transition-all duration-300'
       id='newItemForm'
       onSubmit={(e) => {
+        // FIX ME this is a bit messy, try to clean it up
         e.preventDefault();
         const titleInput = getElement<HTMLInputElement>('#titleInput');
         const hrefInput = getElement<HTMLInputElement>('#hrefInput');
@@ -55,16 +56,17 @@ export default function AddItem() {
         if (!title) throw Error('missing title');
         const dir = UserVault.getCurrentDir();
         if (!dir) throw Error('dir is null');
-        if (dir.type !== 'folder') throw Error('dir is encrypted')
+        if (dir.type !== 'folder') throw Error('dir is encrypted');
         if (dir.contents[title]) {
           // show submit error that name already exists
-          console.log('use custom validity message')
           titleInput.setCustomValidity('Name already taken');
           e.currentTarget.reportValidity();
           return;
         }
         if (href && !/^https?:\/\//.test(href)) {
-          hrefInput.setCustomValidity('Links must start with http:// or https://')
+          hrefInput.setCustomValidity(
+            'Links must start with http:// or https://'
+          );
           e.currentTarget.reportValidity();
           return;
         }

@@ -15,6 +15,7 @@ interface Link extends ListItem {
 
 interface Folder extends ListItem {
   contents: FolderContents,
+  tags: string[],
   encryption?: {
     key: CryptoKey,
     salt: string,
@@ -52,3 +53,5 @@ export type RenderItem = {
 export type HotKeyOpts = '+' | 'H' | 'U'
 
 export type SizeTypes = 'sidepanel' | 'popup' | 'website'
+
+export type Encrypted = Pick<Folder, 'contents' | 'tags'>

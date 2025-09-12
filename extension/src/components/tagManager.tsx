@@ -4,7 +4,7 @@ import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { Content } from '@/types';
 
-export default function TagManager({ item }: { item: Content<'link'> }) {
+export default function TagManager({ item }: { item: Content<'link' | 'folder'> }) {
   function refreshTags() {
     const container = getElement('#tagsContainer');
     container.innerHTML = '';
@@ -34,6 +34,7 @@ export default function TagManager({ item }: { item: Content<'link'> }) {
   }
 
   function addTag(newTag: string) {
+    console.log('newTag', newTag)
     UserVault.addTags(item.title, [ newTag ]);
     const newTagInput = getElement<HTMLInputElement>('#newTagInput');
     newTagInput.value = '';
@@ -69,6 +70,7 @@ export default function TagManager({ item }: { item: Content<'link'> }) {
             const newTag = e.currentTarget.value.toLowerCase();
             const extTags = UserVault.getExistingTags();
             if (!extTags) return;
+            // FIX ME
             // filter out tags that are already associate with the item
             const tagSuggestions = extTags.filter(extTag => {
               if (item.tags.includes(extTag)) return;
@@ -85,6 +87,7 @@ export default function TagManager({ item }: { item: Content<'link'> }) {
                     <>
                       {i > 0 && <hr />}
                       <button className='focus:bg-secondary rounded-lg ring-red-500'
+                        type='button'
                         onClick={() => addTag(tag)}
                       >{tag}</button>
                     </>

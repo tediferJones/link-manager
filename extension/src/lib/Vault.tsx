@@ -1,12 +1,13 @@
 import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
-import { Content } from '@/types.ts';
+import { Content, Encrypted } from '@/types.ts';
 
 const newVault = {
   type: 'folder',
   title: '',
   contents: {},
+  tags: [],
 } satisfies Content<'folder'> as Content<'folder'>;
 
 export default class Vault {
@@ -100,13 +101,17 @@ export default class Vault {
       )
     );
     if (encryption) {
+      console.log('encrypted', packedContents)
       return {
         type: 'encryptedFolder',
         title,
         data: await encrypt(
-          JSON.stringify(packedContents),
+          JSON.stringify({
+            contents: packedContents,
+            tags: folder.tags,
+          }),
           encryption.key,
-          encryption.iv
+          encryption.iv,
         ),
         salt: encryption.salt,
         iv: encryption.iv,
@@ -116,6 +121,7 @@ export default class Vault {
         type: 'folder',
         title,
         contents: packedContents,
+        tags: folder.tags,
       }
     }
   }
@@ -144,6 +150,7 @@ export default class Vault {
       type: 'folder',
       title,
       contents: {},
+      tags: [],
     };
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -152,6 +159,7 @@ export default class Vault {
     this.saveAndRender();
   }
 
+  // FIX ME, rename to addEncryption
   async encryptFolder(folder: Content<'folder'>, password: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -175,16 +183,19 @@ export default class Vault {
     }
     const { iv, salt, data } = dir;
     const key = await getKey(password, salt);
-    const decryptedContent: Content<'folder'>['contents'] = JSON.parse(
+    // const decryptedContent: Content<'folder'>['contents'] = JSON.parse(
+    const decryptedData: Encrypted = JSON.parse(
       await decrypt(data, key, iv)
     );
+    console.log('decrypted data', decryptedData)
     const newIv = getRandomBase64('iv');
     const newSalt = getRandomBase64('salt');
     const newKey = await getKey(password, newSalt);
     const decryptedFolder: Content<'folder'> = {
       type: 'folder',
       title: dir.title,
-      contents: decryptedContent,
+      // contents: decryptedContent,
+      ...decryptedData,
       encryption: {
         key: newKey,
         salt: newSalt,
@@ -259,8 +270,8 @@ export default class Vault {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type !== 'folder') throw Error('dir is encrypted');
-    if (dir.contents[title].type !== 'link') {
-      throw Error('target is not a link');
+    if (dir.contents[title].type === 'encryptedFolder') {
+      throw Error('item is encrypted');
     }
     const existingTags = dir.contents[title].tags;
     existingTags.push(
@@ -273,8 +284,8 @@ export default class Vault {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type !== 'folder') throw Error('dir is encrypted');
-    if (dir.contents[title].type !== 'link') {
-      throw Error('target is not a link');
+    if (dir.contents[title].type === 'encryptedFolder') {
+      throw Error('item is encrypted');
     }
     dir.contents[title].tags = dir.contents[title].tags.filter(
       extTag => !tags.includes(extTag)
@@ -288,11 +299,16 @@ export default class Vault {
     if (parent.type === 'encryptedFolder') return;
     Object.keys(parent.contents).forEach(title => {
       const item = parent.contents[title];
-      if (item.type === 'link') {
-        item.tags.forEach(tag => tags.add(tag));
-      } else if (item.type === 'folder') {
+      if (item.type === 'encryptedFolder') return;
+      item.tags.forEach(tag => tags.add(tag));
+      if (item.type === 'folder') {
         this.getExistingTags(item, tags);
       }
+      // if (item.type === 'link') {
+      //   item.tags.forEach(tag => tags.add(tag));
+      // } else if (item.type === 'folder') {
+      //   this.getExistingTags(item, tags);
+      // }
     });
     return [ ...tags ];
   }

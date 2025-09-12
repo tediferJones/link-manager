@@ -13,6 +13,8 @@ import UserVault from '@/lib/userVault';
 // convert all other uses of this.currentDir to this.viewDir
 // or maybe rename currentDir to savedDir and use currentDir as viewDir
 
+// FIX ME disable hotkeys when input is focused
+
 export default function DecryptPrompt() {
   setTimeout(() => {
     getElement<HTMLInputElement>('#directoryViewPassword').focus();

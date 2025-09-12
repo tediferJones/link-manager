@@ -13,9 +13,10 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
+// FIX ME, trap focus within modal when opened
 export function openModal(title: string, element: Element) {
   getElement<HTMLDivElement>('#modalTitle').innerText = title;
-  const content = getElement('#modalContent')
+  const content = getElement('#modalContent');
   content.appendChild(element);
 
   const container = getElement('#modalContainer');
@@ -33,10 +34,12 @@ export function openModal(title: string, element: Element) {
 }
 
 export function closeModal() {
-  getElement<HTMLDivElement>('#modalTitle').innerText = '';
-  const content = getElement('#modalContent')
-  content.innerHTML = '';
-  content.classList.remove('pr-2');
+  setTimeout(() => {
+    getElement<HTMLDivElement>('#modalTitle').innerText = '';
+    const content = getElement('#modalContent');
+    content.innerHTML = '';
+    content.classList.remove('pr-2');
+  }, 300 /* same as animation duration */);
 
   const container = getElement('#modalContainer');
   container.classList.remove(...openClasses);
@@ -48,25 +51,25 @@ export function closeModal() {
 
 export function Modal() {
   return (
-    <div className={`fixed top-0 left-0 w-screen h-screen flex justify-center items-center backdrop-blur-lg ${closedClasses.join(' ')}`}
+    <div className={`fixed top-0 left-0 w-screen h-screen flex justify-center items-center transition-all duration-300 backdrop-blur-lg ${closedClasses.join(' ')}`}
       id='modalContainer'
       onClick={closeModal}
     >
       <div className='relative m-auto defaultBorder flex flex-col gap-4 bg-bg max-w-[90vw] max-h-[90vh]'
         onClick={(e) => e.stopPropagation()}
       >
-        <div className='flex justify-between gap-4'>
-          {/* FIX ME title is not actually centered, it is offset by the X button */}
-          <div className='flex-1 m-auto text-center font-semibold'
+        <div className='flex justify-between gap-4 relative'>
+          <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold'
             id='modalTitle'
           ></div>
-          <button className='defaultBorder'
+          <button className='defaultBorder ml-auto'
             onClick={closeModal}
           >
             <Icon name={X} />
           </button>
         </div>
         <hr />
+        {/* FIX ME overflow-y-auto causes input outlines to be cut off when focused */}
         <div className='overflow-y-auto' id='modalContent'></div>
       </div>
     </div>
