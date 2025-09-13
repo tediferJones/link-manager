@@ -2,6 +2,8 @@ import { ReactElement } from 'jsx-dom';
 
 export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
+type Timestamp = number;
+
 type FolderContents = { [title: string]: AnyContent }
 
 type ListItem = {
@@ -11,6 +13,8 @@ type ListItem = {
 interface Link extends ListItem {
   href: string,
   tags: string[],
+  watched?: Timestamp,
+  priority: Timestamp,
 }
 
 interface Folder extends ListItem {

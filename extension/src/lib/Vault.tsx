@@ -3,12 +3,12 @@ import getElement from '@/lib/getElement';
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
 import { Content, Encrypted } from '@/types.ts';
 
-const newVault = {
+const newVault: Content<'folder'> = {
   type: 'folder',
   title: '',
   contents: {},
   tags: [],
-} satisfies Content<'folder'> as Content<'folder'>;
+};
 
 export default class Vault {
   // FIX ME
@@ -132,15 +132,24 @@ export default class Vault {
   }
 
   addLink(title: string, href: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted')
     const newLink: Content<'link'> = {
       type: 'link',
       title,
       href,
       tags: [],
+      // priority: Date.now(),
+      priority: Object.keys(dir.contents).reduce((highest, title) => {
+        const item = dir.contents[title];
+        if (item.type === 'link' && item.priority > highest) {
+          return item.priority;
+        }
+        return highest;
+      }, 0) + 1,
     };
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted')
+    console.log('link priority', newLink.priority)
     dir.contents[title] = newLink;
     this.saveAndRender();
   }
@@ -183,7 +192,6 @@ export default class Vault {
     }
     const { iv, salt, data } = dir;
     const key = await getKey(password, salt);
-    // const decryptedContent: Content<'folder'>['contents'] = JSON.parse(
     const decryptedData: Encrypted = JSON.parse(
       await decrypt(data, key, iv)
     );
@@ -194,7 +202,6 @@ export default class Vault {
     const decryptedFolder: Content<'folder'> = {
       type: 'folder',
       title: dir.title,
-      // contents: decryptedContent,
       ...decryptedData,
       encryption: {
         key: newKey,
@@ -304,12 +311,64 @@ export default class Vault {
       if (item.type === 'folder') {
         this.getExistingTags(item, tags);
       }
-      // if (item.type === 'link') {
-      //   item.tags.forEach(tag => tags.add(tag));
-      // } else if (item.type === 'folder') {
-      //   this.getExistingTags(item, tags);
-      // }
     });
     return [ ...tags ];
+  }
+
+  toggleWatched(title: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    const item = dir.contents[title];
+    if (item.type !== 'link') throw Error('item is not a link');
+    if (item.watched) {
+      delete item.watched;
+    } else {
+      item.watched = Date.now();
+    }
+    this.saveAndRender();
+  }
+
+  // FIX ME, re-write this, swaps don't always swap as expected
+  // does it even make sense to keep priority value on watched links?
+  setPriority(title: string, type: 'up' | 'down') {
+    console.log('moving', title, type)
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    const item = dir.contents[title];
+    if (item.type !== 'link') throw Error('item is not a link');
+    const { swapItem } = (
+      Object.values(dir.contents).reduce((closest, checkItem) => {
+        if (item === checkItem) return closest;
+        if (checkItem.type === 'link' && !checkItem.watched) {
+          // const diff = checkItem.priority - closest.swapItem.priority;
+          const diff = item.priority - checkItem.priority;
+          console.log(diff, item.priority, checkItem.priority)
+          if (diff < 0 && type === 'down') {
+            return closest;
+          } else if (diff > 0 && type === 'up') {
+            return closest;
+          } else if (Math.abs(diff) < closest.diff) {
+            return {
+              swapItem: checkItem,
+              diff,
+            }
+          }
+        }
+        return closest;
+      }, { swapItem: item, diff: Infinity })
+    );
+
+    console.log('swapping', item, swapItem);
+    [
+      item.priority,
+      swapItem.priority,
+    ] = [
+        swapItem.priority,
+        item.priority,
+      ];
+
+    this.saveAndRender();
   }
 }

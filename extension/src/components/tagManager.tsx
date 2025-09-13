@@ -14,7 +14,7 @@ export default function TagManager({ item }: { item: Content<'link' | 'folder'> 
   function TagsDisplay() {
     return (
       <>
-        {!item.tags.length ? <div className='flex-1 text-center text-slate-500'>
+        {!item.tags.length ? <div className='flex-1 text-center text-muted font-bold'>
           No Tags
         </div> : item.tags.map(tag => (
           <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>

@@ -7,7 +7,8 @@ import { AnyContent } from '@/types';
 export default function DeleteConfirmation({ item }: { item: AnyContent }) {
   return (
     <form className='flex flex-col gap-4'
-      onSubmit={() => {
+      onSubmit={(e) => {
+        e.preventDefault();
         UserVault.delete(item.title);
         closeModal();
       }}

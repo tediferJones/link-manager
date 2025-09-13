@@ -5,6 +5,7 @@
   --color-secondary: var(--color-secondary);
   --color-fg: var(--color-fg);
   --color-bg: var(--color-bg);
+  --color-muted: var(--color-muted);
 }
 
 @layer base {
@@ -16,6 +17,7 @@
 * */
     --color-primary: theme(colors.slate.900);
     --color-secondary: theme(colors.slate.300);
+    --color-muted: theme(colors.slate.500);
   }
 
   .dark {
@@ -26,6 +28,7 @@
 * */
     --color-primary: theme(colors.slate.100);
     --color-secondary: theme(colors.slate.700);
+    --color-muted: theme(colors.slate.500);
   }
 
   html, body {
@@ -81,6 +84,5 @@ button {
 }
 
 input::placeholder {
-  /* FIX ME this should be a custom class like primary/secondary, call it 'muted' */
-  @apply text-slate-500;
+  @apply text-muted;
 }
