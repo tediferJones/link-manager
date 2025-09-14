@@ -1,4 +1,14 @@
-import { ChevronDown, ChevronUp, Eye, Folder, FolderKey, FolderLock, Link2, Lock, Settings2 } from 'lucide';
+import {
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Folder,
+  FolderKey,
+  FolderLock,
+  Link2,
+  Lock,
+  Settings2
+} from 'lucide';
 import Breadcrumbs from '@/components/breadcrumbs';
 import Icon from '@/components/icon';
 import Loading from '@/components/loading';
@@ -14,32 +24,10 @@ import { AnyContent, Content, ContentTypes, RenderItem } from '@/types';
 //     down: (e: Element) => e.nextElementSibling,
 //   }
 // 
-//   if (!element) return console.log('parent is null');
-//   const first = getElement[type](element);
-//   console.log('first', first)
-//   const firstPriority = getPriority(first);
-//   if (!first || !firstPriority) return console.log(`No ${type} element found`);
-//   const second = getElement[type](first);
-//   const secondPriority = getPriority(second);
-//   if (!second || !secondPriority) {
-//     // plus or minus 1 depending on type
-//     console.log('diff 1')
-//     return type === 'up' ? firstPriority + 1 : firstPriority - 1;
-//   }
-//   // console.log(firstPriority, secondPriority)
-//   // const mid = (firstPriority - secondPriority) + secondPriority;
-//   // if (mid === firstPriority || mid === secondPriority) throw Error('priority match')
-//   // return mid;
-//   console.log('average')
-//   // FIX ME average does not provide enough precision
-//   // find some better way to organize these without using decimals
-//   // also make sure that new priority does not match either firstPriority or secondPriority
-//   return (firstPriority + secondPriority) / 2;
-// }
-// 
-// function getPriority(element: Element | null) {
 //   if (!element) return;
-//   const priority = element.getAttribute('data-priority');
+//   const nextElement = getElement[type](element);
+//   if (!nextElement) return;
+//   const priority = nextElement.getAttribute('data-priority');
 //   if (!priority) return;
 //   return Number(priority);
 // }
@@ -68,25 +56,25 @@ export default function DirectoryView() {
         {!item.watched && (
           <>
             <button onClick={() => {
-              UserVault.setPriority(item.title, 'up');
+              UserVault.swapPriority(item.priority, item.priority + 1);
               // const newPriority = getNewPriority(
               //   e.currentTarget.parentElement,
-              //   'up',
+              //   'up'
               // );
               // if (newPriority) {
-              //   UserVault.setPriority(item.title, newPriority);
+              //   UserVault.swapPriority(item.priority, newPriority);
               // }
             }}>
               <Icon name={ChevronUp} />
             </button>
             <button onClick={() => {
-              UserVault.setPriority(item.title, 'down')
+              UserVault.swapPriority(item.priority, item.priority - 1);
               // const newPriority = getNewPriority(
               //   e.currentTarget.parentElement,
-              //   'down',
-              // )
+              //   'down'
+              // );
               // if (newPriority) {
-              //   UserVault.setPriority(item.title, newPriority);
+              //   UserVault.swapPriority(item.priority, newPriority);
               // }
             }}>
               <Icon name={ChevronDown} />
