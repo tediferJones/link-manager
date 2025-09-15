@@ -4,11 +4,11 @@ import TagManager from '@/components/tagManager';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
-import { AnyContent } from '@/types';
+import { Content } from '@/types';
 
 const tagChanges = { add: [] as string[], remove: [] as string[] };
 
-function handleInputChange(folder: AnyContent) {
+function handleInputChange(folder: Content) {
   const title = getElement<HTMLInputElement>('#folderSettingsTitle').value;
   const pwd = document.querySelector<HTMLInputElement>(
     '#folderSettingsPassword'
@@ -27,7 +27,7 @@ function handleInputChange(folder: AnyContent) {
 }
 
 // FIX ME autofocus modal when opened
-export default function ItemSettings({ item }: { item: AnyContent }) {
+export default function ItemSettings({ item }: { item: Content }) {
   return (
     <div className='flex flex-col gap-4'>
       {(item.type === 'folder' || item.type === 'link') && (

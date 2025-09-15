@@ -2,9 +2,9 @@ import { closeModal } from '@/components/modal';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
-import { AnyContent } from '@/types';
+import { Content } from '@/types';
 
-export default function DeleteConfirmation({ item }: { item: AnyContent }) {
+export default function DeleteConfirmation({ item }: { item: Content }) {
   return (
     <form className='flex flex-col gap-4'
       onSubmit={(e) => {

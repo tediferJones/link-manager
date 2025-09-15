@@ -3,7 +3,8 @@ import DirectoryView from '@/components/directoryView';
 import { Modal, openModal } from '@/components/modal';
 import AddItem from '@/components/addItem';
 import Icon from '@/components/icon';
-import getElement from '@/lib/getElement';
+import Dropdown from '@/components/dropdown';
+// import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { SizeTypes } from '@/types';
 
@@ -30,11 +31,13 @@ import { SizeTypes } from '@/types';
 //  - links should be sorted by priority
 //    - might as well add watched attribute when doing priority
 // Add dates to all items (just created at dates)
+//  - for links update date when moved to watched or when moved back to links
 // Add watch attribute to links
 //  - also add button to link list item to toggle/indicate watch status
 // Add functionality for items to be moved from one dir to another
 //  - with this add this functionality when creating a new item
 //    - that way users don't have to manually navigate to the desired destination directory just to create an item
+// Add pinned attribute
 // Address FIX ME comments
 
 export default function App({ type }: { type: SizeTypes }) {
@@ -86,6 +89,28 @@ export default function App({ type }: { type: SizeTypes }) {
           </div>
           {/* FIX ME move user info dropdown to its own component */}
           {/* and add a hotkey so that pressing 'escape' or clicking anywhere outside of the dropdown, will close it */}
+          <Dropdown key='userSettings' align='right'>
+            <button className='defaultBorder text-xl'>
+              <Icon name={User} />
+            </button>
+            <div className='flex flex-col gap-2 transition-all duration-300'
+            >
+              <button>Login</button>
+              <hr />
+              <button onClick={() => {
+                const savedTheme = localStorage.getItem('theme');
+                const newTheme = savedTheme === 'light' ? 'dark' : 'light';
+                document.documentElement.className = newTheme;
+                localStorage.setItem('theme', newTheme);
+                document.documentElement.offsetHeight;
+              }}>Toggle theme</button>
+              <hr />
+              <button>About</button>
+              <hr />
+              <button>FAQ</button>
+            </div>
+          </Dropdown>
+          {/*
           <div className='relative'>
             <button className='defaultBorder text-xl'
               onClick={() => {
@@ -115,6 +140,7 @@ export default function App({ type }: { type: SizeTypes }) {
               <button>FAQ</button>
             </div>
           </div>
+          */}
         </div>
       </div>
       <div className='defaultBorder flex flex-col gap-2 flex-1 overflow-y-auto'

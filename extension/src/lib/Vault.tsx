@@ -8,6 +8,11 @@ const newVault: Content<'folder'> = {
   title: '',
   contents: {},
   tags: [],
+  sortedKeys: {
+    folders: [],
+    links: [],
+    watched: [],
+  }
 };
 
 export default class Vault {
@@ -88,7 +93,7 @@ export default class Vault {
 
   // FIX ME, improve types
   async pack(folder: Content<'folder'>): Promise<Content<'folder' | 'encryptedFolder'>> {
-    const { encryption, contents, title } = folder;
+    const { encryption, contents, title, tags, sortedKeys } = folder;
     let packedContents = Object.fromEntries(
       await Promise.all(
         Object.keys(contents).map(async title => {
@@ -102,14 +107,16 @@ export default class Vault {
     );
     if (encryption) {
       console.log('encrypted', packedContents)
+      const toEncrypt: Encrypted = {
+        contents: packedContents,
+        tags,
+        sortedKeys,
+      }
       return {
         type: 'encryptedFolder',
         title,
         data: await encrypt(
-          JSON.stringify({
-            contents: packedContents,
-            tags: folder.tags,
-          }),
+          JSON.stringify(toEncrypt),
           encryption.key,
           encryption.iv,
         ),
@@ -118,10 +125,8 @@ export default class Vault {
       }
     } else {
       return {
-        type: 'folder',
-        title,
+        ...folder,
         contents: packedContents,
-        tags: folder.tags,
       }
     }
   }
@@ -140,18 +145,9 @@ export default class Vault {
       title,
       href,
       tags: [],
-      // priority: Date.now(),
-      // priority: Object.keys(dir.contents).reduce((highest, title) => {
-      //   const item = dir.contents[title];
-      //   if (item.type === 'link' && item.priority > highest) {
-      //     return item.priority;
-      //   }
-      //   return highest;
-      // }, 0) + 1,
-      priority: this.getNewPriority(),
     };
-    console.log('link priority', newLink.priority)
     dir.contents[title] = newLink;
+    dir.sortedKeys.links.unshift(title);
     this.saveAndRender();
   }
 
@@ -161,11 +157,20 @@ export default class Vault {
       title,
       contents: {},
       tags: [],
+      sortedKeys: {
+        folders: [],
+        links: [],
+        watched: [],
+      }
     };
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type !== 'folder') throw Error('dir is encrypted');
     dir.contents[title] = newFolder;
+    dir.sortedKeys.folders.push(title);
+    dir.sortedKeys.folders.sort(
+      (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
+    );
     this.saveAndRender();
   }
 
@@ -320,104 +325,46 @@ export default class Vault {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    const item = dir.contents[title];
-    if (item.type !== 'link') throw Error('item is not a link');
-    if (item.watched) {
-      delete item.watched;
-      item.priority = this.getNewPriority();
+    if (dir.sortedKeys.links.includes(title)) {
+      const linkIndex = dir.sortedKeys.links.findIndex(
+        linkTitle => linkTitle === title
+      );
+      dir.sortedKeys.links.splice(linkIndex, 1);
+      dir.sortedKeys.watched.unshift(title);
+    } else if (dir.sortedKeys.watched.includes(title)) {
+      const linkIndex = dir.sortedKeys.watched.findIndex(
+        linkTitle => linkTitle === title
+      );
+      dir.sortedKeys.watched.splice(linkIndex, 1);
+      dir.sortedKeys.links.unshift(title);
     } else {
-      item.watched = Date.now();
-      item.priority = 0;
-      this.normalizeLinks();
+      throw Error(`${title} could not be found in links or watched`);
     }
     this.saveAndRender();
   }
 
-  // FIX ME, re-write this, swaps don't always swap as expected
-  // does it even make sense to keep priority value on watched links?
-  // setPriority(title: string, type: 'up' | 'down') {
-  //   console.log('moving', title, type)
-  //   const dir = this.getCurrentDir();
-  //   if (!dir) throw Error('dir is null');
-  //   if (dir.type !== 'folder') throw Error('dir is encrypted');
-  //   const item = dir.contents[title];
-  //   if (item.type !== 'link') throw Error('item is not a link');
-  //   const { swapItem } = (
-  //     Object.values(dir.contents).reduce((closest, checkItem) => {
-  //       if (item === checkItem) return closest;
-  //       if (checkItem.type === 'link' && !checkItem.watched) {
-  //         // const diff = checkItem.priority - closest.swapItem.priority;
-  //         const diff = item.priority - checkItem.priority;
-  //         console.log(diff, item.priority, checkItem.priority)
-  //         if (diff < 0 && type === 'down') {
-  //           return closest;
-  //         } else if (diff > 0 && type === 'up') {
-  //           return closest;
-  //         } else if (Math.abs(diff) < closest.diff) {
-  //           return {
-  //             swapItem: checkItem,
-  //             diff,
-  //           }
-  //         }
-  //       }
-  //       return closest;
-  //     }, { swapItem: item, diff: Infinity })
-  //   );
-
-  //   console.log('swapping', item, swapItem);
-  //   [
-  //     item.priority,
-  //     swapItem.priority,
-  //   ] = [
-  //       swapItem.priority,
-  //       item.priority,
-  //     ];
-
-  //   this.saveAndRender();
-  // }
-
-  // FIX ME
-  // wouldn't it be easier to just have a sortedKeys attribute on folders?
-  // many benefits with approach
-  // if structured like so:
-  // { folderOrder: string[], linkOrder: string[], watchedOrder: string[] }
-  //  - priority is implied by index of title in linkOrder
-  //    - thus we can delete priority attribute from Link type
-  //    - swapping is easier, just switch with item before or after
-  //    - if next priority is -1 or linkOrder.length ignore
-  //  - prevents re-sorting same dir over and over again everytime it is rendered
-  swapPriority(priority1: number, priority2: number) {
+  // new setup, lowest is 0 (top of list), highest is sortedKeys.links.length -1 (bottom of list)
+  // to move an item to first or last, just enter diff of Infinity or -Infinity
+  swapPriority(title: string, diff: number) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted');
-    const item1 = Object.values(dir.contents).find(
-      item => item.type === 'link' && item.priority === priority1
-    ) as Content<'link'>;
-    const item2 = Object.values(dir.contents).find(
-      item => item.type === 'link' && item.priority === priority2
-    ) as Content<'link'>;
-    [ item1.priority, item2.priority ] = [ item2.priority, item1.priority ];
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    const linkIndex = dir.sortedKeys.links.findIndex(
+      linkTitle => linkTitle === title
+    );
+    let newIndex = linkIndex + diff;
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex >= dir.sortedKeys.links.length) {
+      newIndex = dir.sortedKeys.links.length - 1;
+    }
+    if (newIndex === linkIndex) return;
+    [
+      dir.sortedKeys.links[linkIndex],
+      dir.sortedKeys.links[newIndex],
+    ] = [
+        dir.sortedKeys.links[newIndex],
+        dir.sortedKeys.links[linkIndex],
+      ];
     this.saveAndRender();
-  }
-
-  getNewPriority() {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    return Object.values(dir.contents).reduce((highest, item) => {
-      if (item.type !== 'link') return highest;
-      if (item.watched) return highest;
-      return Math.max(item.priority, highest);
-    }, 0) + 1;
-  }
-
-  normalizeLinks() {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    const links = Object.values(dir.contents).filter(
-      item => item.type === 'link' && !item.watched
-    ) as Content<'link'>[];
-    links.forEach((link, i, arr) => link.priority = arr.length - i);
   }
 }

@@ -7,7 +7,7 @@ import {
   FolderLock,
   Link2,
   Lock,
-  Settings2
+  Settings2,
 } from 'lucide';
 import Breadcrumbs from '@/components/breadcrumbs';
 import Icon from '@/components/icon';
@@ -16,34 +16,20 @@ import DecryptPrompt from '@/components/decryptPrompt';
 import ItemSettings from '@/components/itemSettings';
 import { openModal } from '@/components/modal';
 import UserVault from '@/lib/userVault';
-import { AnyContent, Content, ContentTypes, RenderItem } from '@/types';
-
-// function getNewPriority(element: Element | null, type: 'up' | 'down') {
-//   const getElement = {
-//     up: (e: Element) => e.previousElementSibling,
-//     down: (e: Element) => e.nextElementSibling,
-//   }
-// 
-//   if (!element) return;
-//   const nextElement = getElement[type](element);
-//   if (!nextElement) return;
-//   const priority = nextElement.getAttribute('data-priority');
-//   if (!priority) return;
-//   return Number(priority);
-// }
+import { Content, ContentTypes, RenderItem } from '@/types';
 
 export default function DirectoryView() {
   const dir = UserVault.getCurrentDir();
+  const watched = new Set(
+    dir?.type === 'folder' ? dir.sortedKeys.watched : []
+  );
 
   // FIX ME separate into individual components
   // or just one big meta component
+  // consider adding a component for watched items, just to have it separate from links
   const renderItem: RenderItem = {
     link: (item) => (
-      // would be nice if toggling link watched was animated
-      <div className={`flex gap-4 defaultBorder ${item.watched ? 'bg-secondary text-fg' : 'bg-fg text-bg'}`}
-        id={UserVault.currentDir.concat(item.title).join(',')}
-        data-priority={item.watched ? undefined : item.priority}
-      >
+      <div className={`flex gap-4 defaultBorder ${watched.has(item.title) ? 'bg-secondary text-fg' : 'bg-fg text-bg'}`}>
         <a className='flex-1 flex gap-2 overflow-hidden'
           title={`Go to: ${item.href}`}
           href={item.href}
@@ -53,35 +39,21 @@ export default function DirectoryView() {
           </div>
           <span className='truncate'>{item.title}</span>
         </a>
-        {!item.watched && (
+        {!watched.has(item.title) && (
           <>
             <button onClick={() => {
-              UserVault.swapPriority(item.priority, item.priority + 1);
-              // const newPriority = getNewPriority(
-              //   e.currentTarget.parentElement,
-              //   'up'
-              // );
-              // if (newPriority) {
-              //   UserVault.swapPriority(item.priority, newPriority);
-              // }
+              UserVault.swapPriority(item.title, -1);
             }}>
               <Icon name={ChevronUp} />
             </button>
             <button onClick={() => {
-              UserVault.swapPriority(item.priority, item.priority - 1);
-              // const newPriority = getNewPriority(
-              //   e.currentTarget.parentElement,
-              //   'down'
-              // );
-              // if (newPriority) {
-              //   UserVault.swapPriority(item.priority, newPriority);
-              // }
+              UserVault.swapPriority(item.title, 1);
             }}>
               <Icon name={ChevronDown} />
             </button>
           </>
         )}
-        <button className={`transition-all duration-300 ${item.watched ? 'opacity-100' : 'opacity-50'}`}
+        <button className={`transition-all duration-300 ${watched.has(item.title) ? 'opacity-100' : 'opacity-50'}`}
           onClick={() => UserVault.toggleWatched(item.title)}
         >
           <Icon name={Eye} />
@@ -162,39 +134,6 @@ export default function DirectoryView() {
     }
   });
 
-  function isWatchedLink(
-    item: Content<'link'>
-  ): item is Required<Content<'link'>> {
-    return !!item.watched
-  }
-
-  function sortItems(items: AnyContent[]) {
-    const { folders, links, watched } = items.reduce((obj, item) => {
-      if (item.type === 'folder' || item.type === 'encryptedFolder') {
-        obj.folders.push(item);
-      } else if (isWatchedLink(item)) {
-        obj.watched.push(item);
-      } else {
-        obj.links.push(item);
-      }
-      return obj;
-    }, {
-        folders: [] as Content<'folder' | 'encryptedFolder'>[],
-        links: [] as Content<'link'>[],
-        watched: [] as Required<Content<'link'>>[],
-      }
-    );
-
-    // Sort folders alphabetically at the top
-    // then links that havent been watched by priority
-    // then links that have been watched in order from most recently watched to least recently watched
-    return [
-      ...folders.sort((a, b) => a.title.localeCompare(b.title)),
-      ...links.sort((a, b) => b.priority - a.priority),
-      ...watched.sort((a, b) => b.watched - a.watched),
-    ];
-  }
-
   return !dir ? <Loading /> : <>
     <Breadcrumbs />
     <hr className='border-1' />
@@ -206,7 +145,11 @@ export default function DirectoryView() {
         <div className='text-xl font-bold text-muted text-center m-auto'>
           No Contents
         </div>
-        : sortItems(Object.values(dir.contents)).map(typeSafeRender)
+        : [
+            ...dir.sortedKeys.folders,
+            ...dir.sortedKeys.links,
+            ...dir.sortedKeys.watched,
+          ].map(title => typeSafeRender(dir.contents[title]))
       }
     </div>
   </>

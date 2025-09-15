@@ -2,9 +2,7 @@ import { ReactElement } from 'jsx-dom';
 
 export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
-type Timestamp = number;
-
-type FolderContents = { [title: string]: AnyContent }
+type FolderContents = { [title: string]: Content }
 
 type ListItem = {
   title: string,
@@ -13,13 +11,16 @@ type ListItem = {
 interface Link extends ListItem {
   href: string,
   tags: string[],
-  watched?: Timestamp,
-  priority: Timestamp,
 }
 
 interface Folder extends ListItem {
   contents: FolderContents,
   tags: string[],
+  sortedKeys: {
+    folders: string[],
+    links: string[],
+    watched: string[],
+  }
   encryption?: {
     key: CryptoKey,
     salt: string,
@@ -33,18 +34,27 @@ interface EncryptedFolder extends ListItem {
   iv: string,
 }
 
-export type Content<T extends ContentTypes> = {
-  type: T,
-} & {
-  link: Link,
-  folder: Folder,
-  encryptedFolder: EncryptedFolder,
-}[T]
+// FIX ME if new content type does not causes errors delete this
+// export type Content<T extends ContentTypes> = {
+//   type: T,
+// } & {
+//   link: Link,
+//   folder: Folder,
+//   encryptedFolder: EncryptedFolder,
+// }[T]
+// 
+// // FIX ME, try to merge this with Content generic, seems repetitive
+// export type AnyContent = {
+//   [K in ContentTypes]: Content<K>
+// }[ContentTypes]
 
-// FIX ME, try to merge this with Content generic, seems repetitive
-export type AnyContent = {
-  [K in ContentTypes]: Content<K>
-}[ContentTypes]
+export type Content<T extends ContentTypes = ContentTypes> = {
+  [K in ContentTypes]: { type: K } & {
+    link: Link,
+    folder: Folder,
+    encryptedFolder: EncryptedFolder,
+  }[K]
+}[T]
 
 export type ExpandedDirs = string | ExpandedDirs[]
 
@@ -58,4 +68,4 @@ export type HotKeyOpts = '+' | 'H' | 'U'
 
 export type SizeTypes = 'sidepanel' | 'popup' | 'website'
 
-export type Encrypted = Pick<Folder, 'contents' | 'tags'>
+export type Encrypted = Pick<Folder, 'contents' | 'tags' | 'sortedKeys'>

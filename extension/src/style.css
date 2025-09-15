@@ -86,3 +86,17 @@ button {
 input::placeholder {
   @apply text-muted;
 }
+
+/*
+// FIX ME consider using fancy custom outline
+* */
+:focus-visible {
+  @apply outline-none;
+  @apply ring-2;
+  @apply ring-primary;
+  @apply ring-offset-2;
+  @apply ring-offset-bg;
+  @apply rounded-lg;
+  @apply transition-all;
+  @apply duration-300;
+}
