@@ -48,9 +48,9 @@ export default class Vault {
     this.render();
   }
 
-  getCurrentDir(path = this.savedDir) {
+  getCurrentDir(path = this.savedDir, preserve?: 'preserve') {
     if (!this.vault) return;
-    this.currentDir = [];
+    if (!preserve) this.currentDir = [];
     return path.reduce((folder, title) => {
       if (folder.type === 'encryptedFolder') return folder
       const nextItem = folder.contents[title];
@@ -59,7 +59,7 @@ export default class Vault {
       } else if (nextItem.type === 'link') {
         throw Error(`${title} is not folder`);
       }
-      this.currentDir.push(title);
+      if (!preserve) this.currentDir.push(title);
       return nextItem;
     }, this.vault);
   }
@@ -174,6 +174,21 @@ export default class Vault {
     this.saveAndRender();
   }
 
+  // FIX ME, this needs to update folder.sortedKeys
+  moveItem(title: string, newPath: string[]) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+
+    const newDir = this.getCurrentDir(newPath, 'preserve');
+    if (!newDir) throw Error('newDir is null');
+    if (newDir.type === 'encryptedFolder') throw Error('newDir is encrypted');
+
+    newDir.contents[title] = dir.contents[title];
+    delete dir.contents[title];
+    this.saveAndRender();
+  }
+
   // FIX ME, rename to addEncryption
   async encryptFolder(folder: Content<'folder'>, password: string) {
     const dir = this.getCurrentDir();
@@ -245,6 +260,7 @@ export default class Vault {
     this.render();
   }
 
+  // FIX ME, this needs to update folder.sortedKeys
   delete(title: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -253,6 +269,7 @@ export default class Vault {
     this.saveAndRender();
   }
 
+  // FIX ME, this needs to update folder.sortedKeys
   rename(title: string, newTitle: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');

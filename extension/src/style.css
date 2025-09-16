@@ -42,13 +42,14 @@
 }
 
 @layer components {
+  /* // FIX ME delete this, replace all existing instances with bg-bg text-fg */
   .dropdown {
     background-color: var(--color-bg);
     color: var(--color-fg);
   }
 }
 
-/* FIX ME try to make a class called 'border' that will do this */
+/* // FIX ME try to make a class called 'border' that will do this */
 .defaultBorder {
   @apply rounded-lg;
   @apply border-primary;

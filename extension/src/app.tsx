@@ -25,15 +25,8 @@ import { SizeTypes } from '@/types';
 // see style.css for example primary color definition
 
 // CHECKLIST
-// Add tags to folders
-// Get view sortings working
-//  - folders should be sorted alphabetically
-//  - links should be sorted by priority
-//    - might as well add watched attribute when doing priority
 // Add dates to all items (just created at dates)
 //  - for links update date when moved to watched or when moved back to links
-// Add watch attribute to links
-//  - also add button to link list item to toggle/indicate watch status
 // Add functionality for items to be moved from one dir to another
 //  - with this add this functionality when creating a new item
 //    - that way users don't have to manually navigate to the desired destination directory just to create an item
