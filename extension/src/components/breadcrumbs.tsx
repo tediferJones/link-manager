@@ -14,7 +14,9 @@ export default function Breadcrumbs() {
         }
       }}
     >
-      <button onClick={() => UserVault.setDir([])}>
+      <button onClick={() => UserVault.setDir([])}
+        title='Go to: Home'
+      >
         <Icon name={Home} />
       </button>
       <span className='flex-shrink-0'>
@@ -24,6 +26,7 @@ export default function Breadcrumbs() {
         <>
           <button className='underline text-primary'
             onClick={() => UserVault.setDir(arr.slice(0, i + 1))}
+            title={`Go to: ${key}`}
           >{key}</button>
           {i < arr.length - 1 && 
             <div className='flex-shrink-0'>

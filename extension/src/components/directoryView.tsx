@@ -58,7 +58,8 @@ export default function DirectoryView() {
         >
           <Icon name={Eye} />
         </button>
-        <button onClick={() => {
+        <button title='Link Settings'
+          onClick={() => {
           openModal(
             'LinkSettings',
             <ItemSettings item={item} />
@@ -86,7 +87,8 @@ export default function DirectoryView() {
         }}>
           <Icon name={Lock} />
         </button>}
-        <button onClick={() => {
+        <button title='Folder Settings'
+          onClick={() => {
           openModal(
             'Folder Settings',
             <ItemSettings item={item} />
@@ -109,7 +111,8 @@ export default function DirectoryView() {
           </div>
           <span className='truncate'>{item.title}</span>
         </button>
-        <button onClick={() => {
+        <button title='Encrypted Folder Settings'
+          onClick={() => {
           openModal(
             'Encrypted Folder Settings',
             <ItemSettings item={item} />

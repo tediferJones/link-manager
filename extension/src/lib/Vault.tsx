@@ -1,7 +1,8 @@
 import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
+import getTypedKeys from '@/lib/getTypedKeys';
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
-import { Content, Encrypted } from '@/types.ts';
+import { Content, Encrypted, SortedKeysHandler, SortedKeysTypes } from '@/types.ts';
 
 const newVault: Content<'folder'> = {
   type: 'folder',
@@ -175,6 +176,7 @@ export default class Vault {
   }
 
   // FIX ME, this needs to update folder.sortedKeys
+  // also make sure we're not overwriting existing items
   moveItem(title: string, newPath: string[]) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -184,12 +186,61 @@ export default class Vault {
     if (!newDir) throw Error('newDir is null');
     if (newDir.type === 'encryptedFolder') throw Error('newDir is encrypted');
 
+    console.log('new Dir', newDir)
     newDir.contents[title] = dir.contents[title];
     delete dir.contents[title];
+  
+    const type = getTypedKeys(dir.sortedKeys).find(
+      type => dir.sortedKeys[type].includes(title)
+    )
+    if (!type) throw Error(`could not determine sortedKey type for ${title}`)
+    this.modifySortedKeys(dir, 'remove', title, type);
+    this.modifySortedKeys(newDir, 'add', title, type);
+
     this.saveAndRender();
   }
 
-  // FIX ME, rename to addEncryption
+  // FIX ME or delete, how do we figure out what prop of sorted keys belongs to?
+  // i.e. if title is for a folder, link, or watched
+  // if deleted, delete types from types.ts too
+  modifySortedKeys(
+    dir: Content<'folder'>,
+    action: 'add' | 'remove',
+    title: string,
+    type: SortedKeysTypes,
+  ) {
+    // FIX ME if possible move this outside the class
+    // recreating this object everytime this.modifiedSortedKeys is called is not great
+    const handlers: SortedKeysHandler = {
+      folders: {
+        add: () => {
+          dir.sortedKeys[type].push(title);
+          dir.sortedKeys[type].sort(
+            (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
+          );
+        },
+        remove: () => dir.sortedKeys[type] = dir.sortedKeys[type].filter(
+          folderTitle => folderTitle !== title
+        ),
+      },
+      links: {
+        add: () => dir.sortedKeys[type].unshift(title),
+        remove: () => dir.sortedKeys[type] = dir.sortedKeys[type].filter(
+          linkTitle => linkTitle !== title
+        ),
+      },
+      watched: {
+        add: () => dir.sortedKeys[type].unshift(title),
+        remove: () => dir.sortedKeys[type] = dir.sortedKeys[type].filter(
+          watchedTitle => watchedTitle !== title
+        ),
+      }
+    }
+    handlers[type][action]();
+  }
+
+  // FIX ME, rename to enableEncryption
+  // also create method to disableEncryption
   async encryptFolder(folder: Content<'folder'>, password: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');

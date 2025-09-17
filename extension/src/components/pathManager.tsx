@@ -1,28 +1,43 @@
+import { closeModal } from '@/components/modal';
 import UserVault from '@/lib/userVault';
 import getElement from '@/lib/getElement';
+import { Content } from '@/types';
 
-function refreshPath(path: string[], changeHandler: Function) {
-  changeHandler();
+// FIX ME move to it's own file
+class Ref<T> {
+  current: T;
+
+  constructor(arg: T) {
+    this.current = arg;
+  }
+
+  get() {
+    return this.current
+  }
+
+  set(arg: T) {
+    this.current = arg
+  }
+}
+
+function refreshPath(pathRef: Ref<string[]>) {
   const pathContainer = getElement('#pathManagerContainer');
   pathContainer.innerHTML = '';
-  pathContainer.appendChild(
-    <PathDisplay path={path} changeHandler={changeHandler} />
-  );
+  pathContainer.appendChild(<PathDisplay pathRef={pathRef} />);
 }
 
 // FIX ME make sure you can't move folders into their own path
 // i.e. cant move /folder1/nestedFolder1 into /folder1/nestedFolder1/nestedFolder2
 function PathDisplay(
   {
-    path,
+    pathRef,
     index = 0,
-    changeHandler
   }: {
-    path: string[],
+    pathRef: Ref<string[]>,
     index?: number,
-    changeHandler: Function
   }
 ) {
+  const path = pathRef.current;
   if (index > path.length) return;
   const slicedPath = path.slice(0, index);
   const segmentDir = UserVault.getCurrentDir(slicedPath, 'preserve');
@@ -40,15 +55,14 @@ function PathDisplay(
           <div className={`py-1 px-2 rounded-lg ${folder.title === path[index] ? 'bg-fg text-bg' : ''}`}
             onClick={() => {
               console.log('setting path', slicedPath.concat(folder.title))
-              path = slicedPath.concat(folder.title);
-              refreshPath(path, changeHandler);
+              pathRef.set(slicedPath.concat(folder.title));
+              refreshPath(pathRef);
             }}
           >{folder.title}</div>
           {folder.title === path[index] && (
             <div className='pl-2'>
-              <PathDisplay path={path}
+              <PathDisplay pathRef={pathRef}
                 index={index + 1}
-                changeHandler={changeHandler}
               />
             </div>
           )}
@@ -58,25 +72,27 @@ function PathDisplay(
   )
 }
 
-export default function PathManager(
-  {
-    path,
-    changeHandler
-  }: {
-    path: string[],
-    changeHandler: Function
-  }
-) {
+// FIX ME, path display should just be another DirectoryView
+export default function PathManager({ item }: { item: Content }) {
+  const pathRef = new Ref([ ...UserVault.currentDir ]);
   return (
-    <>
+    <form className='flex flex-col gap-4' onSubmit={(e) => {
+      e.preventDefault();
+      console.log(pathRef.get(), item)
+      UserVault.moveItem(item.title, pathRef.get());
+      closeModal();
+    }}>
       <label className='m-auto'
         htmlFor='pathManagerContainer'
       >Location</label>
       <div className='defaultBorder col-span-2'
         id='pathManagerContainer'
       >
-        <PathDisplay path={path} changeHandler={changeHandler} />
+        <PathDisplay pathRef={pathRef} />
       </div>
-    </>
+      <button className='w-full bg-fg text-bg p-2 rounded-lg'
+        type='submit'
+      >Move</button>
+    </form>
   )
 }

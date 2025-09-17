@@ -4,6 +4,8 @@ import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
 import { Content } from '@/types';
 
+// FIX ME, add better labels now that this is nested
+// i.e. navigate to this component in the UI, it looks kinda ugly, fix that
 export default function DeleteConfirmation({ item }: { item: Content }) {
   return (
     <form className='flex flex-col gap-4'

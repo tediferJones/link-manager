@@ -31,6 +31,9 @@ import { SizeTypes } from '@/types';
 //  - with this add this functionality when creating a new item
 //    - that way users don't have to manually navigate to the desired destination directory just to create an item
 // Add pinned attribute
+// Make sure all buttons have title attributes
+// Make modal titles consistent, especially in regard to nested modals
+//  - we want the back button to automatically revert modal title to whatever the original modal title was
 // Address FIX ME comments
 
 export default function App({ type }: { type: SizeTypes }) {
@@ -83,7 +86,9 @@ export default function App({ type }: { type: SizeTypes }) {
           {/* FIX ME move user info dropdown to its own component */}
           {/* and add a hotkey so that pressing 'escape' or clicking anywhere outside of the dropdown, will close it */}
           <Dropdown key='userSettings' align='right'>
-            <button className='defaultBorder text-xl'>
+            <button className='defaultBorder text-xl'
+              title='Info'
+            >
               <Icon name={User} />
             </button>
             <div className='flex flex-col gap-2 transition-all duration-300'

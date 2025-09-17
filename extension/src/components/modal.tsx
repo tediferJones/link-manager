@@ -1,10 +1,10 @@
-import { X } from 'lucide';
+import { ChevronLeft, X } from 'lucide';
 import Icon from '@/components/icon';
 import getElement from '@/lib/getElement';
 import { disableHotKeys, enableHotKeys } from '@/lib/hotkeys';
 
-const openClasses = ['pointer-events-auto', 'opacity-100'];
-const closedClasses = ['pointer-events-none', 'opacity-0'];
+const openClasses = [ 'pointer-events-auto', 'opacity-100' ];
+const closedClasses = [ 'pointer-events-none', 'opacity-0' ];
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
@@ -14,7 +14,7 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 // FIX ME, trap focus within modal when opened
-export function openModal(title: string, element: Element) {
+export function openModal(title: string, element: Element, back?: { title: string, element: Element }) {
   getElement<HTMLDivElement>('#modalTitle').innerText = title;
   const content = getElement('#modalContent');
   content.appendChild(element);
@@ -22,6 +22,19 @@ export function openModal(title: string, element: Element) {
   const container = getElement('#modalContainer');
   container.classList.remove(...closedClasses);
   container.classList.add(...openClasses);
+
+  const backBtn = getElement<HTMLButtonElement>('#modalBackBtn');
+  if (back) {
+    backBtn.classList.add(...openClasses);
+    backBtn.classList.remove(...closedClasses);
+    backBtn.onclick = () => {
+      clearModal();
+      openModal(back.title, back.element);
+    }
+  } else {
+    backBtn.classList.add(...closedClasses);
+    backBtn.classList.remove(...openClasses);
+  }
   
   addEventListener('keydown', handleKeyDown);
   disableHotKeys();
@@ -34,12 +47,7 @@ export function openModal(title: string, element: Element) {
 }
 
 export function closeModal() {
-  setTimeout(() => {
-    getElement<HTMLDivElement>('#modalTitle').innerText = '';
-    const content = getElement('#modalContent');
-    content.innerHTML = '';
-    content.classList.remove('pr-2');
-  }, 300 /* same as animation duration */);
+  setTimeout(() => clearModal(), 300 /* same as animation duration */);
 
   const container = getElement('#modalContainer');
   container.classList.remove(...openClasses);
@@ -47,6 +55,22 @@ export function closeModal() {
 
   removeEventListener('keydown', handleKeyDown);
   enableHotKeys();
+}
+
+export function clearModal() {
+  getElement<HTMLDivElement>('#modalTitle').innerText = '';
+  const content = getElement('#modalContent');
+  content.innerHTML = '';
+  content.classList.remove('pr-2');
+}
+
+export function navigateModal(
+  title: string,
+  element: Element,
+  back?: { title: string, element: Element },
+) {
+  clearModal();
+  openModal(title, element, back);
 }
 
 export function Modal() {
@@ -58,11 +82,18 @@ export function Modal() {
       <div className='relative m-auto defaultBorder flex flex-col gap-4 bg-bg max-w-[90vw] max-h-[90vh]'
         onClick={(e) => e.stopPropagation()}
       >
-        <div className='flex justify-between gap-4 relative'>
-          <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold'
+        <div className='flex justify-between items-center gap-4'>
+          <button className={`defaultBorder mr-auto transition-all duration-300 ${closedClasses.join(' ')}`}
+            title='Back'
+            id='modalBackBtn'
+          >
+            <Icon name={ChevronLeft} />
+          </button>
+          <div className='font-semibold text-nowrap'
             id='modalTitle'
           ></div>
           <button className='defaultBorder ml-auto'
+            title='Close'
             onClick={closeModal}
           >
             <Icon name={X} />

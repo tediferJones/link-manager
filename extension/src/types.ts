@@ -2,8 +2,6 @@ import { ReactElement } from 'jsx-dom';
 
 export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
 
-type FolderContents = { [title: string]: Content }
-
 type ListItem = {
   title: string,
 }
@@ -13,14 +11,14 @@ interface Link extends ListItem {
   tags: string[],
 }
 
+type FolderContents = { [title: string]: Content }
+
+export type SortedKeysTypes = 'folders' | 'links' | 'watched'
+
 interface Folder extends ListItem {
   contents: FolderContents,
   tags: string[],
-  sortedKeys: {
-    folders: string[],
-    links: string[],
-    watched: string[],
-  }
+  sortedKeys: { [K in SortedKeysTypes]: string[] }
   encryption?: {
     key: CryptoKey,
     salt: string,
@@ -69,3 +67,11 @@ export type HotKeyOpts = '+' | 'H' | 'U'
 export type SizeTypes = 'sidepanel' | 'popup' | 'website'
 
 export type Encrypted = Pick<Folder, 'contents' | 'tags' | 'sortedKeys'>
+
+export type SortedKeysActions = 'add' | 'remove'
+
+export type SortedKeysHandler = {
+  [T in SortedKeysTypes]: {
+    [A in SortedKeysActions]: () => void;
+  }
+}
