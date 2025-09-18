@@ -4,7 +4,13 @@ import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { Content } from '@/types';
 
-export default function TagManager({ item }: { item: Content<'link' | 'folder'> }) {
+export default function TagManager(
+  {
+    item,
+  }: {
+    item: Content<'link' | 'folder' | 'watched'>,
+  }
+) {
   function refreshTags() {
     const container = getElement('#tagsContainer');
     container.innerHTML = '';

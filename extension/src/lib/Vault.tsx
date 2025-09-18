@@ -1,8 +1,13 @@
 import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
-import getTypedKeys from '@/lib/getTypedKeys';
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
-import { Content, Encrypted, SortedKeysHandler, SortedKeysTypes } from '@/types.ts';
+import {
+  Content,
+  ContentTypes,
+  Encrypted,
+  SortedKeysHandler,
+  SortedKeysTypes,
+} from '@/types.ts';
 
 const newVault: Content<'folder'> = {
   type: 'folder',
@@ -16,6 +21,43 @@ const newVault: Content<'folder'> = {
   }
 };
 
+// FIX ME move to its own file
+const handlers: SortedKeysHandler = {
+  folders: {
+    add: (dir, item) => {
+      dir.sortedKeys.folders.push(item.title);
+      dir.sortedKeys.folders.sort(
+        (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
+      );
+    },
+    remove: (dir, item) => dir.sortedKeys.folders = dir.sortedKeys.folders.filter(
+      folderTitle => folderTitle !== item.title
+    ),
+  },
+  links: {
+    add: (dir, item) => dir.sortedKeys.links.unshift(item.title),
+    remove: (dir, item) => dir.sortedKeys.links = dir.sortedKeys.links.filter(
+      linkTitle => linkTitle !== item.title
+    ),
+  },
+  watched: {
+    add: (dir, item) => dir.sortedKeys.watched.unshift(item.title),
+    remove: (dir, item) => dir.sortedKeys.watched = dir.sortedKeys.watched.filter(
+      watchedTitle => watchedTitle !== item.title
+    ),
+  }
+}
+const typeMap: { [K in ContentTypes]: SortedKeysTypes } = {
+  link: 'links',
+  folder: 'folders',
+  encryptedFolder: 'folders',
+  watched: 'watched',
+}
+
+// FIX ME where possible don't use title to identify resource
+// pass the item to the method, and then use Object.assign(item, changedItem)
+// this will maintain the reference and allow updates
+
 export default class Vault {
   // FIX ME
   // this will make it easier to copy this over to the webpage
@@ -27,6 +69,7 @@ export default class Vault {
   vault: Content<'folder'> | Content<'encryptedFolder'> | null;
   currentDir: string[];
   savedDir: string[];
+  toMove?: { item: Content, dir: string[] }
   // ExpandedDirs type exists in types.ts file
   // expandedDirs: ExpandedDirs
 
@@ -59,6 +102,8 @@ export default class Vault {
         throw Error(`could not find ${title}`);
       } else if (nextItem.type === 'link') {
         throw Error(`${title} is not folder`);
+      } else if (nextItem.type === 'watched') {
+        throw Error(`${title} is not a folder`);
       }
       if (!preserve) this.currentDir.push(title);
       return nextItem;
@@ -175,29 +220,41 @@ export default class Vault {
     this.saveAndRender();
   }
 
-  // FIX ME, this needs to update folder.sortedKeys
-  // also make sure we're not overwriting existing items
-  moveItem(title: string, newPath: string[]) {
+  // FIX ME can we merge all these move methods into one method
+  // move(action: start | end | cancel, if action === start require item)
+  startMove(item: Content) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    this.toMove = {
+      item,
+      dir: [ ...this.currentDir ],
+    }
+    delete dir.contents[item.title];
+    this.modifySortedKeys(dir, 'remove', item)
+    this.render();
+  }
 
-    const newDir = this.getCurrentDir(newPath, 'preserve');
-    if (!newDir) throw Error('newDir is null');
-    if (newDir.type === 'encryptedFolder') throw Error('newDir is encrypted');
-
-    console.log('new Dir', newDir)
-    newDir.contents[title] = dir.contents[title];
-    delete dir.contents[title];
-  
-    const type = getTypedKeys(dir.sortedKeys).find(
-      type => dir.sortedKeys[type].includes(title)
-    )
-    if (!type) throw Error(`could not determine sortedKey type for ${title}`)
-    this.modifySortedKeys(dir, 'remove', title, type);
-    this.modifySortedKeys(newDir, 'add', title, type);
-
+  endMove() {
+    if (!this.toMove) return;
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    dir.contents[this.toMove.item.title] = this.toMove.item;
+    this.modifySortedKeys(dir, 'add', this.toMove.item);
+    delete this.toMove;
     this.saveAndRender();
+  }
+
+  cancelMove() {
+    if (!this.toMove) return;
+    const dir = this.getCurrentDir(this.toMove.dir, 'preserve');
+    if (!dir) throw Error('dir is null');
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    dir.contents[this.toMove.item.title] = this.toMove.item;
+    this.modifySortedKeys(dir, 'add', this.toMove.item);
+    delete this.toMove;
+    this.render();
   }
 
   // FIX ME or delete, how do we figure out what prop of sorted keys belongs to?
@@ -206,41 +263,15 @@ export default class Vault {
   modifySortedKeys(
     dir: Content<'folder'>,
     action: 'add' | 'remove',
-    title: string,
-    type: SortedKeysTypes,
+    item: Content,
   ) {
-    // FIX ME if possible move this outside the class
-    // recreating this object everytime this.modifiedSortedKeys is called is not great
-    const handlers: SortedKeysHandler = {
-      folders: {
-        add: () => {
-          dir.sortedKeys[type].push(title);
-          dir.sortedKeys[type].sort(
-            (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
-          );
-        },
-        remove: () => dir.sortedKeys[type] = dir.sortedKeys[type].filter(
-          folderTitle => folderTitle !== title
-        ),
-      },
-      links: {
-        add: () => dir.sortedKeys[type].unshift(title),
-        remove: () => dir.sortedKeys[type] = dir.sortedKeys[type].filter(
-          linkTitle => linkTitle !== title
-        ),
-      },
-      watched: {
-        add: () => dir.sortedKeys[type].unshift(title),
-        remove: () => dir.sortedKeys[type] = dir.sortedKeys[type].filter(
-          watchedTitle => watchedTitle !== title
-        ),
-      }
-    }
-    handlers[type][action]();
+    const type = typeMap[item.type];
+    handlers[type][action](dir, item);
   }
 
   // FIX ME, rename to enableEncryption
   // also create method to disableEncryption
+  // then make encryptFolder method whose sole purpose to turn Content<'folder'> in Content<'encryptedFolder'>
   async encryptFolder(folder: Content<'folder'>, password: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -389,24 +420,31 @@ export default class Vault {
     return [ ...tags ];
   }
 
-  toggleWatched(title: string) {
+  toggleWatched(item: Content<'link' | 'watched'>) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    if (dir.sortedKeys.links.includes(title)) {
-      const linkIndex = dir.sortedKeys.links.findIndex(
-        linkTitle => linkTitle === title
-      );
-      dir.sortedKeys.links.splice(linkIndex, 1);
-      dir.sortedKeys.watched.unshift(title);
-    } else if (dir.sortedKeys.watched.includes(title)) {
-      const linkIndex = dir.sortedKeys.watched.findIndex(
-        linkTitle => linkTitle === title
-      );
-      dir.sortedKeys.watched.splice(linkIndex, 1);
-      dir.sortedKeys.links.unshift(title);
-    } else {
-      throw Error(`${title} could not be found in links or watched`);
+    if (item.type === 'link') {
+      const watched: Content<'watched'> = {
+        ...item,
+        type: 'watched',
+        watched: Date.now(),
+      }
+      Object.assign(item, watched);
+      this.modifySortedKeys(dir, 'remove', item);
+      this.modifySortedKeys(dir, 'add', item);
+    } else if (item.type === 'watched') {
+      const { watched, ...rest } = item;
+      const link: Content<'link'> = {
+        // FIX ME typescript won't throw an error if we try do do this
+        // but it should because we are spreading watched into a link
+        // ...item,
+        ...rest,
+        type: 'link'
+      }
+      Object.assign(item, link);
+      this.modifySortedKeys(dir, 'remove', item);
+      this.modifySortedKeys(dir, 'add', item);
     }
     this.saveAndRender();
   }

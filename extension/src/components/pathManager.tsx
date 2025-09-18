@@ -4,6 +4,7 @@ import getElement from '@/lib/getElement';
 import { Content } from '@/types';
 
 // FIX ME move to it's own file
+// FIX ME delete this whole file if not used
 class Ref<T> {
   current: T;
 
@@ -79,7 +80,7 @@ export default function PathManager({ item }: { item: Content }) {
     <form className='flex flex-col gap-4' onSubmit={(e) => {
       e.preventDefault();
       console.log(pathRef.get(), item)
-      UserVault.moveItem(item.title, pathRef.get());
+      // UserVault.moveItem(item.title, pathRef.get());
       closeModal();
     }}>
       <label className='m-auto'

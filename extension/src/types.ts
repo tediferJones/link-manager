@@ -1,6 +1,9 @@
 import { ReactElement } from 'jsx-dom';
 
-export type ContentTypes = 'link' | 'folder' | 'encryptedFolder'
+// FIX ME double check that exported types actually get used somewhere
+// if not used then delete them
+
+export type ContentTypes = 'link' | 'folder' | 'encryptedFolder' | 'watched'
 
 type ListItem = {
   title: string,
@@ -11,12 +14,16 @@ interface Link extends ListItem {
   tags: string[],
 }
 
-type FolderContents = { [title: string]: Content }
+interface Watched extends Link {
+  watched: number,
+}
 
+// FIX ME this type should mirror ContentTypes, something like:
+// Exclude<ContentTypes, 'encryptedFolder'>
 export type SortedKeysTypes = 'folders' | 'links' | 'watched'
 
 interface Folder extends ListItem {
-  contents: FolderContents,
+  contents: { [title: string]: Content },
   tags: string[],
   sortedKeys: { [K in SortedKeysTypes]: string[] }
   encryption?: {
@@ -51,6 +58,7 @@ export type Content<T extends ContentTypes = ContentTypes> = {
     link: Link,
     folder: Folder,
     encryptedFolder: EncryptedFolder,
+    watched: Watched,
   }[K]
 }[T]
 
@@ -72,6 +80,8 @@ export type SortedKeysActions = 'add' | 'remove'
 
 export type SortedKeysHandler = {
   [T in SortedKeysTypes]: {
-    [A in SortedKeysActions]: () => void;
+    [A in SortedKeysActions]: (
+      dir: Content<'folder'>, item: { title: string }
+    ) => void;
   }
 }

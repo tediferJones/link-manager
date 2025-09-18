@@ -34,6 +34,10 @@ import { SizeTypes } from '@/types';
 // Make sure all buttons have title attributes
 // Make modal titles consistent, especially in regard to nested modals
 //  - we want the back button to automatically revert modal title to whatever the original modal title was
+//  - could just deprecate nested modals if we can get move working with other method
+//    - remember to revert modal back to original state without nesting
+// Do we want a copy function for items?
+// Considering making watched its own item type, it will just be a link with an additional watched prop
 // Address FIX ME comments
 
 export default function App({ type }: { type: SizeTypes }) {
@@ -47,8 +51,8 @@ export default function App({ type }: { type: SizeTypes }) {
   
   return (
     // FIX ME, look at pop up, consider a wider min width (maybe 480px) and settings a min height
-    <div className={`p-4 flex flex-col m-auto ${typeClasses[type]}`}>
-      <div className='mb-4 flex items-center justify-between gap-2'>
+    <div className={`p-4 flex flex-col gap-4 m-auto ${typeClasses[type]}`}>
+      <div className='flex items-center justify-between gap-2'>
         <div className='flex justify-between gap-4'>
           <button className='text-xl defaultBorder'
             title='Go to parent directory'
@@ -108,37 +112,6 @@ export default function App({ type }: { type: SizeTypes }) {
               <button>FAQ</button>
             </div>
           </Dropdown>
-          {/*
-          <div className='relative'>
-            <button className='defaultBorder text-xl'
-              onClick={() => {
-                const dropdown = getElement<HTMLDivElement>('#settingsDropdown');
-                dropdown.classList.toggle('h-[0%]');
-                dropdown.classList.toggle('h-fit');
-                dropdown.classList.toggle('defaultBorder');
-              }}
-            >
-              <Icon name={User} />
-            </button>
-            <div className='absolute dropdown right-0 mt-1 z-10 text-nowrap h-[0%] flex flex-col gap-2 transition-all duration-300 overflow-hidden'
-              id='settingsDropdown'
-            >
-              <button>Login</button>
-              <hr />
-              <button onClick={() => {
-                const savedTheme = localStorage.getItem('theme');
-                const newTheme = savedTheme === 'light' ? 'dark' : 'light';
-                document.documentElement.className = newTheme;
-                localStorage.setItem('theme', newTheme);
-                document.documentElement.offsetHeight;
-              }}>Toggle theme</button>
-              <hr />
-              <button>About</button>
-              <hr />
-              <button>FAQ</button>
-            </div>
-          </div>
-          */}
         </div>
       </div>
       <div className='defaultBorder flex flex-col gap-2 flex-1 overflow-y-auto'

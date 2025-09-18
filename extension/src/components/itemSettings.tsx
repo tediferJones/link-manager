@@ -1,7 +1,7 @@
 import { closeModal, navigateModal } from '@/components/modal';
 import DeleteConfirmation from '@/components/deleteConfirmation';
 import TagManager from '@/components/tagManager';
-import PathManager from '@/components/pathManager';
+// import PathManager from '@/components/pathManager';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
@@ -37,7 +37,7 @@ function handleInputChange(item: Content) {
 export default function ItemSettings({ item }: { item: Content }) {
   return (
     <div className='flex flex-col gap-4'>
-      {(item.type === 'folder' || item.type === 'link') && (
+      {(item.type === 'folder' || item.type === 'link' || item.type === 'watched') && (
         <>
           <form className='grid grid-cols-3 gap-4'
             onSubmit={async (e) => {
@@ -92,14 +92,18 @@ export default function ItemSettings({ item }: { item: Content }) {
       )}
       <div className='flex gap-2 justify-stretch'>
         <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
-          onClick={() => navigateModal(
-            `Move ${item.title}`,
-            <PathManager item={item} />,
-            {
-              title: `Settings`,
-              element: <ItemSettings item={item} />,
-            }
-          )}
+          onClick={() => {
+            UserVault.startMove(item);
+            closeModal();
+          }}
+          // onClick={() => navigateModal(
+          //   `Move ${item.title}`,
+          //   <PathManager item={item} />,
+          //   {
+          //     title: `Settings`,
+          //     element: <ItemSettings item={item} />,
+          //   }
+          // )}
         >Move</button>
         <button className='flex-1 bg-red-500 p-2 rounded-lg'
           onClick={() => {

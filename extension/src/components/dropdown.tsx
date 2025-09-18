@@ -22,6 +22,11 @@ export default function Dropdown(
     center: [ 'left-1/2', '-translate-x-1/2' ],
   }[align];
 
+  const toggleClasses = {
+    open: [ 'opacity-100', 'pointer-events-auto' ],
+    closed: [ 'opacity-0', 'pointer-events-none' ],
+  }
+
   const contentClasses = [
     'absolute',
     'mt-2',
@@ -29,14 +34,10 @@ export default function Dropdown(
     'z-10',
     'text-nowrap',
     'overflow-hidden',
-    'h-[0%]',
-    'w-[0%]',
-  ].concat(alignmentClasses);
-
-  const toggleClasses = {
-    open: [ 'defaultBorder', 'h-fit' ],
-    closed: [ 'h-[0%]', 'w-[0%]' ],
-  }
+    'transition-all',
+    'duration-300',
+    'defaultBorder',
+  ].concat(alignmentClasses).concat(toggleClasses.closed);
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') toggleVisibility();
