@@ -5,6 +5,7 @@ import {
   Content,
   ContentTypes,
   Encrypted,
+  ResultObj,
   SortedKeysHandler,
   SortedKeysTypes,
 } from '@/types.ts';
@@ -15,6 +16,7 @@ const newVault: Content<'folder'> = {
   contents: {},
   tags: [],
   sortedKeys: {
+    pinned: [],
     folders: [],
     links: [],
     watched: [],
@@ -45,6 +47,12 @@ const handlers: SortedKeysHandler = {
     remove: (dir, item) => dir.sortedKeys.watched = dir.sortedKeys.watched.filter(
       watchedTitle => watchedTitle !== item.title
     ),
+  },
+  pinned: {
+    add: (dir, item) => dir.sortedKeys.pinned.push(item.title),
+    remove: (dir, item) => dir.sortedKeys.pinned = dir.sortedKeys.pinned.filter(
+      pinnedTitle => pinnedTitle !== item.title
+    ),
   }
 }
 const typeMap: { [K in ContentTypes]: SortedKeysTypes } = {
@@ -58,6 +66,9 @@ const typeMap: { [K in ContentTypes]: SortedKeysTypes } = {
 // pass the item to the method, and then use Object.assign(item, changedItem)
 // this will maintain the reference and allow updates
 
+// This class is getting very large
+// consider only keep core functionality in class like add, update, delete, etc...
+// for the most part these methods are only called in one place, just write the code in the component
 export default class Vault {
   // FIX ME
   // this will make it easier to copy this over to the webpage
@@ -101,13 +112,20 @@ export default class Vault {
       if (!nextItem) {
         throw Error(`could not find ${title}`);
       } else if (nextItem.type === 'link') {
-        throw Error(`${title} is not folder`);
+        throw Error(`${title} is not a folder`);
       } else if (nextItem.type === 'watched') {
         throw Error(`${title} is not a folder`);
       }
       if (!preserve) this.currentDir.push(title);
       return nextItem;
     }, this.vault);
+  }
+
+  getCurrentFolder() {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    return dir;
   }
 
   render() {
@@ -182,6 +200,7 @@ export default class Vault {
     this.render();
   }
 
+  // FIX ME merge addLink and addFolder into addItem
   addLink(title: string, href: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -207,6 +226,7 @@ export default class Vault {
         folders: [],
         links: [],
         watched: [],
+        pinned: [],
       }
     };
     const dir = this.getCurrentDir();
@@ -222,28 +242,44 @@ export default class Vault {
 
   // FIX ME can we merge all these move methods into one method
   // move(action: start | end | cancel, if action === start require item)
+  // also can't change title while moving (rename only works on currentDir)
+  //  - so maybe just disable settings of toMove item?
+  //  - or come up with an entirely different way to accomplish moving
+  //
+  // NEW IDEA: just use an input field in itemSettings
+  // move method should just be move(title: string, newPath: string[])
+  // hitting enter will append current text to path
+  // delete on an empty input will delete last segement from path
+  // this will be much easier to handle errors
+  // and should just be cleaner in general (all settings are in one place)
   startMove(item: Content) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
     this.toMove = {
       item,
       dir: [ ...this.currentDir ],
     }
-    delete dir.contents[item.title];
-    this.modifySortedKeys(dir, 'remove', item)
     this.render();
   }
 
-  endMove() {
-    if (!this.toMove) return;
+  endMove(): ResultObj {
+    if (!this.toMove) return { success: false, error: 'toMove not assigned' };
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    if (dir.contents[this.toMove.item.title]) {
+      return { success: false, error: 'Title already exists' };
+    }
     dir.contents[this.toMove.item.title] = this.toMove.item;
+
+    const oldDir = this.getCurrentDir(this.toMove.dir, 'preserve');
+    if (!oldDir) throw Error('dir is null');
+    if (oldDir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    delete oldDir.contents[this.toMove.item.title];
+    this.modifySortedKeys(oldDir, 'remove', this.toMove.item);
+
     this.modifySortedKeys(dir, 'add', this.toMove.item);
     delete this.toMove;
     this.saveAndRender();
+    return { success: true };
   }
 
   cancelMove() {
@@ -255,6 +291,24 @@ export default class Vault {
     this.modifySortedKeys(dir, 'add', this.toMove.item);
     delete this.toMove;
     this.render();
+  }
+
+  copyItem(title: string) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    const item = dir.contents[title];
+    if (!item) throw Error('item not found');
+    const itemCopy: Content = JSON.parse(JSON.stringify(item));
+    itemCopy.title = `${item.title}-COPY`;
+    this.insertItem(dir, itemCopy);
+    this.saveAndRender();
+  }
+
+  insertItem(folder: Content<'folder'>, item: Content) {
+    if (folder.contents[item.title]) throw Error('name already exists');
+    folder.contents[item.title] = item;
+    this.modifySortedKeys(folder, 'add', item);
   }
 
   // FIX ME or delete, how do we figure out what prop of sorted keys belongs to?
@@ -352,14 +406,20 @@ export default class Vault {
   }
 
   // FIX ME, this needs to update folder.sortedKeys
-  rename(title: string, newTitle: string) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted');
-    dir.contents[title].title = newTitle;
-    dir.contents[newTitle] = dir.contents[title];
-    delete dir.contents[title];
+  // also needs to check for name collision
+  rename(title: string, newTitle: string): ResultObj {
+    const folder = this.getCurrentFolder();
+    if (folder.contents[newTitle]) {
+      return { success: false, error: 'Title already exists' }
+    }
+    const item = folder.contents[title];
+    this.modifySortedKeys(folder, 'remove', item);
+    item.title = newTitle;
+    folder.contents[newTitle] = item;
+    this.modifySortedKeys(folder, 'add', item);
+    delete folder.contents[title];
     this.saveAndRender();
+    return { success: true };
   }
 
   getParent() {

@@ -1,11 +1,11 @@
 import { closeModal, navigateModal } from '@/components/modal';
 import DeleteConfirmation from '@/components/deleteConfirmation';
 import TagManager from '@/components/tagManager';
-// import PathManager from '@/components/pathManager';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
 import { Content } from '@/types';
+import ErrorMsg, { hideError, showError } from './errorMsg';
 
 function handleInputChange(item: Content) {
   const checkForChange: ((item: Content) => boolean)[] = [
@@ -34,7 +34,9 @@ function handleInputChange(item: Content) {
 // FIX ME add hotkeys for Move and Delete
 //  - M for Move
 //  - D for Delete
+//  - C for Copy
 export default function ItemSettings({ item }: { item: Content }) {
+  const renameErrorId = 'itemSettingsRenameError';
   return (
     <div className='flex flex-col gap-4'>
       {(item.type === 'folder' || item.type === 'link' || item.type === 'watched') && (
@@ -42,6 +44,7 @@ export default function ItemSettings({ item }: { item: Content }) {
           <form className='grid grid-cols-3 gap-4'
             onSubmit={async (e) => {
               e.preventDefault();
+              hideError(renameErrorId);
               const title = getElement<HTMLInputElement>(
                 '#itemSettingsTitle'
               ).value;
@@ -51,7 +54,12 @@ export default function ItemSettings({ item }: { item: Content }) {
               if (item.type === 'folder' && password) {
                 await UserVault.encryptFolder(item, password);
               }
-              if (title !== item.title) UserVault.rename(item.title, title);
+              if (title !== item.title) {
+                const result = UserVault.rename(item.title, title);
+                if (!result.success) {
+                  return showError(renameErrorId, result.error);
+                }
+              }
               closeModal();
             }}
           >
@@ -66,6 +74,7 @@ export default function ItemSettings({ item }: { item: Content }) {
               placeholder={item.title || 'Home Directory'}
               onInput={() => handleInputChange(item)}
             />
+            <ErrorMsg id={renameErrorId} />
             {item.type === 'folder' && (
               <>
                 <label className='m-auto'
@@ -92,6 +101,11 @@ export default function ItemSettings({ item }: { item: Content }) {
       )}
       <div className='flex gap-2 justify-stretch'>
         <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
+          onClick={() => UserVault.copyItem(item.title)}
+        >
+          Copy
+        </button>
+        <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
           onClick={() => {
             UserVault.startMove(item);
             closeModal();
@@ -111,7 +125,7 @@ export default function ItemSettings({ item }: { item: Content }) {
               `Delete ${item.title}`,
               <DeleteConfirmation item={item} />,
               {
-                title: `Settings`,
+                title: 'Settings',
                 element: <ItemSettings item={item} />,
               }
             );

@@ -20,7 +20,7 @@ interface Watched extends Link {
 
 // FIX ME this type should mirror ContentTypes, something like:
 // Exclude<ContentTypes, 'encryptedFolder'>
-export type SortedKeysTypes = 'folders' | 'links' | 'watched'
+export type SortedKeysTypes = 'pinned' | 'folders' | 'links' | 'watched'
 
 interface Folder extends ListItem {
   contents: { [title: string]: Content },
@@ -85,3 +85,7 @@ export type SortedKeysHandler = {
     ) => void;
   }
 }
+
+export type MoveActions = 'start' | 'end' | 'cancel'
+
+export type ResultObj = { success: true } | { success: false, error: string }
