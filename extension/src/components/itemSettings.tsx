@@ -6,6 +6,7 @@ import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
 import { Content } from '@/types';
 import ErrorMsg, { hideError, showError } from './errorMsg';
+import PathManager from './pathManager';
 
 function handleInputChange(item: Content) {
   const checkForChange: ((item: Content) => boolean)[] = [
@@ -97,6 +98,8 @@ export default function ItemSettings({ item }: { item: Content }) {
           <hr className='col-span-3' />
           <TagManager item={item} />
           <hr className='col-span-3' />
+          <PathManager item={item} />
+          <hr />
         </>
       )}
       <div className='flex gap-2 justify-stretch'>

@@ -62,6 +62,7 @@ html, body {
   @apply text-base;
 }
 
+/* // FIX ME delete this, make Button component with the usual classes */
 button {
   @apply cursor-pointer;
 }

@@ -293,6 +293,22 @@ export default class Vault {
     this.render();
   }
 
+  move(title: string, newPath: string[]) {
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    const item = dir.contents[title];
+    this.modifySortedKeys(dir, 'remove', item);
+    const newDir = this.getCurrentDir(newPath, 'preserve');
+    if (!newDir) throw Error('dir is null');
+    if (newDir.type === 'encryptedFolder') throw Error('dir is encrypted');
+    if (newDir.contents[title]) throw Error('title already exists in new dir');
+    newDir.contents[title] = item;
+    delete dir.contents[title];
+    this.modifySortedKeys(newDir, 'add', item);
+    this.saveAndRender();
+  }
+
   copyItem(title: string) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
