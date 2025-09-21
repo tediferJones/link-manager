@@ -1,3 +1,4 @@
+import { closeModal } from '@/components/modal';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault'
 import { Content } from '@/types';
@@ -10,16 +11,85 @@ import { Content } from '@/types';
 // when item from autocomplete is selected: 
 //  - replace last path segment with title 
 //  - reset autocomplete container
-// pressing escape should lose focus on input, not close the whole modal
-// get button toggle working
-//  - only enable move button if:
-//    - new dir exists 
-//    - new dir does not contain an item with the same title
-//    - new dir is not current dir
-//  - if path contains an item with same title button should read something like "Title already taken"
+// What happens if user tries to change segment that isn't last segment?
 
 const showAutoComplete = [ 'flex' ];
 const hideAutoComplete = [ 'hidden' ];
+
+function setSubmitButton(disabled: boolean, text: string) {
+  const submitBtn = getElement<HTMLButtonElement>('#pathManagerSubmit');
+  submitBtn.textContent = text;
+  submitBtn.disabled = disabled;
+}
+
+function updateButton({ path }: { path: string[] }) {
+  // name cannot be taken in selected dir
+  // dir must also exist
+  const title = path[path.length - 1];
+  try {
+    const dir = UserVault.getCurrentDir(path, 'preserve');
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    if (path.join('/') === UserVault.currentDir.join('/')) {
+      return setSubmitButton(true, 'Already here');
+    }
+    if (dir.contents[title]) {
+      return setSubmitButton(true, 'Title Already Taken');
+    }
+  } catch {
+    return setSubmitButton(true, 'Invalid Path');
+  }
+  setSubmitButton(false, 'Move');
+}
+
+function displayAutoComplete({ path }: { path: string[] }) {
+  // FIX ME, add better error msg to catch clause
+  try {
+    const folder = UserVault.getCurrentDir(path.slice(0, -1), 'preserve');
+    if (!folder) throw Error('dir is null');
+    if (folder.type === 'encryptedFolder') throw Error('dir is encrypted');
+
+    const checkSegement = path[path.length - 1].toLowerCase();
+    const opts = Object.keys(folder.contents).filter(title => {
+      if (folder.contents[title].type !== 'folder') return;
+      if (!title.toLowerCase().includes(checkSegement)) return;
+      return true;
+    });
+
+    const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+    autoCompleteContainer.innerHTML = '';
+    autoCompleteContainer.append(
+      !opts.length ? 'No Results' : 
+        <>
+          {opts.map((title, i) => (
+            <>
+              {i !== 0 && <hr className='border-1' />}
+              <button type='button'
+                onClick={() => {
+                  path[path.length - 1] = title;
+                  path.push('');
+                  const pathInput = getElement<HTMLInputElement>(
+                    '#pathManager'
+                  );
+                  pathInput.value = getPathStr(path);
+                  pathInput.focus();
+                  displayAutoComplete({ path });
+                }}
+              >{title}</button>
+            </>
+          ))}
+        </>
+    );
+  } catch {
+    console.log('caught error')
+    const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+    autoCompleteContainer.innerHTML = 'Error';
+  }
+}
+
+function getPathStr(path: string[], append?: boolean) {
+  return `/${path.join('/')}${append ? '/' : ''}`
+}
 
 export default function PathManager({ item }: { item: Content }) {
   let path = [ ...UserVault.currentDir ];
@@ -28,7 +98,8 @@ export default function PathManager({ item }: { item: Content }) {
     <form className='grid grid-cols-3 gap-4'
       onSubmit={(e) => {
         e.preventDefault();
-        UserVault.move(item.title, path);
+        UserVault.move(item.title, path.filter(Boolean));
+        closeModal();
       }}
     >
       <label className='m-auto'
@@ -51,49 +122,65 @@ export default function PathManager({ item }: { item: Content }) {
       >
         <input className='defaultBorder'
           id='pathManager'
-          value={`/${path.join('/')}`}
+          value={getPathStr(path)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.stopPropagation();
+              e.currentTarget.blur();
+            }
+          }}
           onInput={(e) => {
             const val = e.currentTarget.value;
             if (!val) e.currentTarget.value = '/';
-            try {
-              path = val.split('/').slice(1);
-              console.log('PATH', path)
-              const folder = UserVault.getCurrentDir(path.slice(0, -1), 'preserve');
-              if (!folder) throw Error('dir is null');
-              if (folder.type === 'encryptedFolder') {
-                throw Error('dir is encrypted');
-              }
-              const opts = Object.keys(folder.contents).filter(title => {
-                if (folder.contents[title].type !== 'folder') return;
-                if (!title.toLowerCase().includes(path[path.length - 1])) return;
-                return true;
-              });
-              const autoCompleteContainer = getElement('#pathManagerAutoComplete');
-              autoCompleteContainer.innerHTML = '';
-              autoCompleteContainer.append(
-                !opts.length ? 'No Results' : 
-                <>
-                  {opts.map((title, i) => (
-                      <>
-                        {i !== 0 && <hr className='border-1' />}
-                        <button type='button'
-                          onClick={() => console.log('replace last path segment with', title)}
-                        >{title}</button>
-                      </>
-                  ))}
-                </>
-              );
-            } catch {
-              const autoCompleteContainer = getElement('#pathManagerAutoComplete');
-              autoCompleteContainer.innerHTML = 'Error';
-            }
+            path = val.split('/').slice(1);
+            if (!path.length) path = [''];
+            displayAutoComplete({ path });
+            updateButton({ path });
+            // try {
+            //   path = val.split('/').slice(1);
+            //   if (!path.length) path = [''];
+            //   console.log('PATH', path)
+            //   const folder = UserVault.getCurrentDir(path.slice(0, -1), 'preserve');
+            //   if (!folder) throw Error('dir is null');
+            //   if (folder.type === 'encryptedFolder') {
+            //     throw Error('dir is encrypted');
+            //   }
+
+            //   const opts = Object.keys(folder.contents).filter(title => {
+            //     if (folder.contents[title].type !== 'folder') return;
+            //     if (!title.toLowerCase().includes(path[path.length - 1])) return;
+            //     return true;
+            //   });
+            //   const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+            //   autoCompleteContainer.innerHTML = '';
+            //   autoCompleteContainer.append(
+            //     !opts.length ? 'No Results' : 
+            //     <>
+            //       {opts.map((title, i) => (
+            //           <>
+            //             {i !== 0 && <hr className='border-1' />}
+            //             <button type='button'
+            //               onClick={() => {
+            //                 path[path.length - 1] = title;
+            //                 console.log(path)
+            //               }}
+            //             >{title}</button>
+            //           </>
+            //       ))}
+            //     </>
+            //   );
+            // } catch {
+            //   const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+            //   autoCompleteContainer.innerHTML = 'Error';
+            // }
           }}
         />
         <div className={`absolute z-10 defaultBorder bg-bg w-full mt-2 text-center flex-col gap-2 ${hideAutoComplete.join(' ')}`}
           id='pathManagerAutoComplete'
         >No Results</div>
       </div>
-      <button className='col-span-full p-2 bg-fg text-bg rounded-lg opacity-50 !cursor-not-allowed'
+      <button className={`col-span-full p-2 bg-fg text-bg rounded-lg disabled:opacity-50 disabled:!cursor-not-allowed`}
+        id='pathManagerSubmit'
         disabled={true}
       >Move</button>
     </form>

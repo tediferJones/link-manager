@@ -293,6 +293,7 @@ export default class Vault {
     this.render();
   }
 
+  // FIX ME this is essentially just an add action and remove action
   move(title: string, newPath: string[]) {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');

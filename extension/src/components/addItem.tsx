@@ -50,6 +50,9 @@ export default function AddItem() {
       id='newItemForm'
       onSubmit={(e) => {
         // FIX ME this is a bit messy, try to clean it up
+        //
+        // make sure to trim whitespace from title and href (if provided) 
+        // and make sure string still has length after trim
         e.preventDefault();
         const titleInput = getElement<HTMLInputElement>('#titleInput');
         const hrefInput = getElement<HTMLInputElement>('#hrefInput');
