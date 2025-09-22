@@ -1,7 +1,197 @@
+import { ChevronRight, Home } from 'lucide';
+import Icon from '@/components/icon';
 import { closeModal } from '@/components/modal';
+import UserVault from '@/lib/userVault';
 import getElement from '@/lib/getElement';
-import UserVault from '@/lib/userVault'
 import { Content } from '@/types';
+
+// FIX ME test autocomplete when there are lots of options
+// container should not overflow screen
+// container should also be above/below depending on which direction has more space
+// if container requires more space than screen can allow, have container scroll
+// maybe just have a max number of items before scrolling
+//  i.e. container should only be tall enough to fit 5 items
+//    - the rest can be accessible via scrolling
+//
+// maybe make a portal component, all the above will also apply to tag autocomplete
+
+function pathMatch(path1: string[], path2: string[]) {
+  return path1.join('/') === path2.join('/');
+}
+
+function updatePathDisplay({ path, item }: { path: string[], item: Content }) {
+  const pathContainer = getElement('#pathContainer');
+  pathContainer.innerHTML = '';
+  pathContainer.appendChild(<PathDisplay path={path} />);
+  const pathSubmitBtn = getElement<HTMLButtonElement>('#pathSubmitBtn');
+  pathSubmitBtn.disabled = pathMatch(
+    path.concat(item.title),
+    UserVault.currentDir.concat(item.title)
+  );
+}
+
+function PathDisplay({ path }: { path: string[] }) {
+  setTimeout(() => {
+    const pathContainer = getElement('#pathContainer');
+    pathContainer.scrollLeft = pathContainer.scrollWidth;
+  });
+  return (
+    <>
+      <div className='flex-shrink-0'>
+        <Icon name={Home} />
+      </div>
+      {path.length > 0 && (
+        <div className='flex-shrink-0'>
+          <Icon name={ChevronRight} />
+        </div>
+      )}
+      {path.map((segment, i) => (
+        <>
+          {i > 0 && (
+            <div className='flex-shrink-0'>
+              <Icon name={ChevronRight} />
+            </div>
+          )}
+          <div className='py-2 text-nowrap'>{segment}</div>
+        </>
+      ))}
+    </>
+  )
+}
+
+function PathInput({ path, item }: { path: string[], item: Content }) {
+  setTimeout(() => updatePathAutocomplete({ path, item }));
+  return (
+    <div className='flex items-center' id='pathInputContainer'>
+      <Icon name={ChevronRight} />
+      <div className='relative'
+        onBlurCapture={e => {
+          const next = e.relatedTarget;
+          if (!(next instanceof Node && e.currentTarget.contains(next))) {
+            getElement('#pathInputContainer').remove();
+          }
+        }}
+      >
+        <input className='defaultBorder'
+          id='pathInput' 
+          placeholder='Backspace to change parent'
+          onKeyDown={(e) => {
+            if (e.key === 'Backspace' && e.currentTarget.value === '') {
+              path.splice(path.length - 1, 1);
+              updatePathDisplay({ path, item });
+              getElement<HTMLFormElement>('#pathContainer').click();
+            } else if (e.key === 'Escape') {
+              e.currentTarget.blur();
+              e.stopPropagation();
+            }
+          }}
+          onInput={() => updatePathAutocomplete({ path, item })}
+        />
+        <div className='fixed mt-1 defaultBorder bg-bg z-10 flex flex-col gap-2 w-full text-center'
+          id='pathAutocomplete'
+        ></div>
+      </div>
+    </div>
+  )
+}
+
+function updatePathAutocomplete(
+  {
+    path,
+    item
+  }: {
+    path: string[],
+    item: Content
+  }
+) {
+  const pathAutocomplete = getElement<HTMLDivElement>('#pathAutocomplete');
+  pathAutocomplete.innerHTML = '';
+  pathAutocomplete.appendChild(<PathAutocomplete path={path} item={item} />);
+  const pathInput = getElement<HTMLInputElement>('#pathInput');
+  // PORTALLING
+  // FIX ME can we fix weird rendering issue?
+  // when autocomplete gets rendered there is a flicker
+  // try hitting backspace to remove parent dir to see flicker
+  const pathInputRect = pathInput.getBoundingClientRect();
+  pathAutocomplete.style.top = `${pathInputRect.bottom}px`;
+  pathAutocomplete.style.left = `${pathInputRect.left}px`;
+  pathAutocomplete.style.width = `${pathInputRect.width}px`;
+}
+
+function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
+  const newSegment = getElement<HTMLInputElement>('#pathInput').value;
+  const folder = UserVault.getCurrentDir(path, 'preserve');
+  if (!folder) throw Error('dir is null');
+  if (folder.type === 'encryptedFolder') throw Error('dir is encrypted');
+  const opts = Object.keys(folder.contents).filter(title => {
+    if (folder.contents[title].type !== 'folder') return;
+    if (!title.toLowerCase().includes(newSegment.toLowerCase())) return;
+    const invalidPath = pathMatch(
+      path.concat(title),
+      UserVault.currentDir.concat(item.title)
+    );
+    if (invalidPath) return;
+    return true;
+  });
+  return (
+    <>
+      {!opts.length ? 'No Results' : opts.map((title, i) => (
+        <>
+          {i > 0 && <hr className='border-1' />}
+          <button type='button'
+            onClick={() => {
+              path.push(title);
+              updatePathDisplay({ path, item });
+            }}
+          >{title}</button>
+        </>
+      ))}
+    </>
+  )
+}
+
+export default function PathManager({ item }: { item: Content }) {
+  const path = [ ...UserVault.currentDir ];
+  return (
+    <div className='flex flex-col gap-4'>
+      <button className='defaultBorder flex items-center overflow-auto no-scrollbar'
+        id='pathContainer'
+        onClick={(e) => {
+          e.currentTarget.appendChild(<PathInput path={path} item={item} />);
+          getElement<HTMLInputElement>('#pathInput').focus();
+        }}
+        onWheel={(e) => {
+          if (e.deltaY !== 0) {
+            e.preventDefault();
+            e.currentTarget.scrollLeft += e.deltaY;
+          }
+        }}
+      >
+        <PathDisplay path={path} />
+      </button>
+      <button className='bg-fg text-bg p-2 rounded-lg disabled:opacity-50 disabled:!cursor-not-allowed'
+        id='pathSubmitBtn'
+        disabled={true}
+        onClick={() => {
+          console.log('attempting submit')
+          const pathSubmitBtn = getElement<HTMLButtonElement>('#pathSubmitBtn');
+          if (pathSubmitBtn.disabled) return;
+          console.log('submitting')
+          console.log('move', item.title, 'to', path)
+          UserVault.move(item.title, path);
+          closeModal();
+        }}
+      >Move</button>
+    </div>
+  )
+}
+
+// FIX ME delete everything below this line
+
+// import { closeModal } from '@/components/modal';
+// import getElement from '@/lib/getElement';
+// import UserVault from '@/lib/userVault'
+// import { Content } from '@/types';
 
 // FIX ME
 // if we stick with this, make sure titles cannot container the '/' char
@@ -13,179 +203,179 @@ import { Content } from '@/types';
 //  - reset autocomplete container
 // What happens if user tries to change segment that isn't last segment?
 
-const showAutoComplete = [ 'flex' ];
-const hideAutoComplete = [ 'hidden' ];
-
-function setSubmitButton(disabled: boolean, text: string) {
-  const submitBtn = getElement<HTMLButtonElement>('#pathManagerSubmit');
-  submitBtn.textContent = text;
-  submitBtn.disabled = disabled;
-}
-
-function updateButton({ path }: { path: string[] }) {
-  // name cannot be taken in selected dir
-  // dir must also exist
-  const title = path[path.length - 1];
-  try {
-    const dir = UserVault.getCurrentDir(path, 'preserve');
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted');
-    if (path.join('/') === UserVault.currentDir.join('/')) {
-      return setSubmitButton(true, 'Already here');
-    }
-    if (dir.contents[title]) {
-      return setSubmitButton(true, 'Title Already Taken');
-    }
-  } catch {
-    return setSubmitButton(true, 'Invalid Path');
-  }
-  setSubmitButton(false, 'Move');
-}
-
-function displayAutoComplete({ path }: { path: string[] }) {
-  // FIX ME, add better error msg to catch clause
-  try {
-    const folder = UserVault.getCurrentDir(path.slice(0, -1), 'preserve');
-    if (!folder) throw Error('dir is null');
-    if (folder.type === 'encryptedFolder') throw Error('dir is encrypted');
-
-    const checkSegement = path[path.length - 1].toLowerCase();
-    const opts = Object.keys(folder.contents).filter(title => {
-      if (folder.contents[title].type !== 'folder') return;
-      if (!title.toLowerCase().includes(checkSegement)) return;
-      return true;
-    });
-
-    const autoCompleteContainer = getElement('#pathManagerAutoComplete');
-    autoCompleteContainer.innerHTML = '';
-    autoCompleteContainer.append(
-      !opts.length ? 'No Results' : 
-        <>
-          {opts.map((title, i) => (
-            <>
-              {i !== 0 && <hr className='border-1' />}
-              <button type='button'
-                onClick={() => {
-                  path[path.length - 1] = title;
-                  path.push('');
-                  const pathInput = getElement<HTMLInputElement>(
-                    '#pathManager'
-                  );
-                  pathInput.value = getPathStr(path);
-                  pathInput.focus();
-                  displayAutoComplete({ path });
-                }}
-              >{title}</button>
-            </>
-          ))}
-        </>
-    );
-  } catch {
-    console.log('caught error')
-    const autoCompleteContainer = getElement('#pathManagerAutoComplete');
-    autoCompleteContainer.innerHTML = 'Error';
-  }
-}
-
-function getPathStr(path: string[], append?: boolean) {
-  return `/${path.join('/')}${append ? '/' : ''}`
-}
-
-export default function PathManager({ item }: { item: Content }) {
-  let path = [ ...UserVault.currentDir ];
-  
-  return (
-    <form className='grid grid-cols-3 gap-4'
-      onSubmit={(e) => {
-        e.preventDefault();
-        UserVault.move(item.title, path.filter(Boolean));
-        closeModal();
-      }}
-    >
-      <label className='m-auto'
-        htmlFor='pathManager'
-      >Path</label>
-      <div className='relative col-span-2'
-        onFocusCapture={() => {
-          const container = getElement('#pathManagerAutoComplete');
-          container.classList.add(...showAutoComplete);
-          container.classList.remove(...hideAutoComplete);
-        }}
-        onBlurCapture={(e) => {
-          const next = e.relatedTarget;
-          if (!(next instanceof Node && e.currentTarget.contains(next))) {
-            const container = getElement('#pathManagerAutoComplete');
-            container.classList.add(...hideAutoComplete);
-            container.classList.remove(...showAutoComplete);
-          }
-        }}
-      >
-        <input className='defaultBorder'
-          id='pathManager'
-          value={getPathStr(path)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.stopPropagation();
-              e.currentTarget.blur();
-            }
-          }}
-          onInput={(e) => {
-            const val = e.currentTarget.value;
-            if (!val) e.currentTarget.value = '/';
-            path = val.split('/').slice(1);
-            if (!path.length) path = [''];
-            displayAutoComplete({ path });
-            updateButton({ path });
-            // try {
-            //   path = val.split('/').slice(1);
-            //   if (!path.length) path = [''];
-            //   console.log('PATH', path)
-            //   const folder = UserVault.getCurrentDir(path.slice(0, -1), 'preserve');
-            //   if (!folder) throw Error('dir is null');
-            //   if (folder.type === 'encryptedFolder') {
-            //     throw Error('dir is encrypted');
-            //   }
-
-            //   const opts = Object.keys(folder.contents).filter(title => {
-            //     if (folder.contents[title].type !== 'folder') return;
-            //     if (!title.toLowerCase().includes(path[path.length - 1])) return;
-            //     return true;
-            //   });
-            //   const autoCompleteContainer = getElement('#pathManagerAutoComplete');
-            //   autoCompleteContainer.innerHTML = '';
-            //   autoCompleteContainer.append(
-            //     !opts.length ? 'No Results' : 
-            //     <>
-            //       {opts.map((title, i) => (
-            //           <>
-            //             {i !== 0 && <hr className='border-1' />}
-            //             <button type='button'
-            //               onClick={() => {
-            //                 path[path.length - 1] = title;
-            //                 console.log(path)
-            //               }}
-            //             >{title}</button>
-            //           </>
-            //       ))}
-            //     </>
-            //   );
-            // } catch {
-            //   const autoCompleteContainer = getElement('#pathManagerAutoComplete');
-            //   autoCompleteContainer.innerHTML = 'Error';
-            // }
-          }}
-        />
-        <div className={`absolute z-10 defaultBorder bg-bg w-full mt-2 text-center flex-col gap-2 ${hideAutoComplete.join(' ')}`}
-          id='pathManagerAutoComplete'
-        >No Results</div>
-      </div>
-      <button className={`col-span-full p-2 bg-fg text-bg rounded-lg disabled:opacity-50 disabled:!cursor-not-allowed`}
-        id='pathManagerSubmit'
-        disabled={true}
-      >Move</button>
-    </form>
-  )
-}
+// const showAutoComplete = [ 'flex' ];
+// const hideAutoComplete = [ 'hidden' ];
+// 
+// function setSubmitButton(disabled: boolean, text: string) {
+//   const submitBtn = getElement<HTMLButtonElement>('#pathManagerSubmit');
+//   submitBtn.textContent = text;
+//   submitBtn.disabled = disabled;
+// }
+// 
+// function updateButton({ path }: { path: string[] }) {
+//   // name cannot be taken in selected dir
+//   // dir must also exist
+//   const title = path[path.length - 1];
+//   try {
+//     const dir = UserVault.getCurrentDir(path, 'preserve');
+//     if (!dir) throw Error('dir is null');
+//     if (dir.type !== 'folder') throw Error('dir is encrypted');
+//     if (path.join('/') === UserVault.currentDir.join('/')) {
+//       return setSubmitButton(true, 'Already here');
+//     }
+//     if (dir.contents[title]) {
+//       return setSubmitButton(true, 'Title Already Taken');
+//     }
+//   } catch {
+//     return setSubmitButton(true, 'Invalid Path');
+//   }
+//   setSubmitButton(false, 'Move');
+// }
+// 
+// function displayAutoComplete({ path }: { path: string[] }) {
+//   // FIX ME, add better error msg to catch clause
+//   try {
+//     const folder = UserVault.getCurrentDir(path.slice(0, -1), 'preserve');
+//     if (!folder) throw Error('dir is null');
+//     if (folder.type === 'encryptedFolder') throw Error('dir is encrypted');
+// 
+//     const checkSegement = path[path.length - 1].toLowerCase();
+//     const opts = Object.keys(folder.contents).filter(title => {
+//       if (folder.contents[title].type !== 'folder') return;
+//       if (!title.toLowerCase().includes(checkSegement)) return;
+//       return true;
+//     });
+// 
+//     const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+//     autoCompleteContainer.innerHTML = '';
+//     autoCompleteContainer.append(
+//       !opts.length ? 'No Results' : 
+//         <>
+//           {opts.map((title, i) => (
+//             <>
+//               {i !== 0 && <hr className='border-1' />}
+//               <button type='button'
+//                 onClick={() => {
+//                   path[path.length - 1] = title;
+//                   path.push('');
+//                   const pathInput = getElement<HTMLInputElement>(
+//                     '#pathManager'
+//                   );
+//                   pathInput.value = getPathStr(path);
+//                   pathInput.focus();
+//                   displayAutoComplete({ path });
+//                 }}
+//               >{title}</button>
+//             </>
+//           ))}
+//         </>
+//     );
+//   } catch {
+//     console.log('caught error')
+//     const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+//     autoCompleteContainer.innerHTML = 'Error';
+//   }
+// }
+// 
+// function getPathStr(path: string[], append?: boolean) {
+//   return `/${path.join('/')}${append ? '/' : ''}`
+// }
+// 
+// export default function PathManager({ item }: { item: Content }) {
+//   let path = [ ...UserVault.currentDir ];
+//   
+//   return (
+//     <form className='grid grid-cols-3 gap-4'
+//       onSubmit={(e) => {
+//         e.preventDefault();
+//         UserVault.move(item.title, path.filter(Boolean));
+//         closeModal();
+//       }}
+//     >
+//       <label className='m-auto'
+//         htmlFor='pathManager'
+//       >Path</label>
+//       <div className='relative col-span-2'
+//         onFocusCapture={() => {
+//           const container = getElement('#pathManagerAutoComplete');
+//           container.classList.add(...showAutoComplete);
+//           container.classList.remove(...hideAutoComplete);
+//         }}
+//         onBlurCapture={(e) => {
+//           const next = e.relatedTarget;
+//           if (!(next instanceof Node && e.currentTarget.contains(next))) {
+//             const container = getElement('#pathManagerAutoComplete');
+//             container.classList.add(...hideAutoComplete);
+//             container.classList.remove(...showAutoComplete);
+//           }
+//         }}
+//       >
+//         <input className='defaultBorder'
+//           id='pathManager'
+//           value={getPathStr(path)}
+//           onKeyDown={(e) => {
+//             if (e.key === 'Escape') {
+//               e.stopPropagation();
+//               e.currentTarget.blur();
+//             }
+//           }}
+//           onInput={(e) => {
+//             const val = e.currentTarget.value;
+//             if (!val) e.currentTarget.value = '/';
+//             path = val.split('/').slice(1);
+//             if (!path.length) path = [''];
+//             displayAutoComplete({ path });
+//             updateButton({ path });
+//             // try {
+//             //   path = val.split('/').slice(1);
+//             //   if (!path.length) path = [''];
+//             //   console.log('PATH', path)
+//             //   const folder = UserVault.getCurrentDir(path.slice(0, -1), 'preserve');
+//             //   if (!folder) throw Error('dir is null');
+//             //   if (folder.type === 'encryptedFolder') {
+//             //     throw Error('dir is encrypted');
+//             //   }
+// 
+//             //   const opts = Object.keys(folder.contents).filter(title => {
+//             //     if (folder.contents[title].type !== 'folder') return;
+//             //     if (!title.toLowerCase().includes(path[path.length - 1])) return;
+//             //     return true;
+//             //   });
+//             //   const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+//             //   autoCompleteContainer.innerHTML = '';
+//             //   autoCompleteContainer.append(
+//             //     !opts.length ? 'No Results' : 
+//             //     <>
+//             //       {opts.map((title, i) => (
+//             //           <>
+//             //             {i !== 0 && <hr className='border-1' />}
+//             //             <button type='button'
+//             //               onClick={() => {
+//             //                 path[path.length - 1] = title;
+//             //                 console.log(path)
+//             //               }}
+//             //             >{title}</button>
+//             //           </>
+//             //       ))}
+//             //     </>
+//             //   );
+//             // } catch {
+//             //   const autoCompleteContainer = getElement('#pathManagerAutoComplete');
+//             //   autoCompleteContainer.innerHTML = 'Error';
+//             // }
+//           }}
+//         />
+//         <div className={`absolute z-10 defaultBorder bg-bg w-full mt-2 text-center flex-col gap-2 ${hideAutoComplete.join(' ')}`}
+//           id='pathManagerAutoComplete'
+//         >No Results</div>
+//       </div>
+//       <button className={`col-span-full p-2 bg-fg text-bg rounded-lg disabled:opacity-50 disabled:!cursor-not-allowed`}
+//         id='pathManagerSubmit'
+//         disabled={true}
+//       >Move</button>
+//     </form>
+//   )
+// }
 
 // import { closeModal } from '@/components/modal';
 // import UserVault from '@/lib/userVault';

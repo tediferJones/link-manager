@@ -9,5 +9,9 @@ export default function Icon(
     className?: string,
   }
 ) {
+  // FIX ME passing classes to this function does not actually apply the classes
+  // wrap this thing in a div/span and pass classes to that element
+  // while we're at it just allow any div/span prop to be passed to the wrapped tag
+  // afterwards fix all occurrences of wrapped Icon tags
   return createElement(name, { className: className || '' });
 }
