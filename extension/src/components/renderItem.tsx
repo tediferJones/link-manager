@@ -10,7 +10,7 @@ const renderOpts: { [K in ContentTypes]: (item: Content<K>) => ReactElement } = 
   link: (item) => <LinkItem link={item} />,
   folder: (item) => <FolderItem folder={item} />,
   encryptedFolder: (item) => <EncryptedFolderItem encryptedFolder={item} />,
-  watched: (item) => <WatchedItem watched={item} />
+  watched: (item) => <WatchedItem watched={item} />,
 }
 
 export default function RenderItem<T extends ContentTypes>(
@@ -23,6 +23,5 @@ export default function RenderItem<T extends ContentTypes>(
   }
 ) {
   if (!moveItem && item === UserVault.toMove?.item) return;
-  console.log(item)
   return renderOpts[item.type](item);
 }

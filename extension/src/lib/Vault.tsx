@@ -9,6 +9,7 @@ import {
   SortedKeysHandler,
   SortedKeysTypes,
 } from '@/types.ts';
+import { compress, decompress } from './compression';
 
 const newVault: Content<'folder'> = {
   type: 'folder',
@@ -97,7 +98,7 @@ export default class Vault {
   async getVault() {
     const chromeStorage = await chrome.storage.sync.get();
     this.vault = (
-      chromeStorage.vault ? JSON.parse(chromeStorage.vault) : newVault
+      chromeStorage.vault ? JSON.parse(await decompress(chromeStorage.vault)) : newVault
     );
     this.savedDir = chromeStorage.savedDir || [];
     this.render();
@@ -146,11 +147,14 @@ export default class Vault {
     //  - this way we can tell which data is the latest
     //    - if client data is latest push to db
     //    - if server data is latest pull from db
+    // also add delay to saving and debounce on next save request
+    // chrome.storage.sync is capped at 8kb, could use local storage, but thats capped at 8MB
     if (!this.vault || !this.currentDir) return;
     const packed = await this.pack(this.vault as Content<'folder'>);
-    console.log('packed', packed);
+    const compressed = await compress(JSON.stringify(packed));
+    console.log('packed', packed, 'size', compressed.length);
     await chrome.storage.sync.set({
-      vault: JSON.stringify(packed),
+      vault: compressed,
       savedDir: this.savedDir,
     });
   }

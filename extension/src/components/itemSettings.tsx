@@ -1,12 +1,12 @@
 import { closeModal, navigateModal } from '@/components/modal';
 import DeleteConfirmation from '@/components/deleteConfirmation';
+import PathManager from '@/components/pathManager';
 import TagManager from '@/components/tagManager';
+import ErrorMsg, { hideError, showError } from '@/components/errorMsg';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
 import { Content } from '@/types';
-import ErrorMsg, { hideError, showError } from './errorMsg';
-import PathManager from './pathManager';
 
 function handleInputChange(item: Content) {
   const checkForChange: ((item: Content) => boolean)[] = [
