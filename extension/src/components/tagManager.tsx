@@ -4,6 +4,8 @@ import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { Content } from '@/types';
 
+// FIX ME compare to pathManager, try to make this as similar as possible
+
 export default function TagManager(
   {
     item,

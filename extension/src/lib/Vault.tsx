@@ -96,6 +96,7 @@ export default class Vault {
   }
 
   async getVault() {
+    // FIX ME switch to chrome.storage.local with 'unlimitedStorage' permission
     const chromeStorage = await chrome.storage.sync.get();
     this.vault = (
       chromeStorage.vault ? JSON.parse(await decompress(chromeStorage.vault)) : newVault

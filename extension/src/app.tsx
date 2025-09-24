@@ -37,6 +37,9 @@ import { SizeTypes } from '@/types';
 //    - remember to revert modal back to original state without nesting
 // Do we want a copy function for items?
 // Considering making watched its own item type, it will just be a link with an additional watched prop
+// make all scrollareas overflow-y-scroll
+//  - add goofy padding to make items appear centered
+//  - only exception could be directoryView component
 // Address FIX ME comments
 
 export default function App({ type }: { type: SizeTypes }) {

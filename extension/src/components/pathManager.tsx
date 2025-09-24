@@ -1,26 +1,19 @@
 import { ChevronRight, Home } from 'lucide';
 import Icon from '@/components/icon';
 import { closeModal } from '@/components/modal';
-import UserVault from '@/lib/userVault';
 import getElement from '@/lib/getElement';
+import UserVault from '@/lib/userVault';
 import { Content } from '@/types';
 
-// FIX ME test autocomplete when there are lots of options
-// container should not overflow screen
-// container should also be above/below depending on which direction has more space
-// if container requires more space than screen can allow, have container scroll
-// maybe just have a max number of items before scrolling
-//  i.e. container should only be tall enough to fit 5 items
-//    - the rest can be accessible via scrolling
-//
-// maybe make a portal component, all the above will also apply to tag autocomplete
+const hideAutocomplete = [ 'hidden' ];
+const showAutocomplete = [ 'flex' ];
 
 function pathMatch(path1: string[], path2: string[]) {
   return path1.join('/') === path2.join('/');
 }
 
 function updatePathDisplay({ path, item }: { path: string[], item: Content }) {
-  const pathContainer = getElement('#pathContainer');
+  const pathContainer = getElement('#pathDisplay');
   pathContainer.innerHTML = '';
   pathContainer.appendChild(<PathDisplay path={path} />);
   const pathSubmitBtn = getElement<HTMLButtonElement>('#pathSubmitBtn');
@@ -30,9 +23,10 @@ function updatePathDisplay({ path, item }: { path: string[], item: Content }) {
   );
 }
 
+// FIX ME replace with breadcrumbs if possible
 function PathDisplay({ path }: { path: string[] }) {
   setTimeout(() => {
-    const pathContainer = getElement('#pathContainer');
+    const pathContainer = getElement('#pathDisplay');
     pathContainer.scrollLeft = pathContainer.scrollWidth;
   });
   return (
@@ -59,44 +53,6 @@ function PathDisplay({ path }: { path: string[] }) {
   )
 }
 
-function PathInput({ path, item }: { path: string[], item: Content }) {
-  setTimeout(() => updatePathAutocomplete({ path, item }));
-  return (
-    <div className='flex items-center' id='pathInputContainer'>
-      <Icon name={ChevronRight} />
-      <div className='relative'
-        onBlurCapture={(e) => {
-          const next = e.relatedTarget;
-          if (!(next instanceof Node && e.currentTarget.contains(next))) {
-            // FIX ME find some way to remove scroll event listener in here
-            getElement('#pathInputContainer').remove();
-          }
-        }}
-      >
-        <input className='defaultBorder'
-          id='pathInput' 
-          placeholder='Backspace to change parent'
-          onKeyDown={(e) => {
-            if (e.key === 'Backspace' && e.currentTarget.value === '') {
-              path.splice(path.length - 1, 1);
-              updatePathDisplay({ path, item });
-              getElement<HTMLFormElement>('#pathContainer').click();
-            } else if (e.key === 'Escape') {
-              e.currentTarget.blur();
-              e.stopPropagation();
-            }
-          }}
-          onInput={() => updatePathAutocomplete({ path, item })}
-        />
-        <div className='fixed my-1 defaultBorder bg-bg z-10 flex flex-col gap-2 text-center overflow-y-auto'
-          id='pathAutocomplete'
-          onWheel={(e) => e.stopPropagation()}
-        ></div>
-      </div>
-    </div>
-  )
-}
-
 function updatePathAutocomplete(
   {
     path,
@@ -109,45 +65,27 @@ function updatePathAutocomplete(
   const pathAutocomplete = getElement<HTMLDivElement>('#pathAutocomplete');
   pathAutocomplete.innerHTML = '';
   pathAutocomplete.appendChild(<PathAutocomplete path={path} item={item} />);
-  const pathInput = getElement<HTMLInputElement>('#pathInput');
-  const pathInputRect = pathInput.getBoundingClientRect();
-  const mid = (pathInputRect.top + pathInputRect.bottom) / 2;
-  pathAutocomplete.style.width = `${pathInputRect.width}px`;
-  pathAutocomplete.style.left = `${pathInputRect.left}px`;
-  // FIX ME portalling issues
-  // funky placement of autocomplete box on smaller windows
-  // try half height of monitor to see
-  if (Math.abs(mid - window.innerHeight) < mid) {
-    console.log('goes on top')
-    pathAutocomplete.style.top = `${pathInputRect.top + window.scrollY - pathAutocomplete.offsetHeight - 8}px`
-    pathAutocomplete.style.maxHeight = `${pathInputRect.top - 8}px`;
-  } else {
-    console.log('goes on bottom')
-    pathAutocomplete.style.top = `${pathInputRect.bottom}px`;
-    pathAutocomplete.style.maxHeight = `${window.innerHeight - pathInputRect.bottom - 8}px`;
-  }
-  // const { top, maxHeight } = getPortalBounds(pathInputRect, pathAutocomplete.offsetHeight);
-  // pathAutocomplete.style.top = `${top}px`
-  // pathAutocomplete.style.maxHeight = `${maxHeight}px`;
-}
 
-// function getPortalBounds(rect: DOMRect, dropdownHeight: number) {
-//   const viewportHeight = window.innerHeight;
-//   const spaceBelow = viewportHeight - rect.bottom;
-//   const spaceAbove = rect.top;
-// 
-//   if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
-//     return {
-//       top: rect.bottom + window.scrollY,
-//       maxHeight: spaceBelow,
-//     }
-//   } else {
-//     return {
-//       top: rect.top + window.scrollY - dropdownHeight,
-//       maxHeight: spaceAbove,
-//     }
-//   }
-// }
+  // FIX ME apply this height limiting stuff to tagManager
+  const pathInputRect = getElement('#pathInput').getBoundingClientRect();
+  const modalContentRect = getElement('#modalContent').getBoundingClientRect();
+  const spaceBelow = modalContentRect.bottom - pathInputRect.bottom;
+  pathAutocomplete.style.maxHeight = `${spaceBelow - 8}px`;
+  // FIX ME do we want autocomplete to ever be on top?
+  // if so it will cover path display
+  // const spaceAbove = pathInputRect.top - modalContentRect.top;
+  // if (spaceAbove > spaceBelow) {
+  //   console.log('render on top')
+  //   pathAutocomplete.classList.remove('top-full');
+  //   pathAutocomplete.classList.add('bottom-full');
+  //   pathAutocomplete.style.maxHeight = `${spaceAbove - 8}px`;
+  // } else {
+  //   console.log('render on bottom')
+  //   pathAutocomplete.classList.remove('bottom-full');
+  //   pathAutocomplete.classList.add('top-full');
+  //   pathAutocomplete.style.maxHeight = `${spaceBelow - 8}px`;
+  // }
+}
 
 function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
   const newSegment = getElement<HTMLInputElement>('#pathInput').value;
@@ -169,11 +107,15 @@ function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
       {!opts.length ? 'No Results' : opts.map((title, i) => (
         <>
           {i > 0 && <hr className='border-1' />}
-          <button className='overflow-ellipsis overflow-x-clip'
+          <button className='overflow-x-clip overflow-ellipsis'
             type='button'
             onClick={() => {
               path.push(title);
               updatePathDisplay({ path, item });
+              updatePathAutocomplete({ path, item });
+              const pathInput = getElement<HTMLInputElement>('#pathInput');
+              pathInput.value = '';
+              pathInput.focus();
             }}
           >{title}</button>
         </>
@@ -182,24 +124,12 @@ function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
   )
 }
 
-
 export default function PathManager({ item }: { item: Content }) {
   const path = [ ...UserVault.currentDir ];
-
-  function handleScroll() {
-    updatePathAutocomplete({ path, item });
-  }
-
   return (
     <div className='flex flex-col gap-4'>
-      <button className='defaultBorder flex items-center overflow-auto no-scrollbar'
-        id='pathContainer'
-        onClick={(e) => {
-          if (document.querySelector('#pathInput')) return;
-          e.currentTarget.appendChild(<PathInput path={path} item={item} />);
-          getElement<HTMLInputElement>('#pathInput').focus();
-          getElement('#modalContent').addEventListener('scroll', handleScroll);
-        }}
+      <div className='flex items-center defaultBorder overflow-auto no-scrollbar'
+        id='pathDisplay'
         onWheel={(e) => {
           if (e.deltaY !== 0) {
             e.preventDefault();
@@ -208,16 +138,56 @@ export default function PathManager({ item }: { item: Content }) {
         }}
       >
         <PathDisplay path={path} />
-      </button>
+      </div>
+      <div className='relative'
+        onBlurCapture={(e) => {
+          const next = e.relatedTarget;
+          if (!(next instanceof Node && e.currentTarget.contains(next))) {
+            const pathAutocomplete = getElement('#pathAutocomplete');
+            pathAutocomplete.classList.add(...hideAutocomplete);
+            pathAutocomplete.classList.remove(...showAutocomplete);
+          }
+        }}
+      >
+        <input className='defaultBorder w-full'
+          id='pathInput'
+          type='text'
+          placeholder='Change path'
+          onFocus={(e) => {
+            e.currentTarget.placeholder = 'Backspace to change parent';
+            const pathAutocomplete = getElement('#pathAutocomplete');
+            pathAutocomplete.classList.add(...showAutocomplete);
+            pathAutocomplete.classList.remove(...hideAutocomplete);
+            updatePathAutocomplete({ path, item });
+          }}
+          onBlur={(e) => {
+            e.currentTarget.placeholder = 'Change path';
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Backspace' && e.currentTarget.value === '') {
+              path.splice(path.length - 1, 1);
+              updatePathDisplay({ path, item });
+              updatePathAutocomplete({ path, item });
+            } else if (e.key === 'Escape') {
+              e.currentTarget.blur();
+              e.stopPropagation();
+            } else if (e.key === 'Enter') {
+              const pathAutocomplete = getElement('#pathAutocomplete');
+              const first = pathAutocomplete.firstElementChild;
+              if (first instanceof HTMLButtonElement) first.click();
+            }
+          }}
+          onInput={() => updatePathAutocomplete({ path, item })}
+        />
+        <div className={`absolute flex-col gap-2 bg-bg w-full text-center z-10 my-2 defaultBorder overflow-y-auto ${hideAutocomplete.join(' ')}`}
+          id='pathAutocomplete'
+        >Loading...</div>
+      </div>
       <button className='bg-fg text-bg p-2 rounded-lg disabled:opacity-50 disabled:!cursor-not-allowed'
         id='pathSubmitBtn'
-        disabled={true}
+        disabled
+        type='button'
         onClick={() => {
-          console.log('attempting submit')
-          const pathSubmitBtn = getElement<HTMLButtonElement>('#pathSubmitBtn');
-          if (pathSubmitBtn.disabled) return;
-          console.log('submitting')
-          console.log('move', item.title, 'to', path)
           UserVault.move(item.title, path);
           closeModal();
         }}
