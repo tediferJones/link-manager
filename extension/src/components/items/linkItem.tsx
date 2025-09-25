@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Eye, Link2, Settings2 } from 'lucide';
+import { ChevronDown, ChevronUp, Eye, Link2, Pin, Settings2 } from 'lucide';
 import Icon from '@/components/icon';
 import ItemSettings from '@/components/itemSettings';
 import { openModal } from '@/components/modal';
@@ -12,6 +12,9 @@ export default function LinkItem({ link }: { link: Content<'link'> }) {
         title={`Go to: ${link.href}`}
         href={link.href}
       >
+        {link.pinned && (
+          <Icon name={Pin} className='stroke-green-500' />
+        )}
         <div className='flex-shrink-0'>
           <Icon name={Link2} />
         </div>

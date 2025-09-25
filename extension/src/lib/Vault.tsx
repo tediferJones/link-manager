@@ -1,6 +1,7 @@
 import DirectoryView from '@/components/directoryView';
 import getElement from '@/lib/getElement';
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
+import { compress, decompress } from '@/lib/compression';
 import {
   Content,
   ContentTypes,
@@ -9,13 +10,13 @@ import {
   SortedKeysHandler,
   SortedKeysTypes,
 } from '@/types.ts';
-import { compress, decompress } from './compression';
 
 const newVault: Content<'folder'> = {
   type: 'folder',
   title: '',
   contents: {},
   tags: [],
+  pinned: false,
   sortedKeys: {
     pinned: [],
     folders: [],
@@ -162,7 +163,7 @@ export default class Vault {
 
   // FIX ME, improve types
   async pack(folder: Content<'folder'>): Promise<Content<'folder' | 'encryptedFolder'>> {
-    const { encryption, contents, title, tags, sortedKeys } = folder;
+    const { encryption, contents, title, tags, sortedKeys, pinned } = folder;
     let packedContents = Object.fromEntries(
       await Promise.all(
         Object.keys(contents).map(async title => {
@@ -184,6 +185,7 @@ export default class Vault {
       return {
         type: 'encryptedFolder',
         title,
+        pinned,
         data: await encrypt(
           JSON.stringify(toEncrypt),
           encryption.key,
@@ -215,6 +217,7 @@ export default class Vault {
       title,
       href,
       tags: [],
+      pinned: false,
     };
     dir.contents[title] = newLink;
     dir.sortedKeys.links.unshift(title);
@@ -232,7 +235,8 @@ export default class Vault {
         links: [],
         watched: [],
         pinned: [],
-      }
+      },
+      pinned: false,
     };
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
@@ -341,7 +345,7 @@ export default class Vault {
     action: 'add' | 'remove',
     item: Content,
   ) {
-    const type = typeMap[item.type];
+    const type = item.pinned ? 'pinned' : typeMap[item.type];
     handlers[type][action](dir, item);
   }
 
@@ -381,6 +385,7 @@ export default class Vault {
     const decryptedFolder: Content<'folder'> = {
       type: 'folder',
       title: dir.title,
+      pinned: dir.pinned,
       ...decryptedData,
       encryption: {
         key: newKey,
@@ -402,10 +407,11 @@ export default class Vault {
     const folder = dir.contents[title];
     if (folder.type !== 'folder') throw Error('item is not a folder');
     if (!folder.encryption) throw Error('folder is not already encrypted');
-    const { encryption, contents } = folder;
+    const { encryption, contents, pinned } = folder;
     const encrypted: Content<'encryptedFolder'> = {
       type: 'encryptedFolder',
       title,
+      pinned, 
       data: await encrypt(
         JSON.stringify(contents),
         encryption.key,
@@ -512,9 +518,9 @@ export default class Vault {
         type: 'watched',
         watched: Date.now(),
       }
+      if (!item.pinned) this.modifySortedKeys(dir, 'remove', item);
       Object.assign(item, watched);
-      this.modifySortedKeys(dir, 'remove', item);
-      this.modifySortedKeys(dir, 'add', item);
+      if (!item.pinned) this.modifySortedKeys(dir, 'add', item);
     } else if (item.type === 'watched') {
       const { watched, ...rest } = item;
       const link: Content<'link'> = {
@@ -524,10 +530,14 @@ export default class Vault {
         ...rest,
         type: 'link'
       }
+      if (!item.pinned) this.modifySortedKeys(dir, 'remove', item);
       Object.assign(item, link);
-      this.modifySortedKeys(dir, 'remove', item);
-      this.modifySortedKeys(dir, 'add', item);
+      if (!item.pinned) this.modifySortedKeys(dir, 'add', item);
     }
+    // if (!item.pinned) {
+    //   this.modifySortedKeys(dir, 'remove', item);
+    //   this.modifySortedKeys(dir, 'add', item);
+    // }
     this.saveAndRender();
   }
 
@@ -553,6 +563,18 @@ export default class Vault {
         dir.sortedKeys.links[newIndex],
         dir.sortedKeys.links[linkIndex],
       ];
+    this.saveAndRender();
+  }
+
+  setPinned(title: string, pinned: boolean) {
+    // FIX ME swapping priority of a pinned item causes rendering issues
+    const dir = this.getCurrentDir();
+    if (!dir) throw Error('dir is null');
+    if (dir.type !== 'folder') throw Error('dir is encrypted');
+    const item = dir.contents[title];
+    this.modifySortedKeys(dir, 'remove', item);
+    item.pinned = pinned;
+    this.modifySortedKeys(dir, 'add', item);
     this.saveAndRender();
   }
 }

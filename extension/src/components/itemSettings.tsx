@@ -2,6 +2,7 @@ import { closeModal, navigateModal } from '@/components/modal';
 import DeleteConfirmation from '@/components/deleteConfirmation';
 import PathManager from '@/components/pathManager';
 import TagManager from '@/components/tagManager';
+import Checkbox from '@/components/checkbox';
 import ErrorMsg, { hideError, showError } from '@/components/errorMsg';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
@@ -11,7 +12,7 @@ import { Content } from '@/types';
 function handleInputChange(item: Content) {
   const checkForChange: ((item: Content) => boolean)[] = [
     (item) => title === item.title,
-    () => !!pwd,
+    () => !pwd,
   ];
 
   const title = getElement<HTMLInputElement>('#itemSettingsTitle').value;
@@ -19,7 +20,7 @@ function handleInputChange(item: Content) {
     '#itemSettingsPassword'
   )?.value;
   const submitBtn = getElement<HTMLButtonElement>('#itemSettingsSubmitBtn');
-  const disableBtn = checkForChange.some(check => check(item));
+  const disableBtn = checkForChange.every(check => check(item));
   submitBtn.disabled = disableBtn;
   const { enabled, disabled } = btnClassNames;
   if (disableBtn) {
@@ -95,9 +96,19 @@ export default function ItemSettings({ item }: { item: Content }) {
               disabled={true}
             >Save</button>
           </form>
-          <hr className='col-span-3' />
+          <hr className='col-span-full' />
+          <div className='col-span-full flex gap-2 items-center justify-center'>
+            <label htmlFor='itemSettingsPinned'>Pinned:</label>
+            <Checkbox id='itemSettingsPinned'
+              checked={item.pinned}
+              onChange={(e) => {
+                UserVault.setPinned(item.title, e.currentTarget.checked);
+              }}
+            />
+          </div>
+          <hr className='col-span-full' />
           <TagManager item={item} />
-          <hr className='col-span-3' />
+          <hr className='col-span-full' />
           <PathManager item={item} />
           <hr />
         </>

@@ -51,6 +51,7 @@ export default function DirectoryView() {
           No Contents
         </div>
         : [
+            ...dir.sortedKeys.pinned,
             ...dir.sortedKeys.folders,
             ...dir.sortedKeys.links,
             ...dir.sortedKeys.watched,

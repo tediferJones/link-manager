@@ -1,4 +1,4 @@
-import { FolderLock, Settings2 } from 'lucide';
+import { FolderLock, Pin, Settings2 } from 'lucide';
 import Icon from '@/components/icon';
 import ItemSettings from '@/components/itemSettings';
 import { openModal } from '@/components/modal';
@@ -20,6 +20,9 @@ export default function EncryptedFolderItem(
           UserVault.currentDir.concat(encryptedFolder.title)
         )}
       >
+        {encryptedFolder.pinned && (
+          <Icon name={Pin} className='stroke-green-500' />
+        )}
         <div className='flex-shrink-0'>
           <Icon name={FolderLock} />
         </div>

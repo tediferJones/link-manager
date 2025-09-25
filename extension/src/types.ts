@@ -7,6 +7,7 @@ export type ContentTypes = 'link' | 'folder' | 'encryptedFolder' | 'watched'
 
 type ListItem = {
   title: string,
+  pinned: boolean,
 }
 
 interface Link extends ListItem {
