@@ -21,12 +21,14 @@ interface Watched extends Link {
 
 // FIX ME this type should mirror ContentTypes, something like:
 // Exclude<ContentTypes, 'encryptedFolder'>
-export type SortedKeysTypes = 'pinned' | 'folders' | 'links' | 'watched'
+// export type SortedKeysTypes = 'pinned' | 'folders' | 'links' | 'watched'
+export type SortedKeysTypes = Exclude<ContentTypes, 'encryptedFolder'> | 'pinned'
+export type SortedKeys = { [K in SortedKeysTypes]: string[] }
 
 interface Folder extends ListItem {
   contents: { [title: string]: Content },
   tags: string[],
-  sortedKeys: { [K in SortedKeysTypes]: string[] }
+  sortedKeys: SortedKeys,
   encryption?: {
     key: CryptoKey,
     salt: string,
@@ -89,4 +91,16 @@ export type SortedKeysHandler = {
 
 export type MoveActions = 'start' | 'end' | 'cancel'
 
-export type ResultObj = { success: true } | { success: false, error: string }
+export type ResultObj<T> =
+  | { success: true, data: T }
+  | { success: false, error: string }
+
+// export type ResultObj<T = void> = T extends void
+//   ? { success: true } | { success: false, error: string }
+//   : { success: true, data: T } | { success: false, error: string }
+
+// export type ResultObj<T = void> = 
+//   | { success: true, data: T extends void ? never : T }
+//   | { success: false, error: string }
+
+export type SavedVault = { vault: Content<'folder'>, currentDir: string[] }

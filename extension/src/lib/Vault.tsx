@@ -1,5 +1,5 @@
-import DirectoryView from '@/components/directoryView';
-import getElement from '@/lib/getElement';
+// import DirectoryView from '@/components/directoryView';
+// import getElement from '@/lib/getElement';
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
 import { compress, decompress } from '@/lib/compression';
 import {
@@ -7,6 +7,8 @@ import {
   ContentTypes,
   Encrypted,
   ResultObj,
+  SavedVault,
+  SortedKeys,
   SortedKeysHandler,
   SortedKeysTypes,
 } from '@/types.ts';
@@ -19,28 +21,28 @@ const newVault: Content<'folder'> = {
   pinned: false,
   sortedKeys: {
     pinned: [],
-    folders: [],
-    links: [],
+    folder: [],
+    link: [],
     watched: [],
   }
 };
 
 // FIX ME move to its own file
 const handlers: SortedKeysHandler = {
-  folders: {
+  folder: {
     add: (dir, item) => {
-      dir.sortedKeys.folders.push(item.title);
-      dir.sortedKeys.folders.sort(
+      dir.sortedKeys.folder.push(item.title);
+      dir.sortedKeys.folder.sort(
         (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
       );
     },
-    remove: (dir, item) => dir.sortedKeys.folders = dir.sortedKeys.folders.filter(
+    remove: (dir, item) => dir.sortedKeys.folder = dir.sortedKeys.folder.filter(
       folderTitle => folderTitle !== item.title
     ),
   },
-  links: {
-    add: (dir, item) => dir.sortedKeys.links.unshift(item.title),
-    remove: (dir, item) => dir.sortedKeys.links = dir.sortedKeys.links.filter(
+  link: {
+    add: (dir, item) => dir.sortedKeys.link.unshift(item.title),
+    remove: (dir, item) => dir.sortedKeys.link = dir.sortedKeys.link.filter(
       linkTitle => linkTitle !== item.title
     ),
   },
@@ -58,11 +60,39 @@ const handlers: SortedKeysHandler = {
   }
 }
 const typeMap: { [K in ContentTypes]: SortedKeysTypes } = {
-  link: 'links',
-  folder: 'folders',
-  encryptedFolder: 'folders',
+  link: 'link',
+  folder: 'folder',
+  encryptedFolder: 'folder',
   watched: 'watched',
 }
+
+function getItemType(item: Content): SortedKeysTypes {
+  if (item.pinned) return 'pinned';
+  if (item.type === 'encryptedFolder') return 'folder';
+  return item.type;
+}
+
+const sortedKeysHandler = {
+  add: (sortedKeys: SortedKeys, item: Content) => {
+    const key = getItemType(item);
+    if (key === 'pinned' || key === 'folder') {
+      sortedKeys[key].push(item.title);
+    } else {
+      sortedKeys[key].unshift(item.title);
+    }
+    if (key === 'folder') {
+      sortedKeys[key].sort(
+        (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
+      );
+    }
+  },
+  delete: (sortedKeys: SortedKeys, item: Content) => {
+    const key = getItemType(item);
+    sortedKeys[key] = sortedKeys[key].filter(title => title !== item.title);
+  },
+}
+
+// FIX ME rename .ts if we don't reference any components
 
 // FIX ME where possible don't use title to identify resource
 // pass the item to the method, and then use Object.assign(item, changedItem)
@@ -79,17 +109,17 @@ export default class Vault {
   // this could also be important for expanding dirs
   // maybe leave it as is until we have that figured out
   // vault: Content<'folder'> | null;
-  vault: Content<'folder'> | Content<'encryptedFolder'> | null;
+  vault: Content<'folder'>;
   currentDir: string[];
-  savedDir: string[];
-  toMove?: { item: Content, dir: string[] }
+  viewDir: string[];
+  storageKey = 'userVault';
   // ExpandedDirs type exists in types.ts file
   // expandedDirs: ExpandedDirs
 
   constructor()  {
-    this.vault = null;
+    this.vault = newVault;
     this.currentDir = [];
-    this.savedDir = [];
+    this.viewDir = [];
     // FIX ME, also use localStorage to store vault and currentDir
     // we would need to keep localStorage, chrome.storage.sync, and the database all in sync
     // but then we wouldn't constantly have to check if vault is null
@@ -98,19 +128,27 @@ export default class Vault {
 
   async getVault() {
     // FIX ME switch to chrome.storage.local with 'unlimitedStorage' permission
-    const chromeStorage = await chrome.storage.sync.get();
-    this.vault = (
-      chromeStorage.vault ? JSON.parse(await decompress(chromeStorage.vault)) : newVault
+
+    const { [this.storageKey]: userVault } = await chrome.storage.sync.get(
+      this.storageKey
     );
-    this.savedDir = chromeStorage.savedDir || [];
+    if (userVault) {
+      const { vault, currentDir }: SavedVault = JSON.parse(
+        await decompress(userVault)
+      );
+      this.vault = vault;
+      this.currentDir = currentDir;
+      this.viewDir = currentDir;
+    }
     this.render();
   }
 
-  getCurrentDir(path = this.savedDir, preserve?: 'preserve') {
+  getCurrentDir(path = this.viewDir, preserve?: 'preserve') {
     if (!this.vault) return;
     if (!preserve) this.currentDir = [];
     return path.reduce((folder, title) => {
       if (folder.type === 'encryptedFolder') return folder
+      // @ts-ignore
       const nextItem = folder.contents[title];
       if (!nextItem) {
         throw Error(`could not find ${title}`);
@@ -121,7 +159,7 @@ export default class Vault {
       }
       if (!preserve) this.currentDir.push(title);
       return nextItem;
-    }, this.vault);
+    }, this.vault as Content<'folder' | 'encryptedFolder'>);
   }
 
   getCurrentFolder() {
@@ -132,13 +170,11 @@ export default class Vault {
   }
 
   render() {
-    const container = getElement('#directoryView');
-    container.innerHTML = '';
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    container.appendChild(<DirectoryView />);
-    const breadcrumbs = getElement('#breadcrumbs');
-    breadcrumbs.scrollLeft = breadcrumbs.scrollWidth;
+    const itemResult = this.get(this.currentDir, 'folder', 'encryptedFolder');
+    if (!itemResult.success) return itemResult;
+    const item = itemResult.data;
+    const event = new CustomEvent('render', { detail: item });
+    window.dispatchEvent(event);
   }
 
   async save() {
@@ -151,14 +187,13 @@ export default class Vault {
     //    - if server data is latest pull from db
     // also add delay to saving and debounce on next save request
     // chrome.storage.sync is capped at 8kb, could use local storage, but thats capped at 8MB
-    if (!this.vault || !this.currentDir) return;
-    const packed = await this.pack(this.vault as Content<'folder'>);
-    const compressed = await compress(JSON.stringify(packed));
-    console.log('packed', packed, 'size', compressed.length);
-    await chrome.storage.sync.set({
-      vault: compressed,
-      savedDir: this.savedDir,
-    });
+    const packed = await this.pack(this.vault) as Content<'folder'>;
+    const savedVault: SavedVault = {
+      vault: packed,
+      currentDir: this.currentDir
+    };
+    const compressed = await compress(JSON.stringify(savedVault));
+    await chrome.storage.sync.set({ [this.storageKey]: compressed });
   }
 
   // FIX ME, improve types
@@ -204,101 +239,6 @@ export default class Vault {
 
   async saveAndRender() {
     await this.save();
-    this.render();
-  }
-
-  // FIX ME merge addLink and addFolder into addItem
-  addLink(title: string, href: string) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted')
-    const newLink: Content<'link'> = {
-      type: 'link',
-      title,
-      href,
-      tags: [],
-      pinned: false,
-    };
-    dir.contents[title] = newLink;
-    dir.sortedKeys.links.unshift(title);
-    this.saveAndRender();
-  }
-
-  addFolder(title: string) {
-    const newFolder: Content<'folder'> = {
-      type: 'folder',
-      title,
-      contents: {},
-      tags: [],
-      sortedKeys: {
-        folders: [],
-        links: [],
-        watched: [],
-        pinned: [],
-      },
-      pinned: false,
-    };
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted');
-    dir.contents[title] = newFolder;
-    dir.sortedKeys.folders.push(title);
-    dir.sortedKeys.folders.sort(
-      (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
-    );
-    this.saveAndRender();
-  }
-
-  // FIX ME can we merge all these move methods into one method
-  // move(action: start | end | cancel, if action === start require item)
-  // also can't change title while moving (rename only works on currentDir)
-  //  - so maybe just disable settings of toMove item?
-  //  - or come up with an entirely different way to accomplish moving
-  //
-  // NEW IDEA: just use an input field in itemSettings
-  // move method should just be move(title: string, newPath: string[])
-  // hitting enter will append current text to path
-  // delete on an empty input will delete last segement from path
-  // this will be much easier to handle errors
-  // and should just be cleaner in general (all settings are in one place)
-  startMove(item: Content) {
-    this.toMove = {
-      item,
-      dir: [ ...this.currentDir ],
-    }
-    this.render();
-  }
-
-  endMove(): ResultObj {
-    if (!this.toMove) return { success: false, error: 'toMove not assigned' };
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    if (dir.contents[this.toMove.item.title]) {
-      return { success: false, error: 'Title already exists' };
-    }
-    dir.contents[this.toMove.item.title] = this.toMove.item;
-
-    const oldDir = this.getCurrentDir(this.toMove.dir, 'preserve');
-    if (!oldDir) throw Error('dir is null');
-    if (oldDir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    delete oldDir.contents[this.toMove.item.title];
-    this.modifySortedKeys(oldDir, 'remove', this.toMove.item);
-
-    this.modifySortedKeys(dir, 'add', this.toMove.item);
-    delete this.toMove;
-    this.saveAndRender();
-    return { success: true };
-  }
-
-  cancelMove() {
-    if (!this.toMove) return;
-    const dir = this.getCurrentDir(this.toMove.dir, 'preserve');
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    dir.contents[this.toMove.item.title] = this.toMove.item;
-    this.modifySortedKeys(dir, 'add', this.toMove.item);
-    delete this.toMove;
     this.render();
   }
 
@@ -425,30 +365,30 @@ export default class Vault {
   }
 
   // FIX ME, this needs to update folder.sortedKeys
-  delete(title: string) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted');
-    delete dir.contents[title];
-    this.saveAndRender();
-  }
+  // delete(title: string) {
+  //   const dir = this.getCurrentDir();
+  //   if (!dir) throw Error('dir is null');
+  //   if (dir.type !== 'folder') throw Error('dir is encrypted');
+  //   delete dir.contents[title];
+  //   this.saveAndRender();
+  // }
 
   // FIX ME, this needs to update folder.sortedKeys
   // also needs to check for name collision
-  rename(title: string, newTitle: string): ResultObj {
-    const folder = this.getCurrentFolder();
-    if (folder.contents[newTitle]) {
-      return { success: false, error: 'Title already exists' }
-    }
-    const item = folder.contents[title];
-    this.modifySortedKeys(folder, 'remove', item);
-    item.title = newTitle;
-    folder.contents[newTitle] = item;
-    this.modifySortedKeys(folder, 'add', item);
-    delete folder.contents[title];
-    this.saveAndRender();
-    return { success: true };
-  }
+  // rename(title: string, newTitle: string): ResultObj<undefined> {
+  //   const folder = this.getCurrentFolder();
+  //   if (folder.contents[newTitle]) {
+  //     return { success: false, error: 'Title already exists' }
+  //   }
+  //   const item = folder.contents[title];
+  //   this.modifySortedKeys(folder, 'remove', item);
+  //   item.title = newTitle;
+  //   folder.contents[newTitle] = item;
+  //   this.modifySortedKeys(folder, 'add', item);
+  //   delete folder.contents[title];
+  //   this.saveAndRender();
+  //   return { success: true, data: undefined };
+  // }
 
   getParent() {
     const parentPath = this.currentDir.slice(0, -1);
@@ -459,7 +399,7 @@ export default class Vault {
 
   setDir(keys: string[]) {
     this.currentDir = keys;
-    this.savedDir = keys;
+    this.viewDir = keys;
     this.saveAndRender();
   }
 
@@ -495,8 +435,8 @@ export default class Vault {
 
   // use for auto-complete of new tags
   getExistingTags(parent = this.vault, tags = new Set<string>()) {
-    if (!parent) throw Error('vault is null');
-    if (parent.type === 'encryptedFolder') return;
+    // if (!parent) throw Error('vault is null');
+    // if (parent.type === 'encryptedFolder') return;
     Object.keys(parent.contents).forEach(title => {
       const item = parent.contents[title];
       if (item.type === 'encryptedFolder') return;
@@ -547,21 +487,21 @@ export default class Vault {
     const dir = this.getCurrentDir();
     if (!dir) throw Error('dir is null');
     if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    const linkIndex = dir.sortedKeys.links.findIndex(
+    const linkIndex = dir.sortedKeys.link.findIndex(
       linkTitle => linkTitle === title
     );
     let newIndex = linkIndex + diff;
     if (newIndex < 0) newIndex = 0;
-    if (newIndex >= dir.sortedKeys.links.length) {
-      newIndex = dir.sortedKeys.links.length - 1;
+    if (newIndex >= dir.sortedKeys.link.length) {
+      newIndex = dir.sortedKeys.link.length - 1;
     }
     if (newIndex === linkIndex) return;
     [
-      dir.sortedKeys.links[linkIndex],
-      dir.sortedKeys.links[newIndex],
+      dir.sortedKeys.link[linkIndex],
+      dir.sortedKeys.link[newIndex],
     ] = [
-        dir.sortedKeys.links[newIndex],
-        dir.sortedKeys.links[linkIndex],
+        dir.sortedKeys.link[newIndex],
+        dir.sortedKeys.link[linkIndex],
       ];
     this.saveAndRender();
   }
@@ -576,5 +516,69 @@ export default class Vault {
     item.pinned = pinned;
     this.modifySortedKeys(dir, 'add', item);
     this.saveAndRender();
+  }
+
+  get<T extends ContentTypes>(
+    path: string[],
+    ...types: T[]
+  ): ResultObj<Content<T>> {
+    const item = path.reduce<Content | undefined>((item, title) => {
+      if (!item) return undefined;
+      if (item.type === 'encryptedFolder') return item;
+      if (item.type !== 'folder') return undefined;
+      return item.contents[title];
+    }, this.vault as Content);
+
+    if (!item) return { success: false, error: 'Could not find item' }
+
+    if (types.length && !types.includes(item.type as T)) {
+      return {
+        success: false,
+        error: `Item type is ${item.type}, expected: ${types.join(', ')}`
+      }
+    }
+    return { success: true, data: item as Content<T> };
+  }
+
+  async add(
+    item: Content,
+    path: string[]
+  ): Promise<ResultObj<Content>> {
+    const result = this.get(path, 'folder');
+    if (!result.success) return result;
+    const folder = result.data;
+    if (folder.contents[item.title]) {
+      return { success: false, error: 'Title already used' };
+    }
+    folder.contents[item.title] = item;
+    sortedKeysHandler.add(folder.sortedKeys, item);
+    await this.saveAndRender();
+    return { success: true, data: item };
+  }
+
+  async delete(path: string[]): Promise<ResultObj<Content>> {
+    const folderPath = path.slice(0, -1);
+    const itemTitle = path[path.length - 1];
+    const result = this.get(folderPath, 'folder');
+    if (!result.success) return result;
+    const folder = result.data;
+    delete folder.contents[itemTitle];
+    const itemResult = this.get(path);
+    if (!itemResult.success) return itemResult;
+    const item = itemResult.data;
+    sortedKeysHandler.delete(folder.sortedKeys, item);
+    await this.saveAndRender();
+    return { success: true, data: item };
+  }
+
+  async rename(newTitle: string, path: string[]): Promise<ResultObj<Content>> {
+    const deleteResult = await this.delete(path);
+    if (!deleteResult.success) return deleteResult;
+    const item = deleteResult.data;
+    item.title = newTitle;
+    const addResult = await this.add(item, path.slice(0, -1));
+    if (!addResult.success) return addResult;
+    await this.saveAndRender();
+    return { success: true, data: item };
   }
 }

@@ -57,7 +57,7 @@ export default function ItemSettings({ item }: { item: Content }) {
                 await UserVault.encryptFolder(item, password);
               }
               if (title !== item.title) {
-                const result = UserVault.rename(item.title, title);
+                const result = await UserVault.rename(title, UserVault.currentDir);
                 if (!result.success) {
                   return showError(renameErrorId, result.error);
                 }
@@ -119,20 +119,6 @@ export default function ItemSettings({ item }: { item: Content }) {
         >
           Copy
         </button>
-        <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
-          onClick={() => {
-            UserVault.startMove(item);
-            closeModal();
-          }}
-          // onClick={() => navigateModal(
-          //   `Move ${item.title}`,
-          //   <PathManager item={item} />,
-          //   {
-          //     title: `Settings`,
-          //     element: <ItemSettings item={item} />,
-          //   }
-          // )}
-        >Move</button>
         <button className='flex-1 bg-red-500 p-2 rounded-lg'
           onClick={() => {
             navigateModal(

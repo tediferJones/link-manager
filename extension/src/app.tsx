@@ -1,11 +1,11 @@
 import { ChevronUp, CloudUpload, Link, Plus, User } from 'lucide';
-import DirectoryView from '@/components/directoryView';
 import { Modal, openModal } from '@/components/modal';
 import AddItem from '@/components/addItem';
 import Icon from '@/components/icon';
 import Dropdown from '@/components/dropdown';
 import UserVault from '@/lib/userVault';
 import { SizeTypes } from '@/types';
+import Loading from './components/loading';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
@@ -119,7 +119,7 @@ export default function App({ type }: { type: SizeTypes }) {
       <div className='defaultBorder flex flex-col gap-2 flex-1 overflow-y-auto'
         id='directoryView'
       >
-        <DirectoryView />
+        <Loading />
       </div>
       <Modal />
     </div>
