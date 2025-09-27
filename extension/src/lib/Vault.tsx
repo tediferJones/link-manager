@@ -1,5 +1,3 @@
-// import DirectoryView from '@/components/directoryView';
-// import getElement from '@/lib/getElement';
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
 import { compress, decompress } from '@/lib/compression';
 import {
@@ -81,6 +79,7 @@ const sortedKeysHandler = {
       sortedKeys[key].unshift(item.title);
     }
     if (key === 'folder') {
+      // FIX ME binary insert would be faster
       sortedKeys[key].sort(
         (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
       );
@@ -109,7 +108,8 @@ export default class Vault {
   // this could also be important for expanding dirs
   // maybe leave it as is until we have that figured out
   // vault: Content<'folder'> | null;
-  vault: Content<'folder'>;
+  // FIX ME maybe rename to root, because vault.vault isn't very clear
+  root: Content<'folder'>;
   currentDir: string[];
   viewDir: string[];
   storageKey = 'userVault';
@@ -117,7 +117,7 @@ export default class Vault {
   // expandedDirs: ExpandedDirs
 
   constructor()  {
-    this.vault = newVault;
+    this.root = newVault;
     this.currentDir = [];
     this.viewDir = [];
     // FIX ME, also use localStorage to store vault and currentDir
@@ -129,14 +129,14 @@ export default class Vault {
   async getVault() {
     // FIX ME switch to chrome.storage.local with 'unlimitedStorage' permission
 
-    const { [this.storageKey]: userVault } = await chrome.storage.sync.get(
-      this.storageKey
-    );
+    const chromeStorage = await chrome.storage.sync.get();
+    // FIX ME theoretically only using ?. to escape testing errors
+    const userVault = chromeStorage?.[this.storageKey];
     if (userVault) {
       const { vault, currentDir }: SavedVault = JSON.parse(
         await decompress(userVault)
       );
-      this.vault = vault;
+      this.root = vault;
       this.currentDir = currentDir;
       this.viewDir = currentDir;
     }
@@ -144,7 +144,7 @@ export default class Vault {
   }
 
   getCurrentDir(path = this.viewDir, preserve?: 'preserve') {
-    if (!this.vault) return;
+    if (!this.root) return;
     if (!preserve) this.currentDir = [];
     return path.reduce((folder, title) => {
       if (folder.type === 'encryptedFolder') return folder
@@ -159,7 +159,7 @@ export default class Vault {
       }
       if (!preserve) this.currentDir.push(title);
       return nextItem;
-    }, this.vault as Content<'folder' | 'encryptedFolder'>);
+    }, this.root as Content<'folder' | 'encryptedFolder'>);
   }
 
   getCurrentFolder() {
@@ -174,7 +174,7 @@ export default class Vault {
     if (!itemResult.success) return itemResult;
     const item = itemResult.data;
     const event = new CustomEvent('render', { detail: item });
-    window.dispatchEvent(event);
+    dispatchEvent(event);
   }
 
   async save() {
@@ -187,7 +187,7 @@ export default class Vault {
     //    - if server data is latest pull from db
     // also add delay to saving and debounce on next save request
     // chrome.storage.sync is capped at 8kb, could use local storage, but thats capped at 8MB
-    const packed = await this.pack(this.vault) as Content<'folder'>;
+    const packed = await this.pack(this.root) as Content<'folder'>;
     const savedVault: SavedVault = {
       vault: packed,
       currentDir: this.currentDir
@@ -243,21 +243,21 @@ export default class Vault {
   }
 
   // FIX ME this is essentially just an add action and remove action
-  move(title: string, newPath: string[]) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    const item = dir.contents[title];
-    this.modifySortedKeys(dir, 'remove', item);
-    const newDir = this.getCurrentDir(newPath, 'preserve');
-    if (!newDir) throw Error('dir is null');
-    if (newDir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    if (newDir.contents[title]) throw Error('title already exists in new dir');
-    newDir.contents[title] = item;
-    delete dir.contents[title];
-    this.modifySortedKeys(newDir, 'add', item);
-    this.saveAndRender();
-  }
+  // move(title: string, newPath: string[]) {
+  //   const dir = this.getCurrentDir();
+  //   if (!dir) throw Error('dir is null');
+  //   if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+  //   const item = dir.contents[title];
+  //   this.modifySortedKeys(dir, 'remove', item);
+  //   const newDir = this.getCurrentDir(newPath, 'preserve');
+  //   if (!newDir) throw Error('dir is null');
+  //   if (newDir.type === 'encryptedFolder') throw Error('dir is encrypted');
+  //   if (newDir.contents[title]) throw Error('title already exists in new dir');
+  //   newDir.contents[title] = item;
+  //   delete dir.contents[title];
+  //   this.modifySortedKeys(newDir, 'add', item);
+  //   this.saveAndRender();
+  // }
 
   copyItem(title: string) {
     const dir = this.getCurrentDir();
@@ -434,7 +434,7 @@ export default class Vault {
   }
 
   // use for auto-complete of new tags
-  getExistingTags(parent = this.vault, tags = new Set<string>()) {
+  getExistingTags(parent = this.root, tags = new Set<string>()) {
     // if (!parent) throw Error('vault is null');
     // if (parent.type === 'encryptedFolder') return;
     Object.keys(parent.contents).forEach(title => {
@@ -518,6 +518,9 @@ export default class Vault {
     this.saveAndRender();
   }
 
+  // FIX ME
+  // START REFACTOR
+
   get<T extends ContentTypes>(
     path: string[],
     ...types: T[]
@@ -527,14 +530,19 @@ export default class Vault {
       if (item.type === 'encryptedFolder') return item;
       if (item.type !== 'folder') return undefined;
       return item.contents[title];
-    }, this.vault as Content);
+    }, this.root as Content);
 
-    if (!item) return { success: false, error: 'Could not find item' }
+    if (!item) {
+      return {
+        success: false,
+        error: `Could not find item at: ${path.join('/')}`,
+      }
+    }
 
     if (types.length && !types.includes(item.type as T)) {
       return {
         success: false,
-        error: `Item type is ${item.type}, expected: ${types.join(', ')}`
+        error: `Item type is ${item.type}, expected: ${types.join(', ')}`,
       }
     }
     return { success: true, data: item as Content<T> };
@@ -544,41 +552,66 @@ export default class Vault {
     item: Content,
     path: string[]
   ): Promise<ResultObj<Content>> {
-    const result = this.get(path, 'folder');
-    if (!result.success) return result;
-    const folder = result.data;
-    if (folder.contents[item.title]) {
+    const parentResult = this.get(path, 'folder');
+    if (!parentResult.success) return parentResult;
+    const parent = parentResult.data;
+    if (parent.contents[item.title]) {
       return { success: false, error: 'Title already used' };
     }
-    folder.contents[item.title] = item;
-    sortedKeysHandler.add(folder.sortedKeys, item);
+    parent.contents[item.title] = item;
+    sortedKeysHandler.add(parent.sortedKeys, item);
     await this.saveAndRender();
     return { success: true, data: item };
   }
 
   async delete(path: string[]): Promise<ResultObj<Content>> {
-    const folderPath = path.slice(0, -1);
+    const parentPath = path.slice(0, -1);
     const itemTitle = path[path.length - 1];
-    const result = this.get(folderPath, 'folder');
-    if (!result.success) return result;
-    const folder = result.data;
-    delete folder.contents[itemTitle];
+
+    const parentResult = this.get(parentPath, 'folder');
+    if (!parentResult.success) return parentResult;
+    const parent = parentResult.data;
+
     const itemResult = this.get(path);
     if (!itemResult.success) return itemResult;
     const item = itemResult.data;
-    sortedKeysHandler.delete(folder.sortedKeys, item);
+
+    sortedKeysHandler.delete(parent.sortedKeys, item);
+    delete parent.contents[itemTitle];
     await this.saveAndRender();
     return { success: true, data: item };
   }
 
   async rename(newTitle: string, path: string[]): Promise<ResultObj<Content>> {
+    const parentResult = this.get(path.slice(0, -1), 'folder');
+    if (!parentResult.success) return parentResult;
+    const parent = parentResult.data;
+
     const deleteResult = await this.delete(path);
     if (!deleteResult.success) return deleteResult;
     const item = deleteResult.data;
+    sortedKeysHandler.delete(parent.sortedKeys, item);
+
     item.title = newTitle;
     const addResult = await this.add(item, path.slice(0, -1));
     if (!addResult.success) return addResult;
-    await this.saveAndRender();
+    const addedItem = addResult.data;
+    sortedKeysHandler.add(parent.sortedKeys, addedItem);
+
+    return { success: true, data: item };
+  }
+
+  async move(path: string[], newPath: string[]): Promise<ResultObj<Content>> {
+    const itemResult = this.get(path);
+    if (!itemResult.success) return itemResult;
+    const item = itemResult.data;
+
+    const addResult = await this.add(item, newPath);
+    if (!addResult.success) return addResult;
+
+    const deleteResult = await this.delete(path);
+    if (!deleteResult.success) return deleteResult;
+
     return { success: true, data: item };
   }
 }

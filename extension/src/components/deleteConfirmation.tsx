@@ -9,9 +9,12 @@ import { Content } from '@/types';
 export default function DeleteConfirmation({ item }: { item: Content }) {
   return (
     <form className='flex flex-col gap-4'
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        UserVault.delete(UserVault.currentDir.concat(item.title));
+        const result = await UserVault.delete(
+          UserVault.currentDir.concat(item.title)
+        );
+        if (!result.success) throw Error(result.error);
         closeModal();
       }}
     >

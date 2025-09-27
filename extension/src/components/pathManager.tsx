@@ -187,8 +187,11 @@ export default function PathManager({ item }: { item: Content }) {
         id='pathSubmitBtn'
         disabled
         type='button'
-        onClick={() => {
-          UserVault.move(item.title, path);
+        onClick={async () => {
+          const result = await UserVault.move(
+            UserVault.currentDir.concat(item.title), path
+          );
+          if (!result.success) throw Error(result.error);
           closeModal();
         }}
       >Move</button>

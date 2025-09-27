@@ -3,9 +3,9 @@ import { Modal, openModal } from '@/components/modal';
 import AddItem from '@/components/addItem';
 import Icon from '@/components/icon';
 import Dropdown from '@/components/dropdown';
+import Loading from '@/components/loading';
 import UserVault from '@/lib/userVault';
 import { SizeTypes } from '@/types';
-import Loading from './components/loading';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same

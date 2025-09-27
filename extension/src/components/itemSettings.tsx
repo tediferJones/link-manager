@@ -57,7 +57,9 @@ export default function ItemSettings({ item }: { item: Content }) {
                 await UserVault.encryptFolder(item, password);
               }
               if (title !== item.title) {
-                const result = await UserVault.rename(title, UserVault.currentDir);
+                const result = await UserVault.rename(
+                  title, UserVault.currentDir.concat(item.title)
+                );
                 if (!result.success) {
                   return showError(renameErrorId, result.error);
                 }
