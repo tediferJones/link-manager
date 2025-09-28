@@ -2,8 +2,6 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import Vault from '@/lib/Vault';
 import { Content } from '@/types';
 
-const vault = new Vault();
-
 function createLink(title: string): Content<'link'> {
   return {
     type: 'link',
@@ -26,9 +24,20 @@ function createFolder(title: string): Content<'folder'> {
       folder: [],
       link: [],
       watched: [],
-    }
+    },
   }
 }
+
+// FIX ME write function to populate a vault with some generic items
+// add one of every type
+// add at least one folder with nested items
+// add as least one encrypted folder with nested items
+// reset vault after each describe
+const vault = new Vault();
+// let vault: Vault;
+// function resetVault() {
+//   vault = new Vault();
+// }
 
 describe('Add item', () => {
   const linkTitle = 'testLink';
@@ -116,4 +125,57 @@ test('Move item', async () => {
   await vault.move([ linkTitle ], [ folderTitle ]);
   expect(vault.root.contents[linkTitle]).toBeUndefined();
   expect(vault.root.sortedKeys.link.includes(linkTitle)).toBeFalsy();
+});
+
+describe('Copy item', async () => {
+  test('Copy without title collision', async () => {
+    const linkTitle = 'testLink';
+    const path: string[] = [];
+    await vault.add(createLink(linkTitle), path);
+
+    const copyResult = await vault.copy([ linkTitle ]);
+    expect(copyResult.success).toBeTruthy();
+    if (copyResult.success) {
+      const itemCopy = copyResult.data;
+      expect(itemCopy.title).toBe(`${linkTitle}-COPY`);
+    }
+  });
+
+  test('Copy with title collision', async () => {
+    const linkTitle = 'testLink';
+    const path: string[] = [];
+    await vault.add(createLink(linkTitle), path);
+
+    const copyResult = await vault.copy([ linkTitle ]);
+    expect(copyResult.success).toBeTruthy();
+    if (copyResult.success) {
+      const itemCopy = copyResult.data;
+      expect(itemCopy.title).toBe(`${linkTitle}-COPY-COPY`);
+    }
+  });
+
+  // FIX ME test if copy will fail after reaching maxAttempt value
+  // easy test: pass a lower maxAttempt value or higher attempt start value
+});
+
+describe('Encryption', async () => {
+  test('Enable encryption', async () => {
+    const folderTitle = 'testFolder';
+    const path: string[] = [];
+    await vault.add(createFolder(folderTitle), path);
+    const enableEncryptionResult = await vault.enableEncryption(
+      [ folderTitle ],
+      'password'
+    );
+    expect(enableEncryptionResult.success).toBeTruthy();
+    if (enableEncryptionResult.success) {
+      const encrytableFolder = enableEncryptionResult.data;
+      expect(encrytableFolder.encryption).toBeDefined();
+      expect(encrytableFolder.encryption!.key).toBeDefined();
+      expect(encrytableFolder.encryption!.iv).toBeTypeOf('string');
+      expect(encrytableFolder.encryption!.salt).toBeTypeOf('string');
+    }
+  });
+
+  // FIX ME test enabling encryption on an item that is not a folder
 });

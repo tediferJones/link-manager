@@ -614,4 +614,120 @@ export default class Vault {
 
     return { success: true, data: item };
   }
+
+  // FIX ME do we really need a maxAttempt value?
+  // there is no max title length, so eventually there will be a valid title
+  async copy(
+    path: string[],
+    attempt = 1,
+    maxAttempt = 64
+  ): Promise<ResultObj<Content>> {
+    const itemResult = this.get(path);
+    if (!itemResult.success) return itemResult;
+    const item = itemResult.data;
+
+    const itemCopy: typeof item = JSON.parse(JSON.stringify(item));
+    itemCopy.title = `${item.title}${'-COPY'.repeat(attempt)}`;
+
+    const addResult = await this.add(itemCopy, path.slice(0, -1));
+    if (!addResult.success && attempt < maxAttempt) {
+      return this.copy(path, attempt + 1);
+    };
+    return addResult;
+  }
+
+  async enableEncryption(
+    path: string[],
+    password: string
+  ): Promise<ResultObj<Content<'folder'>>> {
+    const folderResult = this.get(path, 'folder');
+    if (!folderResult.success) return folderResult;
+    const folder = folderResult.data;
+    const iv = getRandomBase64('iv');
+    const salt = getRandomBase64('salt');
+    const key = await getKey(password, salt);
+    folder.encryption = { key, salt, iv };
+    await this.saveAndRender();
+    return { success: true, data: folder };
+  }
+
+  async disableEncryption(
+    path: string[]
+  ): Promise<ResultObj<Content<'folder'>>> {
+    const folderResult = this.get(path, 'folder');
+    if (!folderResult.success) return folderResult;
+    const folder = folderResult.data;
+    delete folder.encryption;
+    await this.saveAndRender();
+    return { success: true, data: folder };
+  }
+
+  async encrypt(
+    path: string[]
+  ): Promise<ResultObj<Content<'encryptedFolder'>>> {
+    const folderResult = this.get(path, 'folder');
+    if (!folderResult.success) return folderResult;
+    const folder = folderResult.data;
+    if (!folder.encryption) {
+      return {
+        success: false,
+        error: `Folder ${path.join('/')} does not have encryption enabled`,
+      }
+    }
+
+    const { encryption, contents, pinned, title, tags, sortedKeys } = folder;
+    // FIX ME will need to run pack on this dir to re-encrypt all child items that could also be encrypted
+    const toEncrypt: Encrypted = {
+      // contents: packedContents,
+      contents,
+      tags,
+      sortedKeys,
+    }
+
+    const encryptedFolder: Content<'encryptedFolder'> = {
+      type: 'encryptedFolder',
+      title,
+      pinned, 
+      data: await encrypt(
+        JSON.stringify(toEncrypt),
+        encryption.key,
+        encryption.iv
+      ),
+      salt: encryption.salt,
+      iv: encryption.iv,
+    }
+    Object.assign(folder, encryptedFolder);
+    this.render();
+    return { success: true, data: encryptedFolder };
+  }
+
+  async decrypt(
+    path: string[],
+    password: string
+  ): Promise<ResultObj<Content<'folder'>>> {
+    const encryptedFolderResult = this.get(path, 'encryptedFolder');
+    if (!encryptedFolderResult.success) return encryptedFolderResult;
+    const encryptedFolder = encryptedFolderResult.data;
+    const { iv, salt, data } = encryptedFolder;
+    const key = await getKey(password, salt);
+    const decryptedData: Encrypted = JSON.parse(
+      await decrypt(data, key, iv)
+    );
+    const newIv = getRandomBase64('iv');
+    const newSalt = getRandomBase64('salt');
+    const newKey = await getKey(password, newSalt);
+    const decryptedFolder: Content<'folder'> = {
+      type: 'folder',
+      title: encryptedFolder.title,
+      pinned: encryptedFolder.pinned,
+      ...decryptedData,
+      encryption: {
+        key: newKey,
+        salt: newSalt,
+        iv: newIv,
+      },
+    }
+    this.render();
+    return { success: true, data: decryptedFolder };
+  }
 }
