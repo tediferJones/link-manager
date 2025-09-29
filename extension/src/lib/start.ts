@@ -16,6 +16,6 @@ export default function start(type: SizeTypes) {
     container.appendChild(DirectoryView({ item }));
     const breadcrumbs = getElement('#breadcrumbs');
     breadcrumbs.scrollLeft = breadcrumbs.scrollWidth;
-  })
+  });
   document.querySelector('#app')!.appendChild(App({ type }));
 }

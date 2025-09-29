@@ -89,7 +89,7 @@ function updatePathAutocomplete(
 
 function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
   const newSegment = getElement<HTMLInputElement>('#pathInput').value;
-  const folder = UserVault.getCurrentDir(path, 'preserve');
+  const folder = UserVault.getCurrentDir(path);
   if (!folder) throw Error('dir is null');
   if (folder.type === 'encryptedFolder') throw Error('dir is encrypted');
   const opts = Object.keys(folder.contents).filter(title => {

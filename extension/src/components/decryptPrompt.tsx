@@ -29,12 +29,22 @@ export default function DecryptPrompt() {
         const password = getElement<HTMLInputElement>(
           '#directoryViewPassword'
         ).value;
-        try {
-          await UserVault.decryptFolder(password);
-        } catch {
-          errorContainer.innerText = 'Incorrect Password';
+        const decryptResult = await UserVault.decrypt(
+          UserVault.currentDir,
+          password
+        );
+        console.log(decryptResult)
+        if (!decryptResult.success) {
+          // FIX ME replace with ErrorMsg component
+          errorContainer.textContent = decryptResult.error;
           errorContainer.classList.remove('hidden');
         }
+        // try {
+        //   await UserVault.decryptFolder(password);
+        // } catch {
+        //   errorContainer.innerText = 'Incorrect Password';
+        //   errorContainer.classList.remove('hidden');
+        // }
       }}
     >
       <div className='text-center'>

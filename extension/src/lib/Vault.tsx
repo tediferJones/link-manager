@@ -1,5 +1,7 @@
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
 import { compress, decompress } from '@/lib/compression';
+import replaceObject from '@/lib/replaceObject';
+import asyncReduce from '@/lib/asyncReduce';
 import {
   Content,
   ContentTypes,
@@ -110,8 +112,16 @@ export default class Vault {
   // vault: Content<'folder'> | null;
   // FIX ME maybe rename to root, because vault.vault isn't very clear
   root: Content<'folder'>;
+  // FIX ME this whole having two separate dirs things just doesn't make much sense
+  // rename to path
+  // create method getViewPath
+  //  - crawl path until item with type 'encryptedDir' is reached, return that array as viewPath
+  //  - use this array for decryption and breadcrumbs
+  //  - also make sure up arrow will respect viewPath
+  //    - if in [ 'encFolder1', 'encFolder2' ], decrypt prompt for 'encFolder1' should be rendered
+  //      - if user clicks up arrow, should set currentPath to [], because viewDir will just be [ 'encFolder1' ]
   currentDir: string[];
-  viewDir: string[];
+  // viewDir: string[];
   storageKey = 'userVault';
   // ExpandedDirs type exists in types.ts file
   // expandedDirs: ExpandedDirs
@@ -119,7 +129,7 @@ export default class Vault {
   constructor()  {
     this.root = newVault;
     this.currentDir = [];
-    this.viewDir = [];
+    // this.viewDir = [];
     // FIX ME, also use localStorage to store vault and currentDir
     // we would need to keep localStorage, chrome.storage.sync, and the database all in sync
     // but then we wouldn't constantly have to check if vault is null
@@ -128,6 +138,7 @@ export default class Vault {
 
   async getVault() {
     // FIX ME switch to chrome.storage.local with 'unlimitedStorage' permission
+    // rename to load
 
     const chromeStorage = await chrome.storage.sync.get();
     // FIX ME theoretically only using ?. to escape testing errors
@@ -138,14 +149,14 @@ export default class Vault {
       );
       this.root = vault;
       this.currentDir = currentDir;
-      this.viewDir = currentDir;
+      // this.viewDir = currentDir;
     }
     this.render();
   }
 
-  getCurrentDir(path = this.viewDir, preserve?: 'preserve') {
+  getCurrentDir(path = this.currentDir) {
     if (!this.root) return;
-    if (!preserve) this.currentDir = [];
+    // if (!preserve) this.currentDir = [];
     return path.reduce((folder, title) => {
       if (folder.type === 'encryptedFolder') return folder
       // @ts-ignore
@@ -157,17 +168,17 @@ export default class Vault {
       } else if (nextItem.type === 'watched') {
         throw Error(`${title} is not a folder`);
       }
-      if (!preserve) this.currentDir.push(title);
+      // if (!preserve) this.currentDir.push(title);
       return nextItem;
     }, this.root as Content<'folder' | 'encryptedFolder'>);
   }
 
-  getCurrentFolder() {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    return dir;
-  }
+  // getCurrentFolder() {
+  //   const dir = this.getCurrentDir();
+  //   if (!dir) throw Error('dir is null');
+  //   if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+  //   return dir;
+  // }
 
   render() {
     const itemResult = this.get(this.currentDir, 'folder', 'encryptedFolder');
@@ -187,9 +198,11 @@ export default class Vault {
     //    - if server data is latest pull from db
     // also add delay to saving and debounce on next save request
     // chrome.storage.sync is capped at 8kb, could use local storage, but thats capped at 8MB
-    const packed = await this.pack(this.root) as Content<'folder'>;
+    // const packed = await this.pack(this.root) as Content<'folder'>;
+    const packedResult = await this.packV2();
+    if (!packedResult.success) throw Error(packedResult.error)
     const savedVault: SavedVault = {
-      vault: packed,
+      vault: packedResult.data,
       currentDir: this.currentDir
     };
     const compressed = await compress(JSON.stringify(savedVault));
@@ -197,45 +210,45 @@ export default class Vault {
   }
 
   // FIX ME, improve types
-  async pack(folder: Content<'folder'>): Promise<Content<'folder' | 'encryptedFolder'>> {
-    const { encryption, contents, title, tags, sortedKeys, pinned } = folder;
-    let packedContents = Object.fromEntries(
-      await Promise.all(
-        Object.keys(contents).map(async title => {
-          if (contents[title].type === 'folder') {
-            return [ title, await this.pack(contents[title]) ];
-          } else {
-            return [ title, contents[title] ];
-          }
-        })
-      )
-    );
-    if (encryption) {
-      console.log('encrypted', packedContents)
-      const toEncrypt: Encrypted = {
-        contents: packedContents,
-        tags,
-        sortedKeys,
-      }
-      return {
-        type: 'encryptedFolder',
-        title,
-        pinned,
-        data: await encrypt(
-          JSON.stringify(toEncrypt),
-          encryption.key,
-          encryption.iv,
-        ),
-        salt: encryption.salt,
-        iv: encryption.iv,
-      }
-    } else {
-      return {
-        ...folder,
-        contents: packedContents,
-      }
-    }
-  }
+  // async pack(folder: Content<'folder'>): Promise<Content<'folder' | 'encryptedFolder'>> {
+  //   const { encryption, contents, title, tags, sortedKeys, pinned } = folder;
+  //   let packedContents = Object.fromEntries(
+  //     await Promise.all(
+  //       Object.keys(contents).map(async title => {
+  //         if (contents[title].type === 'folder') {
+  //           return [ title, await this.pack(contents[title]) ];
+  //         } else {
+  //           return [ title, contents[title] ];
+  //         }
+  //       })
+  //     )
+  //   );
+  //   if (encryption) {
+  //     console.log('encrypted', packedContents)
+  //     const toEncrypt: Encrypted = {
+  //       contents: packedContents,
+  //       tags,
+  //       sortedKeys,
+  //     }
+  //     return {
+  //       type: 'encryptedFolder',
+  //       title,
+  //       pinned,
+  //       data: await encrypt(
+  //         JSON.stringify(toEncrypt),
+  //         encryption.key,
+  //         encryption.iv,
+  //       ),
+  //       salt: encryption.salt,
+  //       iv: encryption.iv,
+  //     }
+  //   } else {
+  //     return {
+  //       ...folder,
+  //       contents: packedContents,
+  //     }
+  //   }
+  // }
 
   async saveAndRender() {
     await this.save();
@@ -259,23 +272,23 @@ export default class Vault {
   //   this.saveAndRender();
   // }
 
-  copyItem(title: string) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
-    const item = dir.contents[title];
-    if (!item) throw Error('item not found');
-    const itemCopy: Content = JSON.parse(JSON.stringify(item));
-    itemCopy.title = `${item.title}-COPY`;
-    this.insertItem(dir, itemCopy);
-    this.saveAndRender();
-  }
+  // copyItem(title: string) {
+  //   const dir = this.getCurrentDir();
+  //   if (!dir) throw Error('dir is null');
+  //   if (dir.type === 'encryptedFolder') throw Error('dir is encrypted');
+  //   const item = dir.contents[title];
+  //   if (!item) throw Error('item not found');
+  //   const itemCopy: Content = JSON.parse(JSON.stringify(item));
+  //   itemCopy.title = `${item.title}-COPY`;
+  //   this.insertItem(dir, itemCopy);
+  //   this.saveAndRender();
+  // }
 
-  insertItem(folder: Content<'folder'>, item: Content) {
-    if (folder.contents[item.title]) throw Error('name already exists');
-    folder.contents[item.title] = item;
-    this.modifySortedKeys(folder, 'add', item);
-  }
+  // insertItem(folder: Content<'folder'>, item: Content) {
+  //   if (folder.contents[item.title]) throw Error('name already exists');
+  //   folder.contents[item.title] = item;
+  //   this.modifySortedKeys(folder, 'add', item);
+  // }
 
   // FIX ME or delete, how do we figure out what prop of sorted keys belongs to?
   // i.e. if title is for a folder, link, or watched
@@ -292,77 +305,77 @@ export default class Vault {
   // FIX ME, rename to enableEncryption
   // also create method to disableEncryption
   // then make encryptFolder method whose sole purpose to turn Content<'folder'> in Content<'encryptedFolder'>
-  async encryptFolder(folder: Content<'folder'>, password: string) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') {
-      throw Error('dir is already encrypted');
-    }
-    const iv = getRandomBase64('iv');
-    const salt = getRandomBase64('salt');
-    const key = await getKey(password, salt);
-    folder.encryption = { key, salt, iv };
-    console.log(password, salt, iv)
-    this.saveAndRender();
-  }
+  // async encryptFolder(folder: Content<'folder'>, password: string) {
+  //   const dir = this.getCurrentDir();
+  //   if (!dir) throw Error('dir is null');
+  //   if (dir.type !== 'folder') {
+  //     throw Error('dir is already encrypted');
+  //   }
+  //   const iv = getRandomBase64('iv');
+  //   const salt = getRandomBase64('salt');
+  //   const key = await getKey(password, salt);
+  //   folder.encryption = { key, salt, iv };
+  //   console.log(password, salt, iv)
+  //   this.saveAndRender();
+  // }
 
-  async decryptFolder(password: string) {
-    // FIX ME this is a bit of a mess try to clean it up
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'encryptedFolder') {
-      throw Error('dir is already decrypted');
-    }
-    const { iv, salt, data } = dir;
-    const key = await getKey(password, salt);
-    const decryptedData: Encrypted = JSON.parse(
-      await decrypt(data, key, iv)
-    );
-    console.log('decrypted data', decryptedData)
-    const newIv = getRandomBase64('iv');
-    const newSalt = getRandomBase64('salt');
-    const newKey = await getKey(password, newSalt);
-    const decryptedFolder: Content<'folder'> = {
-      type: 'folder',
-      title: dir.title,
-      pinned: dir.pinned,
-      ...decryptedData,
-      encryption: {
-        key: newKey,
-        salt: newSalt,
-        iv: newIv,
-      }
-    }
-    const { parentDir, current } = this.getParent();
-    if (!parentDir) throw Error('parent dir is null');
-    if (parentDir.type !== 'folder') throw Error('parent dir is not a folder');
-    parentDir.contents[current] = decryptedFolder;
-    this.render();
-  }
+  // async decryptFolder(password: string) {
+  //   // FIX ME this is a bit of a mess try to clean it up
+  //   const dir = this.getCurrentDir();
+  //   if (!dir) throw Error('dir is null');
+  //   if (dir.type !== 'encryptedFolder') {
+  //     throw Error('dir is already decrypted');
+  //   }
+  //   const { iv, salt, data } = dir;
+  //   const key = await getKey(password, salt);
+  //   const decryptedData: Encrypted = JSON.parse(
+  //     await decrypt(data, key, iv)
+  //   );
+  //   console.log('decrypted data', decryptedData)
+  //   const newIv = getRandomBase64('iv');
+  //   const newSalt = getRandomBase64('salt');
+  //   const newKey = await getKey(password, newSalt);
+  //   const decryptedFolder: Content<'folder'> = {
+  //     type: 'folder',
+  //     title: dir.title,
+  //     pinned: dir.pinned,
+  //     ...decryptedData,
+  //     encryption: {
+  //       key: newKey,
+  //       salt: newSalt,
+  //       iv: newIv,
+  //     }
+  //   }
+  //   const { parentDir, current } = this.getParent();
+  //   if (!parentDir) throw Error('parent dir is null');
+  //   if (parentDir.type !== 'folder') throw Error('parent dir is not a folder');
+  //   parentDir.contents[current] = decryptedFolder;
+  //   this.render();
+  // }
 
-  async recryptFolder(title: string) {
-    const dir = this.getCurrentDir();
-    if (!dir) throw Error('dir is null');
-    if (dir.type !== 'folder') throw Error('dir is encrypted');
-    const folder = dir.contents[title];
-    if (folder.type !== 'folder') throw Error('item is not a folder');
-    if (!folder.encryption) throw Error('folder is not already encrypted');
-    const { encryption, contents, pinned } = folder;
-    const encrypted: Content<'encryptedFolder'> = {
-      type: 'encryptedFolder',
-      title,
-      pinned, 
-      data: await encrypt(
-        JSON.stringify(contents),
-        encryption.key,
-        encryption.iv
-      ),
-      salt: encryption.salt,
-      iv: encryption.iv,
-    }
-    dir.contents[title] = encrypted;
-    this.render();
-  }
+  // async recryptFolder(title: string) {
+  //   const dir = this.getCurrentDir();
+  //   if (!dir) throw Error('dir is null');
+  //   if (dir.type !== 'folder') throw Error('dir is encrypted');
+  //   const folder = dir.contents[title];
+  //   if (folder.type !== 'folder') throw Error('item is not a folder');
+  //   if (!folder.encryption) throw Error('folder is not already encrypted');
+  //   const { encryption, contents, pinned } = folder;
+  //   const encrypted: Content<'encryptedFolder'> = {
+  //     type: 'encryptedFolder',
+  //     title,
+  //     pinned, 
+  //     data: await encrypt(
+  //       JSON.stringify(contents),
+  //       encryption.key,
+  //       encryption.iv
+  //     ),
+  //     salt: encryption.salt,
+  //     iv: encryption.iv,
+  //   }
+  //   dir.contents[title] = encrypted;
+  //   this.render();
+  // }
 
   // FIX ME, this needs to update folder.sortedKeys
   // delete(title: string) {
@@ -390,16 +403,16 @@ export default class Vault {
   //   return { success: true, data: undefined };
   // }
 
-  getParent() {
-    const parentPath = this.currentDir.slice(0, -1);
-    const [ current ] = this.currentDir.slice(-1);
-    const parentDir = this.getCurrentDir(parentPath);
-    return { parentDir, parentPath, current };
-  }
+  // getParent() {
+  //   const parentPath = this.currentDir.slice(0, -1);
+  //   const [ current ] = this.currentDir.slice(-1);
+  //   const parentDir = this.getCurrentDir(parentPath);
+  //   return { parentDir, parentPath, current };
+  // }
 
   setDir(keys: string[]) {
     this.currentDir = keys;
-    this.viewDir = keys;
+    // this.viewDir = keys;
     this.saveAndRender();
   }
 
@@ -525,10 +538,12 @@ export default class Vault {
     path: string[],
     ...types: T[]
   ): ResultObj<Content<T>> {
+    const newViewDir: string[] = [];
     const item = path.reduce<Content | undefined>((item, title) => {
       if (!item) return undefined;
       if (item.type === 'encryptedFolder') return item;
       if (item.type !== 'folder') return undefined;
+      newViewDir.push(title);
       return item.contents[title];
     }, this.root as Content);
 
@@ -540,9 +555,10 @@ export default class Vault {
     }
 
     if (types.length && !types.includes(item.type as T)) {
+      const expected = types.join(', ');
       return {
         success: false,
-        error: `Item type is ${item.type}, expected: ${types.join(', ')}`,
+        error: `Item type is ${item.type}, expected: ${expected}`,
       }
     }
     return { success: true, data: item as Content<T> };
@@ -663,7 +679,8 @@ export default class Vault {
   }
 
   async encrypt(
-    path: string[]
+    path: string[],
+    preserve?: 'preserve',
   ): Promise<ResultObj<Content<'encryptedFolder'>>> {
     const folderResult = this.get(path, 'folder');
     if (!folderResult.success) return folderResult;
@@ -676,10 +693,25 @@ export default class Vault {
     }
 
     const { encryption, contents, pinned, title, tags, sortedKeys } = folder;
-    // FIX ME will need to run pack on this dir to re-encrypt all child items that could also be encrypted
+
+    const packedContents = await asyncReduce(
+      Object.keys(contents),
+      async (packedContents, title) => {
+        const item = contents[title];
+        if (item.type === 'folder') {
+          const encryptResult = await this.encrypt(path.concat(title), preserve);
+          if (!encryptResult.success) throw Error(encryptResult.error);
+          packedContents[title] = encryptResult.data;
+        } else {
+          packedContents[title] = item;
+        }
+        return packedContents;
+      },
+      {} as Content<'folder'>['contents']
+    );
+
     const toEncrypt: Encrypted = {
-      // contents: packedContents,
-      contents,
+      contents: packedContents,
       tags,
       sortedKeys,
     }
@@ -696,11 +728,15 @@ export default class Vault {
       salt: encryption.salt,
       iv: encryption.iv,
     }
-    Object.assign(folder, encryptedFolder);
+    if (!preserve) replaceObject(folder, encryptedFolder);
     this.render();
     return { success: true, data: encryptedFolder };
   }
 
+  // FIX ME does not preserve directory for nested encrypted folders
+  // i.e. if currentDir is [ 'encFolder1', 'encFolder2' ]
+  // after decrypting 'encFolder1' currentDir is set to 'encFolder1'
+  // we want the preserver currentDir until use manually navigates away
   async decrypt(
     path: string[],
     password: string
@@ -710,9 +746,12 @@ export default class Vault {
     const encryptedFolder = encryptedFolderResult.data;
     const { iv, salt, data } = encryptedFolder;
     const key = await getKey(password, salt);
-    const decryptedData: Encrypted = JSON.parse(
-      await decrypt(data, key, iv)
-    );
+    let decryptedData: Encrypted;
+    try {
+      decryptedData = JSON.parse(await decrypt(data, key, iv));
+    } catch {
+      return { success: false, error: 'Failed to decrypt' }
+    }
     const newIv = getRandomBase64('iv');
     const newSalt = getRandomBase64('salt');
     const newKey = await getKey(password, newSalt);
@@ -727,7 +766,44 @@ export default class Vault {
         iv: newIv,
       },
     }
+    replaceObject(encryptedFolder, decryptedFolder);
     this.render();
     return { success: true, data: decryptedFolder };
+  }
+
+  async packV2(path: string[] = []): Promise<ResultObj<Content<'folder'>>> {
+    const folderResult = this.get(path, 'folder');
+    if (!folderResult.success) return folderResult;
+    const folder = folderResult.data;
+    
+    const packedContents = Object.fromEntries(
+      await Promise.all(
+        Object.keys(folder.contents).map(async (title) => {
+          const item = folder.contents[title];
+          if (item.type === 'folder' && item.encryption) {
+            const encryptResult = await this.encrypt(
+              path.concat(title),
+              'preserve'
+            );
+            if (!encryptResult.success) throw Error(encryptResult.error);
+            return [ title, encryptResult.data ];
+          } else if (item.type === 'folder') {
+            const packResult = await this.packV2(path.concat(title));
+            if (!packResult.success) throw Error(packResult.error);
+            return [ title, packResult.data ];
+          } else {
+            return [ title, item ];
+          }
+        })
+      )
+    );
+
+    return {
+      success: true,
+      data: {
+        ...folder,
+        contents: packedContents,
+      }
+    }
   }
 }

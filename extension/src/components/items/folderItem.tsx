@@ -22,8 +22,11 @@ export default function FolderItem({ folder }: { folder: Content<'folder'> }) {
         </div>
         <span className='truncate'>{folder.title}</span>
       </button>
-      {folder.encryption && <button onClick={() => {
-        UserVault.recryptFolder(folder.title)
+      {folder.encryption && <button onClick={async () => {
+        const encryptResult = await UserVault.encrypt(
+          UserVault.currentDir.concat(folder.title)
+        );
+        if (!encryptResult.success) throw Error(encryptResult.error);
       }}>
         <Icon name={Lock} />
       </button>}

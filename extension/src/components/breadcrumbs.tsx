@@ -5,6 +5,9 @@ import UserVault from '@/lib/userVault';
 export default function Breadcrumbs() {
   return (
     // FIX ME would be nice to add an ellipse to whichever side is overflowing
+    // also display is incorrect when loading nested encrypted folders
+    // if currentDir is [ 'encFolder1', 'encFolder2' ]
+    // breadcrumbs will display full path when attempting to decrypt 'encFolder1'
     <div className='flex-shrink-0 flex gap-2 overflow-auto font-semibold no-scrollbar'
       id='breadcrumbs'
       onWheel={(e) => {

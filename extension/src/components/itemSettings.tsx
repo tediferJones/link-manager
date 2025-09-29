@@ -54,7 +54,11 @@ export default function ItemSettings({ item }: { item: Content }) {
                 '#itemSettingsPassword'
               )?.value;
               if (item.type === 'folder' && password) {
-                await UserVault.encryptFolder(item, password);
+                const enableResult = await UserVault.enableEncryption(
+                  UserVault.currentDir.concat(item.title),
+                  password
+                );
+                if (!enableResult.success) throw Error(enableResult.error);
               }
               if (title !== item.title) {
                 const result = await UserVault.rename(
@@ -117,7 +121,12 @@ export default function ItemSettings({ item }: { item: Content }) {
       )}
       <div className='flex gap-2 justify-stretch'>
         <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
-          onClick={() => UserVault.copyItem(item.title)}
+          onClick={async () => {
+            const copyResult = await UserVault.copy(
+              UserVault.currentDir.concat(item.title)
+            );
+            if (!copyResult.success) throw Error(copyResult.error);
+          }}
         >
           Copy
         </button>
