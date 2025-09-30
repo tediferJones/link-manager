@@ -3,6 +3,7 @@ import Icon from '@/components/icon';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { Content } from '@/types';
+import throwOnFail from '@/lib/throwOnFail';
 
 // FIX ME compare to pathManager, try to make this as similar as possible
 
@@ -25,25 +26,36 @@ export default function TagManager(
         {!item.tags.length ? <div className='flex-1 text-center text-muted font-bold'>
           No Tags
         </div> : item.tags.map(tag => (
-          <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>
-            {tag}
-            <button type='button'
-              onClick={() => {
-                UserVault.removeTags(item.title, [ tag ]);
-                refreshTags();
-              }}
-            >
-              <Icon name={X} />
-            </button>
-          </span>
-        ))}
+            <span className='bg-fg text-bg py-1 px-2 rounded-lg flex gap-2'>
+              {tag}
+              <button type='button'
+                onClick={async () => {
+                  const editTagsResult = await UserVault.editTags(
+                    UserVault.path.concat(item.title),
+                    tag,
+                    'delete'
+                  );
+                  throwOnFail(editTagsResult);
+                  refreshTags();
+                }}
+              >
+                <Icon name={X} />
+              </button>
+            </span>
+          ))
+        }
       </>
     )
   }
 
-  function addTag(newTag: string) {
+  async function addTag(newTag: string) {
     console.log('newTag', newTag)
-    UserVault.addTags(item.title, [ newTag ]);
+    const editTagsResult = await UserVault.editTags(
+      UserVault.path.concat(item.title),
+      newTag,
+      'add'
+    );
+    throwOnFail(editTagsResult);
     const newTagInput = getElement<HTMLInputElement>('#newTagInput');
     newTagInput.value = '';
     const suggestionContainer = getElement('#newTagSuggestions');

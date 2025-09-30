@@ -55,14 +55,15 @@ export default function ItemSettings({ item }: { item: Content }) {
               )?.value;
               if (item.type === 'folder' && password) {
                 const enableResult = await UserVault.enableEncryption(
-                  UserVault.currentDir.concat(item.title),
+                  UserVault.getItemPath(item),
                   password
                 );
                 if (!enableResult.success) throw Error(enableResult.error);
               }
               if (title !== item.title) {
                 const result = await UserVault.rename(
-                  title, UserVault.currentDir.concat(item.title)
+                  title,
+                  UserVault.getItemPath(item)
                 );
                 if (!result.success) {
                   return showError(renameErrorId, result.error);
@@ -108,7 +109,10 @@ export default function ItemSettings({ item }: { item: Content }) {
             <Checkbox id='itemSettingsPinned'
               checked={item.pinned}
               onChange={(e) => {
-                UserVault.setPinned(item.title, e.currentTarget.checked);
+                UserVault.setPinned(
+                  UserVault.getItemPath(item),
+                  e.currentTarget.checked
+                );
               }}
             />
           </div>
@@ -123,7 +127,7 @@ export default function ItemSettings({ item }: { item: Content }) {
         <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
           onClick={async () => {
             const copyResult = await UserVault.copy(
-              UserVault.currentDir.concat(item.title)
+              UserVault.getItemPath(item)
             );
             if (!copyResult.success) throw Error(copyResult.error);
           }}

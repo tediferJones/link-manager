@@ -9,7 +9,7 @@ function isHotKey(key: string): key is HotKeyOpts {
 const hotKeys: { [K in HotKeyOpts]: () => void } = {
   '+': () => getElement<HTMLButtonElement>('#addItemBtn').click(),
   'H': () => UserVault.setDir([]),
-  'U': () => UserVault.setDir(UserVault.currentDir.slice(0, -1)),
+  'U': () => UserVault.setDir(UserVault.path.slice(0, -1)),
 }
 
 function useHotkeys(e: KeyboardEvent) {

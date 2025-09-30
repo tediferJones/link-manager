@@ -17,7 +17,7 @@ export default function EncryptedFolderItem(
       <button className='flex-1 flex gap-2 cursor-pointer overflow-hidden'
         title={`Enter encrypted folder: ${encryptedFolder.title}`}
         onClick={() => UserVault.setDir(
-          UserVault.currentDir.concat(encryptedFolder.title)
+          UserVault.getItemPath(encryptedFolder)
         )}
       >
         {encryptedFolder.pinned && (

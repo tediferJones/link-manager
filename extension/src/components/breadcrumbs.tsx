@@ -2,7 +2,7 @@ import { ChevronRight, Home } from 'lucide';
 import Icon from '@/components/icon';
 import UserVault from '@/lib/userVault';
 
-export default function Breadcrumbs() {
+export default function Breadcrumbs({ path }: { path: string[] }) {
   return (
     // FIX ME would be nice to add an ellipse to whichever side is overflowing
     // also display is incorrect when loading nested encrypted folders
@@ -25,7 +25,7 @@ export default function Breadcrumbs() {
       <span className='flex-shrink-0'>
         <Icon name={ChevronRight} />
       </span>
-      {UserVault.currentDir.map((key, i, arr) => (
+      {path.map((key, i, arr) => (
         <>
           <button className='underline text-primary'
             onClick={() => UserVault.setDir(arr.slice(0, i + 1))}

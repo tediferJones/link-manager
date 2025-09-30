@@ -21,17 +21,20 @@ export default function LinkItem({ link }: { link: Content<'link'> }) {
         <span className='truncate'>{link.title}</span>
       </a>
       <button onClick={() => {
-        UserVault.swapPriority(link.title, -1);
+        UserVault.swapPriority(UserVault.getItemPath(link), -1);
       }}>
         <Icon name={ChevronUp} />
       </button>
       <button onClick={() => {
-        UserVault.swapPriority(link.title, 1);
+        UserVault.swapPriority(UserVault.getItemPath(link), 1);
       }}>
         <Icon name={ChevronDown} />
       </button>
       <button className='transition-all duration-300'
-        onClick={() => UserVault.toggleWatched(link)}
+        onClick={() => UserVault.setWatched(
+          UserVault.getItemPath(link),
+          true
+        )}
       >
         <Icon name={Eye} />
       </button>

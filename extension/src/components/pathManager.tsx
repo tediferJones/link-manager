@@ -3,7 +3,11 @@ import Icon from '@/components/icon';
 import { closeModal } from '@/components/modal';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
+import throwOnFail from '@/lib/throwOnFail';
 import { Content } from '@/types';
+
+// FIX ME extract autocomplete dropdown logic to its own component
+// then implement autocomplete component in tagManager
 
 const hideAutocomplete = [ 'hidden' ];
 const showAutocomplete = [ 'flex' ];
@@ -19,7 +23,7 @@ function updatePathDisplay({ path, item }: { path: string[], item: Content }) {
   const pathSubmitBtn = getElement<HTMLButtonElement>('#pathSubmitBtn');
   pathSubmitBtn.disabled = pathMatch(
     path.concat(item.title),
-    UserVault.currentDir.concat(item.title)
+    UserVault.path.concat(item.title)
   );
 }
 
@@ -89,15 +93,13 @@ function updatePathAutocomplete(
 
 function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
   const newSegment = getElement<HTMLInputElement>('#pathInput').value;
-  const folder = UserVault.getCurrentDir(path);
-  if (!folder) throw Error('dir is null');
-  if (folder.type === 'encryptedFolder') throw Error('dir is encrypted');
+  const folder = throwOnFail(UserVault.get(path, 'folder'));
   const opts = Object.keys(folder.contents).filter(title => {
     if (folder.contents[title].type !== 'folder') return;
     if (!title.toLowerCase().includes(newSegment.toLowerCase())) return;
     const invalidPath = pathMatch(
       path.concat(title),
-      UserVault.currentDir.concat(item.title)
+      UserVault.path.concat(item.title)
     );
     if (invalidPath) return;
     return true;
@@ -125,7 +127,7 @@ function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
 }
 
 export default function PathManager({ item }: { item: Content }) {
-  const path = [ ...UserVault.currentDir ];
+  const path = [ ...UserVault.path ];
   return (
     <div className='flex flex-col gap-4'>
       <div className='flex items-center defaultBorder overflow-auto no-scrollbar'
@@ -189,7 +191,7 @@ export default function PathManager({ item }: { item: Content }) {
         type='button'
         onClick={async () => {
           const result = await UserVault.move(
-            UserVault.currentDir.concat(item.title), path
+            UserVault.path.concat(item.title), path
           );
           if (!result.success) throw Error(result.error);
           closeModal();

@@ -59,8 +59,8 @@ export default function App({ type }: { type: SizeTypes }) {
           <button className='text-xl defaultBorder'
             title='Go to parent directory'
             onClick={() => {
-              if (UserVault.currentDir.length) {
-                UserVault.setDir(UserVault.currentDir.slice(0, -1));
+              if (UserVault.path.length) {
+                UserVault.setDir(UserVault.path.slice(0, -1));
               }
             }}
           >

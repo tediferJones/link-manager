@@ -61,7 +61,7 @@ export default function AddItem() {
             href,
             tags: [],
             pinned: false,
-          }, UserVault.currentDir);
+          }, UserVault.path);
         } else {
           UserVault.add({
             type: 'folder',
@@ -75,7 +75,7 @@ export default function AddItem() {
               link: [],
               watched: [],
             }
-          }, UserVault.currentDir);
+          }, UserVault.path);
         }
         closeModal();
 

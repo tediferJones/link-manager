@@ -1,11 +1,12 @@
 import Breadcrumbs from '@/components/breadcrumbs';
 import DecryptPrompt from '@/components/decryptPrompt';
 import RenderItem from '@/components/renderItem';
+import UserVault from '@/lib/userVault';
 import { Content } from '@/types';
 
 export default function DirectoryView({ item }: { item: Content<'folder' | 'encryptedFolder'> }) {
-  // add scrollbar padding only if container is scrollable
   // FIX ME, could we use transition-all to animate the padding change?
+  // add scrollbar padding only if container is scrollable
   setTimeout(() => {
     const container = document.querySelector('#directoryViewItems');
     if (container && container.scrollHeight > container.clientHeight) {
@@ -15,7 +16,7 @@ export default function DirectoryView({ item }: { item: Content<'folder' | 'encr
 
   return (
     <>
-      <Breadcrumbs />
+      <Breadcrumbs path={UserVault.getViewDir(UserVault.path)} />
       <hr className='border-1' />
       <div className='flex-1 flex flex-col gap-2 overflow-y-auto'
         id='directoryViewItems'

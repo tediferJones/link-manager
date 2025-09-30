@@ -79,28 +79,22 @@ export type SizeTypes = 'sidepanel' | 'popup' | 'website'
 
 export type Encrypted = Pick<Folder, 'contents' | 'tags' | 'sortedKeys'>
 
-export type SortedKeysActions = 'add' | 'remove'
+export type Actions = 'add' | 'delete'
 
-export type SortedKeysHandler = {
-  [T in SortedKeysTypes]: {
-    [A in SortedKeysActions]: (
-      dir: Content<'folder'>, item: { title: string }
-    ) => void;
-  }
-}
-
-export type MoveActions = 'start' | 'end' | 'cancel'
+// export type SortedKeysHandler = {
+//   [T in SortedKeysTypes]: {
+//     [A in SortedKeysActions]: (
+//       dir: Content<'folder'>, item: { title: string }
+//     ) => void;
+//   }
+// }
 
 export type ResultObj<T> =
   | { success: true, data: T }
   | { success: false, error: string }
 
-// export type ResultObj<T = void> = T extends void
-//   ? { success: true } | { success: false, error: string }
-//   : { success: true, data: T } | { success: false, error: string }
+export type SavedVault = { vault: Content<'folder'>, path: string[] }
 
-// export type ResultObj<T = void> = 
-//   | { success: true, data: T extends void ? never : T }
-//   | { success: false, error: string }
-
-export type SavedVault = { vault: Content<'folder'>, currentDir: string[] }
+export type TagHandler = {
+  [K in Actions]: (tags: string[], inputTag: string) => string[]
+}

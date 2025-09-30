@@ -10,9 +10,7 @@ export default function FolderItem({ folder }: { folder: Content<'folder'> }) {
     <div className='flex gap-4 defaultBorder'>
       <button className='flex-1 flex gap-2 cursor-pointer overflow-hidden'
         title={`Enter folder: ${folder.title}`}
-        onClick={() => UserVault.setDir(
-          UserVault.currentDir.concat(folder.title)
-        )}
+        onClick={() => UserVault.setDir(UserVault.getItemPath(folder))}
       >
         {folder.pinned && (
           <Icon name={Pin} className='stroke-green-500' />
@@ -24,7 +22,7 @@ export default function FolderItem({ folder }: { folder: Content<'folder'> }) {
       </button>
       {folder.encryption && <button onClick={async () => {
         const encryptResult = await UserVault.encrypt(
-          UserVault.currentDir.concat(folder.title)
+          UserVault.getItemPath(folder)
         );
         if (!encryptResult.success) throw Error(encryptResult.error);
       }}>
