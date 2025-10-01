@@ -685,6 +685,12 @@ export default class Vault {
     const folderResult = this.get(path, 'folder');
     if (!folderResult.success) return folderResult;
     const folder = folderResult.data;
+    if (!folder.encryption) {
+      return {
+        success: false,
+        error: 'Item does not have encryption enabled'
+      }
+    }
     delete folder.encryption;
     await this.saveAndRender();
     return { success: true, data: folder };

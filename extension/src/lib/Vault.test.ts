@@ -1,6 +1,12 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  test
+} from 'vitest';
 import Vault from '@/lib/Vault';
-import { Content } from '@/types';
+import { Content, ResultObj } from '@/types';
 
 function createLink(title: string): Content<'link'> {
   return {
@@ -33,13 +39,29 @@ function createFolder(title: string): Content<'folder'> {
 // add at least one folder with nested items
 // add as least one encrypted folder with nested items
 // reset vault after each describe
-const vault = new Vault();
-// let vault: Vault;
-// function resetVault() {
-//   vault = new Vault();
-// }
+// const vault = new Vault();
+let vault: Vault;
+function resetVault() {
+  vault = new Vault();
+}
 
-describe('Add item', () => {
+// FIX ME this doesn't actually do anything
+// the issue here is that every new Vault shares the same reference to newVault
+// make a function that returns a newVault (should make a new reference too)
+function describeWithSetup(name: string, func: () => void) {
+  describe(name, () => {
+    beforeAll(resetVault);
+    afterAll(resetVault);
+    func();
+  });
+}
+
+function testResultFailure<T>(result: ResultObj<T>) {
+  expect(result.success).toBeFalsy();
+  if (!result.success) expect(result.error).toBeTruthy();
+}
+
+describeWithSetup('Add item', () => {
   const linkTitle = 'testLink';
   const testLink = createLink('testLink');
   const path: string[] = [];
@@ -55,9 +77,9 @@ describe('Add item', () => {
     const addResult = await vault.add(testLink, path);
     expect(addResult.success).toBeFalsy();
   });
-})
+});
 
-describe('Delete item', () => {
+describeWithSetup('Delete item', () => {
   test('Delete item from vault', async () => {
     const linkTitle = 'testLink';
     await vault.delete([ linkTitle ]);
@@ -65,16 +87,19 @@ describe('Delete item', () => {
     expect(vault.root.sortedKeys.link.includes(linkTitle)).toBeFalsy();
   });
 
-  // FIX ME test deleting an item that does not exist
-})
+  test('Attempt to delete item that does not exist', async () => {
+    const attemptDeleteResult = await vault.delete([ 'thisItemDoesNotExist' ]);
+    testResultFailure(attemptDeleteResult);
+  });
+});
 
-describe('Get item', async () => {
+describeWithSetup('Get item', async () => {
   const linkTitle = 'testLink';
   const pathToItem = [ linkTitle ];
 
   beforeAll(async () => {
     await vault.add(createLink(linkTitle), []);
-  })
+  });
 
   test('Get any item', async () => {
     const itemResult = vault.get(pathToItem);
@@ -86,10 +111,10 @@ describe('Get item', async () => {
     expect(itemResult.success).toBeTruthy();
     if (itemResult.success) expect(itemResult.data.type).toBe('link');
   });
-  
+
   test('Get item with wrong type', async () => {
     const itemResult = vault.get(pathToItem, 'folder');
-    expect(itemResult.success).toBeFalsy();
+    testResultFailure(itemResult);
   });
 
   // FIX ME should probably make tests for more combos of item types
@@ -97,37 +122,82 @@ describe('Get item', async () => {
 
   afterAll(async () => {
     await vault.delete([ linkTitle ]);
-  })
+  });
 });
 
-test('Rename item', async () => {
-  const linkTitle = 'testLink';
-  const path: string[] = [];
-  const addItemResult = await vault.add(createLink(linkTitle), path);
-  expect(addItemResult.success).toBeTruthy();
-  if (!addItemResult.success) throw Error()
-  const item = addItemResult.data;
-  const newTitle = `${linkTitle}-RENAMED`;
-  const renameResult = await vault.rename(newTitle, path.concat(linkTitle));
-  expect(renameResult.success).toBeTruthy();
-  const renamedItemResult = vault.get(path.concat(newTitle));
-  expect(renamedItemResult.success).toBeTruthy();
-  if (renamedItemResult.success) expect(renamedItemResult.data).toBe(item);
+describeWithSetup('Rename item', () => {
+  test('Rename existing item', async () => {
+    const linkTitle = 'testLink';
+    const path: string[] = [];
+    const addItemResult = await vault.add(createLink(linkTitle), path);
+    expect(addItemResult.success).toBeTruthy();
+    if (addItemResult.success) {
+      const item = addItemResult.data;
+      const newTitle = `${linkTitle}-RENAMED`;
+      const renameResult = await vault.rename(newTitle, path.concat(linkTitle));
+      expect(renameResult.success).toBeTruthy();
+      const renamedItemResult = vault.get(path.concat(newTitle));
+      expect(renamedItemResult.success).toBeTruthy();
+      if (renamedItemResult.success) expect(renamedItemResult.data).toBe(item);
+    }
+  });
 
-  // FIX ME test renaming an item that does not exist
-})
-
-test('Move item', async () => {
-  const linkTitle = 'testLink';
-  const folderTitle = 'folder1';
-  await vault.add(createLink(linkTitle), []);
-  await vault.add(createFolder(folderTitle), []);
-  await vault.move([ linkTitle ], [ folderTitle ]);
-  expect(vault.root.contents[linkTitle]).toBeUndefined();
-  expect(vault.root.sortedKeys.link.includes(linkTitle)).toBeFalsy();
+  test('Fail to rename item that does not exist', async () => {
+    const attemptRenameResult = await vault.rename(
+      'newTitle',
+      [ 'thisItemDoesNotExist' ]
+    );
+    testResultFailure(attemptRenameResult);
+  });
 });
 
-describe('Copy item', async () => {
+describeWithSetup('Move item', async () => {
+  test('Move existing item to existing path', async () => {
+    const linkTitle = 'testLink';
+    const folderTitle = 'folder1';
+    await vault.add(createLink(linkTitle), []);
+    await vault.add(createFolder(folderTitle), []);
+    await vault.move([ linkTitle ], [ folderTitle ]);
+    expect(vault.root.contents[linkTitle]).toBeUndefined();
+    expect(vault.root.sortedKeys.link.includes(linkTitle)).toBeFalsy();
+    const destinationFolderResult = vault.get([ folderTitle ], 'folder');
+    expect(destinationFolderResult.success).toBeTruthy();
+    if (destinationFolderResult.success) {
+      const destinationFolder = destinationFolderResult.data;
+      expect(
+        destinationFolder.sortedKeys['link'].includes(linkTitle)
+      ).toBeTruthy();
+    }
+  });
+
+  test('Fail to move item that does not exist to existing path', async () => {
+    const attemptMoveResult = await vault.move(
+      [ 'thisItemDoesNotExist' ],
+      [ 'folder1' ]
+    );
+    testResultFailure(attemptMoveResult);
+  });
+
+  test('Fail to move existing item to path that does not exist', async () => {
+    const attemptMoveResult = await vault.move(
+      [ 'folder1' ],
+      [ 'thisItemDoesNotExist' ]
+    );
+    testResultFailure(attemptMoveResult);
+  });
+
+  test('Fail to move item that does not exist to path that does not exist',
+    async () => {
+      const attemptMoveResult = await vault.move(
+        [ 'thisItemDoesNotExist' ],
+        [ 'thisPathDoesNotExist' ]
+      );
+      testResultFailure(attemptMoveResult);
+    }
+  );
+});
+
+describeWithSetup('Copy item', async () => {
   test('Copy without title collision', async () => {
     const linkTitle = 'testLink';
     const path: string[] = [];
@@ -158,9 +228,9 @@ describe('Copy item', async () => {
   // easy test: pass a lower maxAttempt value or higher attempt start value
 });
 
-describe('Encryption', async () => {
+describeWithSetup('Toggle encryption status', async () => {
   test('Enable encryption', async () => {
-    const folderTitle = 'testFolder';
+    const folderTitle = 'encryptionTest';
     const path: string[] = [];
     await vault.add(createFolder(folderTitle), path);
     const enableEncryptionResult = await vault.enableEncryption(
@@ -177,5 +247,40 @@ describe('Encryption', async () => {
     }
   });
 
-  // FIX ME test enabling encryption on an item that is not a folder
+  test('Attempt to encrypt non-folder item', async () => {
+    const linkTitle = 'testLink';
+    const path: string[] = [];
+    await vault.add(createLink(linkTitle), path);
+    const attemptEncryptResult = await vault.enableEncryption(
+      [ linkTitle ],
+      'password',
+    );
+    testResultFailure(attemptEncryptResult);
+  });
+
+  test('Disable encryption', async () => {
+    const disableEncryptionResult = await vault.disableEncryption(
+      [ 'encryptionTest' ]
+    );
+    expect(disableEncryptionResult.success).toBeTruthy();
+    if (disableEncryptionResult.success) {
+      const disabledEncryptionFolder = disableEncryptionResult.data;
+      expect(disabledEncryptionFolder.encryption).toBeUndefined();
+    }
+  });
+
+  test('Attempt to disable encryption of item without encryption enabled',
+    async () => {
+      const attemptDisableEncryptionResult = await vault.disableEncryption(
+        [ 'folder1' ]
+      );
+      testResultFailure(attemptDisableEncryptionResult);
+    }
+  );
+});
+
+describeWithSetup('Encryption', () => {
+  test('Encrypt folder', () => {
+    console.log(vault, new Vault());
+  });
 });
