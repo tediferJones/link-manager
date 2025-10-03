@@ -499,6 +499,8 @@ export default class Vault {
     if (!folderResult.success) return folderResult;
     const folder = folderResult.data;
     
+    // FIX ME try to use asyncReduce
+    // write tests first so we can verify async reduce works as expected
     const packedContents = Object.fromEntries(
       await Promise.all(
         Object.keys(folder.contents).map(async (title) => {
@@ -548,7 +550,6 @@ export default class Vault {
     tag: string,
     action: Actions,
   ): Promise<ResultObj<Content<'folder' | 'link' | 'watched'>>> {
-    console.log('add tag', path, tag)
     const itemResult = this.get(path, 'folder', 'link', 'watched');
     if (!itemResult.success) return itemResult;
     const item = itemResult.data;
