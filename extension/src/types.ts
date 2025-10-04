@@ -89,6 +89,7 @@ export type Actions = 'add' | 'delete'
 //   }
 // }
 
+// FIX ME rename to Result
 export type ResultObj<T> =
   | { success: true, data: T }
   | { success: false, error: string }

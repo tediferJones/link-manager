@@ -3,6 +3,7 @@ import { compress, decompress } from '@/lib/compression';
 import replaceObject from '@/lib/replaceObject';
 import asyncReduce from '@/lib/asyncReduce';
 import throwOnFail from '@/lib/throwOnFail';
+import returnOnFail from '@/lib/returnOnFail';
 import getNewVault from '@/lib/getNewVault';
 import {
   Actions,
@@ -42,6 +43,23 @@ const sortedKeysHandler = {
     const key = getItemType(item);
     sortedKeys[key] = sortedKeys[key].filter(title => title !== item.title);
   },
+  move: (sortedKeys: SortedKeys, item: Content, diff: number) => {
+    const key = getItemType(item);
+    const currentIndex = sortedKeys[key].indexOf(item.title);
+    let newIndex = currentIndex + diff;
+    if (newIndex < 0) {
+      newIndex = 0;
+    } else if (newIndex > sortedKeys[key].length) {
+      newIndex = sortedKeys[key].length - 1;
+    }
+    [ 
+      sortedKeys[key][currentIndex],
+      sortedKeys[key][newIndex],
+    ] = [
+        sortedKeys[key][newIndex],
+        sortedKeys[key][currentIndex],
+      ];
+  }
 }
 
 // FIX ME move to its own file
@@ -283,6 +301,13 @@ export default class Vault {
     return { success: true, data: item as Content<T> };
   }
 
+  // FIX ME
+  // Ideally this should look like this:
+  //
+  // async add<T extends 'link' | 'folder'>(
+  //   item: Content<T>,
+  //   path: string[]
+  // ): Promise<ResultObj<Content<T>>> {
   async add(
     item: Content,
     path: string[]
@@ -545,6 +570,9 @@ export default class Vault {
     }, [] as string[]);
   }
 
+  // FIX ME
+  // make action second arg
+  // make tags a spread arg so multiple tags can be added or deleted at once
   async editTags(
     path: string[],
     tag: string,
@@ -558,13 +586,78 @@ export default class Vault {
     return { success: true, data: item };
   }
 
-  setWatched(path: string[], val: boolean) {
-    console.log('set watched', path, val)
+  // maybe change to toggleWatched, second arg could be force: boolean
+  // if no force arg is includes just toggle, otherwise set to value of force
+  setWatched(
+    path: string[],
+    val: boolean,
+  ): ResultObj<Content<'link' | 'watched'>> {
+    return returnOnFail(
+      this.get(path, 'link', 'watched'),
+      (item) => returnOnFail(
+        this.get(path.slice(0, -1), 'folder'),
+        (parent) => {
+          if (item.type === 'watched' && val === false) {
+            const { watched, ...rest } = item;
+            const link: Content<'link'> = {
+              ...rest,
+              type: 'link',
+            }
+            if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+            replaceObject(item, link);
+            if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, link);
+          } else if (item.type === 'link' && val === true) {
+            const watched: Content<'watched'> = {
+              ...item,
+              type: 'watched',
+              watched: Date.now(),
+            }
+            if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+            replaceObject(item, watched);
+            if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, watched);
+          }
+          return { success: true, data: item };
+        }
+      )
+    );
   }
-  swapPriority(path: string[], diff: number) {
-    console.log('swap priority', path, diff)
+
+  swapPriority(path: string[], diff: number): ResultObj<Content<'link'>> {
+    return returnOnFail(
+      this.get(path, 'link'),
+      (link) => returnOnFail(
+        this.get(path.slice(0, -1), 'folder'),
+        (parent) => {
+          sortedKeysHandler.move(
+            parent.sortedKeys,
+            link,
+            diff,
+          );
+          return { success: true, data: link };
+        }
+      )
+    );
   }
-  setPinned(path: string[], val: boolean) {
-    console.log('set pinned', path, val)
+
+  // FIX ME
+  // this could also be a toggle like setWatched
+  setPinned(path: string[], val: boolean): ResultObj<Content> {
+    return returnOnFail(
+      this.get(path),
+      (item) => {
+        item.pinned = val;
+        return { success: true, data: item };
+      }
+    );
   }
+
+  // FIX ME 
+  // make query function
+  //  - dfs directory from a given path
+  //  - run user defined function on each item
+  //  - build up some accumulator value and return it
+  // This would could be used to help simplify a couple functions like:
+  //  - getAllTags
+  //  - pack
+  //  - would also be very useful if we add a search bar in the future
 }

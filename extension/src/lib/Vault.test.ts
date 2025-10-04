@@ -1,6 +1,7 @@
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
+import { testResultFailure, testResultSuccess } from '@/lib/testHelpers';
 import Vault from '@/lib/Vault';
-import { Content, ResultObj } from '@/types';
+import { Content } from '@/types';
 
 function createLink(title: string): Content<'link'> {
   return {
@@ -28,12 +29,22 @@ function createFolder(title: string): Content<'folder'> {
   }
 }
 
+async function addItem(title: string, type: 'folder' | 'link', path: string[]) {
+  const itemFactory = {
+    folder: createFolder,
+    link: createLink,
+  }[type];
+  const item = itemFactory(title);
+  const addResult = await vault.add(item, path);
+  const addedItem = testResultSuccess(addResult);
+  return { item: addedItem, path: path.concat(item.title) }
+}
+
 // FIX ME write function to populate a vault with some generic items
 // add one of every type
 // add at least one folder with nested items
-// add as least one encrypted folder with nested items
-// reset vault after each describe
-// const vault = new Vault();
+// add at least one encrypted folder with nested items
+// add at least one encrypted folder with at least one nested encrypted folder
 let vault: Vault;
 function resetVault() {
   vault = new Vault();
@@ -42,9 +53,6 @@ function resetVault() {
 const rootPath: string[] = [];
 const password = 'password';
 
-// FIX ME this doesn't actually do anything
-// the issue here is that every new Vault shares the same reference to newVault
-// make a function that returns a newVault (should make a new reference too)
 function describeWithSetup(name: string, func: () => void) {
   describe(name, () => {
     beforeEach(resetVault);
@@ -53,16 +61,13 @@ function describeWithSetup(name: string, func: () => void) {
   });
 }
 
-function testResultFailure<T>(result: ResultObj<T>) {
-  expect(result.success).toBe(false);
-  if (!result.success) expect(result.error).toBeTruthy();
-}
-
-function testResultSuccess<T>(result: ResultObj<T>): T {
-  expect(result.success).toBe(true);
-  if (!result.success) throw Error();
-  return result.data;
-}
+// FIX ME simplify tests and minimize repeated code with helper functions
+// use addItem function
+// stop doing:
+//  const someResult = vault.something();
+//  testResult(someResult);
+// just do:
+// testResult(vault.something());
 
 describeWithSetup('Add item', () => {
   const linkTitle = 'testLink';
@@ -481,5 +486,123 @@ describeWithSetup('Edit tags', () => {
     testResultSuccess(encryptedResult);
     const addTagResult = await vault.editTags(itemPath, newTag, 'add');
     testResultFailure(addTagResult);
+  });
+});
+
+describeWithSetup('Set watched', () => {
+  test('Change link to watched', async () => {
+    const linkTitle = 'linkTitle';
+    const itemPath = [ linkTitle ];
+    const addResult = await vault.add(createLink(linkTitle), rootPath);
+    testResultSuccess(addResult);
+    const setWatchedResult = vault.setWatched(itemPath, true);
+    const watched = testResultSuccess(setWatchedResult);
+    expect(watched.type).toBe('watched');
+    expect('watched' in watched).toBe(true);
+  });
+
+  test('Change watched to link', async () => {
+    const linkTitle = 'linkTitle';
+    const itemPath = [ linkTitle ];
+    const addResult = await vault.add(createLink(linkTitle), rootPath);
+    testResultSuccess(addResult);
+    const setWatchedResult = vault.setWatched(itemPath, true);
+    testResultSuccess(setWatchedResult);
+    const setLinkResult = vault.setWatched(itemPath, false);
+    const link = testResultSuccess(setLinkResult);
+    expect(link.type).toBe('link');
+    expect('watched' in link).toBe(false);
+  });
+
+  test('Change link to link', async () => {
+    const linkTitle = 'linkTitle';
+    const itemPath = [ linkTitle ];
+    const addResult = await vault.add(createLink(linkTitle), rootPath);
+    testResultSuccess(addResult);
+    const setLinkResult = vault.setWatched(itemPath, false);
+    const link = testResultSuccess(setLinkResult);
+    expect(link.type).toBe('link');
+    expect('watched' in link).toBe(false);
+  });
+
+  test('Change watched to watched', async () => {
+    const linkTitle = 'linkTitle';
+    const itemPath = [ linkTitle ];
+    const addResult = await vault.add(createLink(linkTitle), rootPath);
+    testResultSuccess(addResult);
+    const setWatchedResult = vault.setWatched(itemPath, true);
+    testResultSuccess(setWatchedResult);
+    const setWatchedResult2 = vault.setWatched(itemPath, true);
+    const watched = testResultSuccess(setWatchedResult2);
+    expect(watched.type).toBe('watched');
+    expect('watched' in watched).toBe(true);
+  });
+});
+
+describeWithSetup('Swap priority', () => {
+  test('Swap +1', async () => {
+    await addItem('link1', 'link', rootPath);
+    const { path, item } = await addItem('link2', 'link', rootPath);
+    await addItem('link3', 'link', rootPath);
+    testResultSuccess(vault.swapPriority(path, 1));
+    const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
+    expect(parent.sortedKeys.link[2]).toBe(item.title);
+  });
+
+  test('Swap -1', async () => {
+    await addItem('link1', 'link', rootPath);
+    const { path, item } = await addItem('link2', 'link', rootPath);
+    await addItem('link3', 'link', rootPath);
+    testResultSuccess(vault.swapPriority(path, -1));
+    const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
+    expect(parent.sortedKeys.link[0]).toBe(item.title);
+  });
+
+  test('Swap to first position', async () => {
+    const addedItems = await Promise.all(
+      Array(5).fill(0).map(async (_, i) => {
+        return await addItem(`link${i}`, 'link', rootPath);
+      })
+    );
+    const { path, item } = addedItems[4];
+    testResultSuccess(vault.swapPriority(path, -Infinity));
+    const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
+    expect(parent.sortedKeys.link[0]).toBe(item.title);
+  });
+
+  test('Swap to last position', async () => {
+    const addedItems = await Promise.all(
+      Array(5).fill(0).map(async (_, i) => {
+        return await addItem(`link${i}`, 'link', rootPath);
+      })
+    );
+    const { path, item } = addedItems[1];
+    testResultSuccess(vault.swapPriority(path, Infinity));
+    const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
+    expect(parent.sortedKeys.link[4]).toBe(item.title);
+  });
+});
+
+describeWithSetup('Set pinned', () => {
+  test('Set pinned true', async () => {
+    const linkTitle = 'linkTitle';
+    const itemPath = [ linkTitle ];
+    const addResult = await vault.add(createLink(linkTitle), rootPath);
+    testResultSuccess(addResult);
+    const setPinnedResult = vault.setPinned(itemPath, true);
+    const item = testResultSuccess(setPinnedResult);
+    expect(item.pinned).toBe(true);
+  });
+
+  test('Set pinned false', async () => {
+    const linkTitle = 'linkTitle';
+    const itemPath = [ linkTitle ];
+    const addResult = await vault.add(createLink(linkTitle), rootPath);
+    testResultSuccess(addResult);
+    const setPinnedTrueResult = vault.setPinned(itemPath, true);
+    testResultSuccess(setPinnedTrueResult);
+    const setPinnedFalseResult = vault.setPinned(itemPath, false);
+    const item = testResultSuccess(setPinnedFalseResult);
+    expect(item.pinned).toBe(false);
   });
 });
