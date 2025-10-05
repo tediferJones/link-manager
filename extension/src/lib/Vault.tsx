@@ -16,6 +16,7 @@ import {
   SortedKeysTypes,
   TagHandler,
 } from '@/types.ts';
+import Result from './Result';
 
 function getItemType(item: Content): SortedKeysTypes {
   if (item.pinned) return 'pinned';
@@ -301,6 +302,25 @@ export default class Vault {
     return { success: true, data: item as Content<T> };
   }
 
+  getV2<T extends ContentTypes>(path: string[], ...types: T[]): Result<Content<T>> {
+    const item = path.reduce<Content | undefined>((item, title) => {
+      if (!item) return undefined;
+      if (item.type === 'encryptedFolder') return item;
+      if (item.type !== 'folder') return undefined;
+      return item.contents[title];
+    }, this.root as Content);
+    
+    if (!item) {
+      return Result.failure(`Could not find item at: ${path.join('/')}`);
+    }
+
+    if (types.length && !types.includes(item.type as T)) {
+      const expected = types.join(', ');
+      return Result.failure(`Item type is ${item.type}, expected: ${expected}`);
+    }
+    return Result.success(item as Content<T>);
+  }
+
   // FIX ME
   // Ideally this should look like this:
   //
@@ -324,6 +344,18 @@ export default class Vault {
     return { success: true, data: item };
   }
 
+  async addV2(path: string[], item: Content): Promise<Result<Content>> {
+    return await this.getV2(path, 'folder').next(async (parent) => {
+      if (parent.contents[item.title]) {
+        return Result.failure('Title already used');
+      }
+      parent.contents[item.title] = item;
+      sortedKeysHandler.add(parent.sortedKeys, item);
+      await this.saveAndRender();
+      return Result.success(item);
+    });
+  }
+
   async delete(path: string[]): Promise<ResultObj<Content>> {
     const parentPath = path.slice(0, -1);
     const itemTitle = path[path.length - 1];
@@ -340,6 +372,19 @@ export default class Vault {
     delete parent.contents[itemTitle];
     await this.saveAndRender();
     return { success: true, data: item };
+  }
+
+  deleteV2(path: string[]): Promise<Result<Content>> {
+    const parentPath = path.slice(0, -1);
+    const itemTitle = path[path.length - 1];
+    return this.getV2(parentPath, 'folder').next(parent => {
+      return this.getV2(path).next(item => {
+        sortedKeysHandler.delete(parent.sortedKeys, item);
+        delete parent.contents[itemTitle];
+        this.saveAndRender();
+        return Result.success(item);
+      });
+    });
   }
 
   async rename(newTitle: string, path: string[]): Promise<ResultObj<Content>> {
@@ -361,6 +406,14 @@ export default class Vault {
     return { success: true, data: item };
   }
 
+  async renameV2(path: string[], newTitle: string): Promise<Result<Content>> {
+    const parentPath = path.slice(0, -1);
+    return (await this.deleteV2(path)).next((item) => {
+      item.title = newTitle;
+      return this.addV2(parentPath, item);
+    });
+  }
+
   async move(path: string[], newPath: string[]): Promise<ResultObj<Content>> {
     const itemResult = this.get(path);
     if (!itemResult.success) return itemResult;
@@ -373,6 +426,10 @@ export default class Vault {
     if (!deleteResult.success) return deleteResult;
 
     return { success: true, data: item };
+  }
+
+  async moveV2(path: string[], newPath: string[]): Promise<Result<Content>> {
+    return (await this.deleteV2(path)).next(item => this.addV2(newPath, item));
   }
 
   async copy(
@@ -393,6 +450,17 @@ export default class Vault {
     return addResult;
   }
 
+  async copyV2(path: string[], attempt = 1): Promise<Result<Content>> {
+    const parentPath = path.slice(0, -1);
+    return this.getV2(path).next(async item => {
+      const itemCopy: typeof item = JSON.parse(JSON.stringify(item));
+      itemCopy.title = `${item.title}${'-COPY'.repeat(attempt)}`;
+      const addResult = await this.addV2(parentPath, itemCopy);
+      if (!addResult.success()) return this.copyV2(path, attempt + 1);
+      return addResult;
+    });
+  }
+
   async enableEncryption(
     path: string[],
     password: string
@@ -406,6 +474,20 @@ export default class Vault {
     folder.encryption = { key, salt, iv };
     await this.saveAndRender();
     return { success: true, data: folder };
+  }
+
+  async enableEncryptionV2(
+    path: string[],
+    password: string
+  ): Promise<Result<Content<'folder'>>> {
+    return this.getV2(path, 'folder').next(async (folder) => {
+      const iv = getRandomBase64('iv');
+      const salt = getRandomBase64('salt');
+      const key = await getKey(password, salt);
+      folder.encryption = { key, salt, iv };
+      this.saveAndRender();
+      return Result.success(folder);
+    });
   }
 
   async disableEncryption(
@@ -423,6 +505,19 @@ export default class Vault {
     delete folder.encryption;
     await this.saveAndRender();
     return { success: true, data: folder };
+  }
+
+  async disableEncryptionV2(
+    path: string[]
+  ): Promise<Result<Content<'folder'>>> {
+    return this.getV2(path, 'folder').next(async folder => {
+      if (!folder.encryption) {
+        return Result.failure('Item does not have encryption enabled');
+      }
+      delete folder.encryption;
+      this.saveAndRender();
+      return Result.success(folder);
+    });
   }
 
   async encrypt(
@@ -481,6 +576,59 @@ export default class Vault {
     return { success: true, data: encryptedFolder };
   }
 
+  async encryptV2(
+    path: string[],
+    preserve: 'preserve'
+  ): Promise<Result<Content<'encryptedFolder'>>> {
+    return this.getV2(path, 'folder').next(async (folder) => {
+      if (!folder.encryption) {
+        return Result.failure(
+          `Folder ${path.join('/')} does not have encryption enabled`
+        );
+      }
+      const { encryption, contents, pinned, title, tags, sortedKeys } = folder;
+
+      const packedContents = await asyncReduce(
+        Object.keys(contents),
+        async (packedContents, title) => {
+          const item = contents[title];
+          if (item.type === 'folder' && item.encryption) {
+            const encrypted = (
+              await this.encryptV2(path.concat(title), preserve)
+            ).throw().data();
+            packedContents[title] = encrypted;
+          } else {
+            packedContents[title] = item;
+          }
+          return packedContents;
+        },
+        {} as Content<'folder'>['contents']
+      );
+
+      const toEncrypt: Encrypted = {
+        contents: packedContents,
+        tags,
+        sortedKeys,
+      }
+
+      const encryptedFolder: Content<'encryptedFolder'> = {
+        type: 'encryptedFolder',
+        title,
+        pinned, 
+        data: await encrypt(
+          JSON.stringify(toEncrypt),
+          encryption.key,
+          encryption.iv
+        ),
+        salt: encryption.salt,
+        iv: encryption.iv,
+      }
+      if (!preserve) replaceObject(folder, encryptedFolder);
+      this.render();
+      return Result.success(encryptedFolder);
+    });
+  }
+
   // FIX ME does not preserve directory for nested encrypted folders
   // i.e. if currentDir is [ 'encFolder1', 'encFolder2' ]
   // after decrypting 'encFolder1' currentDir is set to 'encFolder1'
@@ -517,6 +665,39 @@ export default class Vault {
     replaceObject(encryptedFolder, decryptedFolder);
     this.render();
     return { success: true, data: decryptedFolder };
+  }
+
+  async decryptV2(
+    path: string[],
+    password: string
+  ): Promise<Result<Content<'folder'>>> {
+    return this.getV2(path, 'encryptedFolder').next(async (encryptedFolder) => {
+      const { iv, salt, data } = encryptedFolder;
+      const key = await getKey(password, salt);
+      let decryptedData: Encrypted;
+      try {
+        decryptedData = JSON.parse(await decrypt(data, key, iv));
+      } catch {
+        return Result.failure('Failed to decrypt');
+      }
+      const newIv = getRandomBase64('iv');
+      const newSalt = getRandomBase64('salt');
+      const newKey = await getKey(password, newSalt);
+      const decryptedFolder: Content<'folder'> = {
+        type: 'folder',
+        title: encryptedFolder.title,
+        pinned: encryptedFolder.pinned,
+        ...decryptedData,
+        encryption: {
+          key: newKey,
+          salt: newSalt,
+          iv: newIv,
+        },
+      }
+      replaceObject(encryptedFolder, decryptedFolder);
+      this.render();
+      return Result.success(decryptedFolder);
+    });
   }
 
   async pack(path: string[] = []): Promise<ResultObj<Content<'folder'>>> {
@@ -558,6 +739,10 @@ export default class Vault {
     return this.path.concat(item.title);
   }
 
+  getParentPath(path: string[]): string[] {
+    return path.slice(0, -1);
+  }
+
   // FIX ME rename to getViewPath
   //  - make sure up arrow will respect viewPath
   //    - if in [ 'encFolder1', 'encFolder2' ], decrypt prompt for 'encFolder1' should be rendered
@@ -584,6 +769,18 @@ export default class Vault {
     item.tags = tagHandler[action](item.tags, tag);
     await this.saveAndRender();
     return { success: true, data: item };
+  }
+
+  async editTagsV2(
+    path: string[],
+    action: Actions,
+    ...tags: string[]
+  ): Promise<Result<Content<'folder' | 'link' | 'watched'>>> {
+    return this.getV2(path, 'folder', 'link', 'watched').next(async (item) => {
+      tags.forEach(tag => tagHandler[action](item.tags, tag));
+      await this.saveAndRender();
+      return Result.success(item);
+    });
   }
 
   // maybe change to toggleWatched, second arg could be force: boolean
