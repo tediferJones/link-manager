@@ -2,21 +2,21 @@ import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
 import { compress, decompress } from '@/lib/compression';
 import replaceObject from '@/lib/replaceObject';
 import asyncReduce from '@/lib/asyncReduce';
-import throwOnFail from '@/lib/throwOnFail';
-import returnOnFail from '@/lib/returnOnFail';
+// import throwOnFail from '@/lib/throwOnFail';
+// import returnOnFail from '@/lib/returnOnFail';
 import getNewVault from '@/lib/getNewVault';
+import Result from '@/lib/Result';
 import {
   Actions,
   Content,
   ContentTypes,
   Encrypted,
-  ResultObj,
+  // ResultObj,
   SavedVault,
   SortedKeys,
   SortedKeysTypes,
   TagHandler,
 } from '@/types.ts';
-import Result from './Result';
 
 function getItemType(item: Content): SortedKeysTypes {
   if (item.pinned) return 'pinned';
@@ -128,7 +128,7 @@ export default class Vault {
     //    - if client data is latest push to db
     //    - if server data is latest pull from db
     // also add delay to saving and debounce on next save request
-    const packed = throwOnFail(await this.pack());
+    const packed = (await this.pack()).throw().data();
     const savedVault: SavedVault = {
       vault: packed,
       path: this.path,
@@ -138,9 +138,11 @@ export default class Vault {
   }
 
   render() {
-    const itemResult = this.get(this.path, 'folder', 'encryptedFolder');
-    if (!itemResult.success) return itemResult;
-    const item = itemResult.data;
+    const item = this.get(
+      this.path,
+      'folder',
+      'encryptedFolder'
+    ).throw().data();
     const event = new CustomEvent('render', { detail: item });
     dispatchEvent(event);
   }
@@ -274,35 +276,399 @@ export default class Vault {
   // decide if path should always be first or last argument
   // START REFACTOR
 
-  get<T extends ContentTypes>(
-    path: string[],
-    ...types: T[]
-  ): ResultObj<Content<T>> {
-    const item = path.reduce<Content | undefined>((item, title) => {
-      if (!item) return undefined;
-      if (item.type === 'encryptedFolder') return item;
-      if (item.type !== 'folder') return undefined;
-      return item.contents[title];
-    }, this.root as Content);
+  // get<T extends ContentTypes>(
+  //   path: string[],
+  //   ...types: T[]
+  // ): ResultObj<Content<T>> {
+  //   const item = path.reduce<Content | undefined>((item, title) => {
+  //     if (!item) return undefined;
+  //     if (item.type === 'encryptedFolder') return item;
+  //     if (item.type !== 'folder') return undefined;
+  //     return item.contents[title];
+  //   }, this.root as Content);
 
-    if (!item) {
-      return {
-        success: false,
-        error: `Could not find item at: ${path.join('/')}`,
-      }
-    }
+  //   if (!item) {
+  //     return {
+  //       success: false,
+  //       error: `Could not find item at: ${path.join('/')}`,
+  //     }
+  //   }
 
-    if (types.length && !types.includes(item.type as T)) {
-      const expected = types.join(', ');
-      return {
-        success: false,
-        error: `Item type is ${item.type}, expected: ${expected}`,
-      }
-    }
-    return { success: true, data: item as Content<T> };
+  //   if (types.length && !types.includes(item.type as T)) {
+  //     const expected = types.join(', ');
+  //     return {
+  //       success: false,
+  //       error: `Item type is ${item.type}, expected: ${expected}`,
+  //     }
+  //   }
+  //   return { success: true, data: item as Content<T> };
+  // }
+
+  // FIX ME
+  // Ideally this should look like this:
+  //
+  // async add<T extends 'link' | 'folder'>(
+  //   item: Content<T>,
+  //   path: string[]
+  // ): Promise<ResultObj<Content<T>>> {
+  // async add(
+  //   item: Content,
+  //   path: string[]
+  // ): Promise<ResultObj<Content>> {
+  //   const parentResult = this.get(path, 'folder');
+  //   if (!parentResult.success) return parentResult;
+  //   const parent = parentResult.data;
+  //   if (parent.contents[item.title]) {
+  //     return { success: false, error: 'Title already used' };
+  //   }
+  //   parent.contents[item.title] = item;
+  //   sortedKeysHandler.add(parent.sortedKeys, item);
+  //   await this.saveAndRender();
+  //   return { success: true, data: item };
+  // }
+
+  // async delete(path: string[]): Promise<ResultObj<Content>> {
+  //   const parentPath = path.slice(0, -1);
+  //   const itemTitle = path[path.length - 1];
+
+  //   const parentResult = this.get(parentPath, 'folder');
+  //   if (!parentResult.success) return parentResult;
+  //   const parent = parentResult.data;
+
+  //   const itemResult = this.get(path);
+  //   if (!itemResult.success) return itemResult;
+  //   const item = itemResult.data;
+
+  //   sortedKeysHandler.delete(parent.sortedKeys, item);
+  //   delete parent.contents[itemTitle];
+  //   await this.saveAndRender();
+  //   return { success: true, data: item };
+  // }
+
+  // async rename(newTitle: string, path: string[]): Promise<ResultObj<Content>> {
+  //   const parentResult = this.get(path.slice(0, -1), 'folder');
+  //   if (!parentResult.success) return parentResult;
+  //   const parent = parentResult.data;
+
+  //   const deleteResult = await this.delete(path);
+  //   if (!deleteResult.success) return deleteResult;
+  //   const item = deleteResult.data;
+  //   sortedKeysHandler.delete(parent.sortedKeys, item);
+
+  //   item.title = newTitle;
+  //   const addResult = await this.add(item, path.slice(0, -1));
+  //   if (!addResult.success) return addResult;
+  //   const addedItem = addResult.data;
+  //   sortedKeysHandler.add(parent.sortedKeys, addedItem);
+
+  //   return { success: true, data: item };
+  // }
+
+  // async move(path: string[], newPath: string[]): Promise<ResultObj<Content>> {
+  //   const itemResult = this.get(path);
+  //   if (!itemResult.success) return itemResult;
+  //   const item = itemResult.data;
+
+  //   const addResult = await this.add(item, newPath);
+  //   if (!addResult.success) return addResult;
+
+  //   const deleteResult = await this.delete(path);
+  //   if (!deleteResult.success) return deleteResult;
+
+  //   return { success: true, data: item };
+  // }
+
+  // async copy(
+  //   path: string[],
+  //   attempt = 1
+  // ): Promise<ResultObj<Content>> {
+  //   const itemResult = this.get(path);
+  //   if (!itemResult.success) return itemResult;
+  //   const item = itemResult.data;
+
+  //   const itemCopy: typeof item = JSON.parse(JSON.stringify(item));
+  //   itemCopy.title = `${item.title}${'-COPY'.repeat(attempt)}`;
+
+  //   const addResult = await this.add(itemCopy, path.slice(0, -1));
+  //   if (!addResult.success) {
+  //     return this.copy(path, attempt + 1);
+  //   };
+  //   return addResult;
+  // }
+
+  // async enableEncryption(
+  //   path: string[],
+  //   password: string
+  // ): Promise<ResultObj<Content<'folder'>>> {
+  //   const folderResult = this.get(path, 'folder');
+  //   if (!folderResult.success) return folderResult;
+  //   const folder = folderResult.data;
+  //   const iv = getRandomBase64('iv');
+  //   const salt = getRandomBase64('salt');
+  //   const key = await getKey(password, salt);
+  //   folder.encryption = { key, salt, iv };
+  //   await this.saveAndRender();
+  //   return { success: true, data: folder };
+  // }
+
+  // async disableEncryption(
+  //   path: string[]
+  // ): Promise<ResultObj<Content<'folder'>>> {
+  //   const folderResult = this.get(path, 'folder');
+  //   if (!folderResult.success) return folderResult;
+  //   const folder = folderResult.data;
+  //   if (!folder.encryption) {
+  //     return {
+  //       success: false,
+  //       error: 'Item does not have encryption enabled'
+  //     }
+  //   }
+  //   delete folder.encryption;
+  //   await this.saveAndRender();
+  //   return { success: true, data: folder };
+  // }
+
+  // async encrypt(
+  //   path: string[],
+  //   preserve?: 'preserve',
+  // ): Promise<ResultObj<Content<'encryptedFolder'>>> {
+  //   const folderResult = this.get(path, 'folder');
+  //   if (!folderResult.success) return folderResult;
+  //   const folder = folderResult.data;
+  //   if (!folder.encryption) {
+  //     return {
+  //       success: false,
+  //       error: `Folder ${path.join('/')} does not have encryption enabled`,
+  //     }
+  //   }
+
+  //   const { encryption, contents, pinned, title, tags, sortedKeys } = folder;
+
+  //   const packedContents = await asyncReduce(
+  //     Object.keys(contents),
+  //     async (packedContents, title) => {
+  //       const item = contents[title];
+  //       if (item.type === 'folder' && item.encryption) {
+  //         const encrypted = throwOnFail(
+  //           await this.encrypt(path.concat(title), preserve)
+  //         );
+  //         packedContents[title] = encrypted;
+  //       } else {
+  //         packedContents[title] = item;
+  //       }
+  //       return packedContents;
+  //     },
+  //     {} as Content<'folder'>['contents']
+  //   );
+
+  //   const toEncrypt: Encrypted = {
+  //     contents: packedContents,
+  //     tags,
+  //     sortedKeys,
+  //   }
+
+  //   const encryptedFolder: Content<'encryptedFolder'> = {
+  //     type: 'encryptedFolder',
+  //     title,
+  //     pinned, 
+  //     data: await encrypt(
+  //       JSON.stringify(toEncrypt),
+  //       encryption.key,
+  //       encryption.iv
+  //     ),
+  //     salt: encryption.salt,
+  //     iv: encryption.iv,
+  //   }
+  //   if (!preserve) replaceObject(folder, encryptedFolder);
+  //   this.render();
+  //   return { success: true, data: encryptedFolder };
+  // }
+
+  // FIX ME does not preserve directory for nested encrypted folders
+  // i.e. if currentDir is [ 'encFolder1', 'encFolder2' ]
+  // after decrypting 'encFolder1' currentDir is set to 'encFolder1'
+  // we want the preserver currentDir until use manually navigates away
+  // async decrypt(
+  //   path: string[],
+  //   password: string
+  // ): Promise<ResultObj<Content<'folder'>>> {
+  //   const encryptedFolderResult = this.get(path, 'encryptedFolder');
+  //   if (!encryptedFolderResult.success) return encryptedFolderResult;
+  //   const encryptedFolder = encryptedFolderResult.data;
+  //   const { iv, salt, data } = encryptedFolder;
+  //   const key = await getKey(password, salt);
+  //   let decryptedData: Encrypted;
+  //   try {
+  //     decryptedData = JSON.parse(await decrypt(data, key, iv));
+  //   } catch {
+  //     return { success: false, error: 'Failed to decrypt' };
+  //   }
+  //   const newIv = getRandomBase64('iv');
+  //   const newSalt = getRandomBase64('salt');
+  //   const newKey = await getKey(password, newSalt);
+  //   const decryptedFolder: Content<'folder'> = {
+  //     type: 'folder',
+  //     title: encryptedFolder.title,
+  //     pinned: encryptedFolder.pinned,
+  //     ...decryptedData,
+  //     encryption: {
+  //       key: newKey,
+  //       salt: newSalt,
+  //       iv: newIv,
+  //     },
+  //   }
+  //   replaceObject(encryptedFolder, decryptedFolder);
+  //   this.render();
+  //   return { success: true, data: decryptedFolder };
+  // }
+
+  // async pack(path: string[] = []): Promise<ResultObj<Content<'folder'>>> {
+  //   const folderResult = this.get(path, 'folder');
+  //   if (!folderResult.success) return folderResult;
+  //   const folder = folderResult.data;
+  //   
+  //   // FIX ME try to use asyncReduce
+  //   // write tests first so we can verify async reduce works as expected
+  //   const packedContents = Object.fromEntries(
+  //     await Promise.all(
+  //       Object.keys(folder.contents).map(async (title) => {
+  //         const item = folder.contents[title];
+  //         if (item.type === 'folder' && item.encryption) {
+  //           const encrypted = throwOnFail(
+  //             await this.encrypt(path.concat(title), 'preserve')
+  //           );
+  //           return [ title, encrypted ];
+  //         } else if (item.type === 'folder') {
+  //           const packed = throwOnFail(await this.pack(path.concat(title)));
+  //           return [ title, packed ];
+  //         } else {
+  //           return [ title, item ];
+  //         }
+  //       })
+  //     )
+  //   );
+
+  //   return {
+  //     success: true,
+  //     data: {
+  //       ...folder,
+  //       contents: packedContents,
+  //     }
+  //   }
+  // }
+
+  // FIX ME
+  // make action second arg
+  // make tags a spread arg so multiple tags can be added or deleted at once
+  // async editTags(
+  //   path: string[],
+  //   tag: string,
+  //   action: Actions,
+  // ): Promise<ResultObj<Content<'folder' | 'link' | 'watched'>>> {
+  //   const itemResult = this.get(path, 'folder', 'link', 'watched');
+  //   if (!itemResult.success) return itemResult;
+  //   const item = itemResult.data;
+  //   item.tags = tagHandler[action](item.tags, tag);
+  //   await this.saveAndRender();
+  //   return { success: true, data: item };
+  // }
+
+  // maybe change to toggleWatched, second arg could be force: boolean
+  // if no force arg is includes just toggle, otherwise set to value of force
+  // setWatched(
+  //   path: string[],
+  //   val: boolean,
+  // ): ResultObj<Content<'link' | 'watched'>> {
+  //   return returnOnFail(
+  //     this.get(path, 'link', 'watched'),
+  //     (item) => returnOnFail(
+  //       this.get(path.slice(0, -1), 'folder'),
+  //       (parent) => {
+  //         if (item.type === 'watched' && val === false) {
+  //           const { watched, ...rest } = item;
+  //           const link: Content<'link'> = {
+  //             ...rest,
+  //             type: 'link',
+  //           }
+  //           if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+  //           replaceObject(item, link);
+  //           if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, link);
+  //         } else if (item.type === 'link' && val === true) {
+  //           const watched: Content<'watched'> = {
+  //             ...item,
+  //             type: 'watched',
+  //             watched: Date.now(),
+  //           }
+  //           if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+  //           replaceObject(item, watched);
+  //           if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, watched);
+  //         }
+  //         return { success: true, data: item };
+  //       }
+  //     )
+  //   );
+  // }
+
+  // swapPriority(path: string[], diff: number): ResultObj<Content<'link'>> {
+  //   return returnOnFail(
+  //     this.get(path, 'link'),
+  //     (link) => returnOnFail(
+  //       this.get(path.slice(0, -1), 'folder'),
+  //       (parent) => {
+  //         sortedKeysHandler.move(
+  //           parent.sortedKeys,
+  //           link,
+  //           diff,
+  //         );
+  //         return { success: true, data: link };
+  //       }
+  //     )
+  //   );
+  // }
+
+  // FIX ME
+  // this could also be a toggle like setWatched
+  // setPinned(path: string[], val: boolean): ResultObj<Content> {
+  //   return returnOnFail(
+  //     this.get(path),
+  //     (item) => {
+  //       item.pinned = val;
+  //       return { success: true, data: item };
+  //     }
+  //   );
+  // }
+
+  // FIX ME 
+  // make query function
+  //  - dfs directory from a given path
+  //  - run user defined function on each item
+  //  - build up some accumulator value and return it
+  // This would could be used to help simplify a couple functions like:
+  //  - getAllTags
+  //  - pack
+  //  - would also be very useful if we add a search bar in the future
+
+  getItemPath(item: Content): string[] {
+    return this.path.concat(item.title);
   }
 
-  getV2<T extends ContentTypes>(path: string[], ...types: T[]): Result<Content<T>> {
+  getParentPath(path: string[]): string[] {
+    return path.slice(0, -1);
+  }
+
+  // FIX ME rename to getViewPath
+  //  - make sure up arrow will respect viewPath
+  //    - if in [ 'encFolder1', 'encFolder2' ], decrypt prompt for 'encFolder1' should be rendered
+  //      - if user clicks up arrow, should set currentPath to [], because viewDir will just be [ 'encFolder1' ]
+  getViewDir(path: string[]): string[] {
+    return path.reduce((newPath, segment) => {
+      const item = this.get(newPath).throw().data();
+      if (item.type === 'encryptedFolder') return newPath;
+      return newPath.concat(segment);
+    }, [] as string[]);
+  }
+
+  get<T extends ContentTypes>(path: string[], ...types: T[]): Result<Content<T>> {
     const item = path.reduce<Content | undefined>((item, title) => {
       if (!item) return undefined;
       if (item.type === 'encryptedFolder') return item;
@@ -321,31 +687,8 @@ export default class Vault {
     return Result.success(item as Content<T>);
   }
 
-  // FIX ME
-  // Ideally this should look like this:
-  //
-  // async add<T extends 'link' | 'folder'>(
-  //   item: Content<T>,
-  //   path: string[]
-  // ): Promise<ResultObj<Content<T>>> {
-  async add(
-    item: Content,
-    path: string[]
-  ): Promise<ResultObj<Content>> {
-    const parentResult = this.get(path, 'folder');
-    if (!parentResult.success) return parentResult;
-    const parent = parentResult.data;
-    if (parent.contents[item.title]) {
-      return { success: false, error: 'Title already used' };
-    }
-    parent.contents[item.title] = item;
-    sortedKeysHandler.add(parent.sortedKeys, item);
-    await this.saveAndRender();
-    return { success: true, data: item };
-  }
-
-  async addV2(path: string[], item: Content): Promise<Result<Content>> {
-    return await this.getV2(path, 'folder').next(async (parent) => {
+  async add(path: string[], item: Content): Promise<Result<Content>> {
+    return await this.get(path, 'folder').next(async (parent) => {
       if (parent.contents[item.title]) {
         return Result.failure('Title already used');
       }
@@ -356,29 +699,11 @@ export default class Vault {
     });
   }
 
-  async delete(path: string[]): Promise<ResultObj<Content>> {
-    const parentPath = path.slice(0, -1);
+  async delete(path: string[]): Promise<Result<Content>> {
     const itemTitle = path[path.length - 1];
-
-    const parentResult = this.get(parentPath, 'folder');
-    if (!parentResult.success) return parentResult;
-    const parent = parentResult.data;
-
-    const itemResult = this.get(path);
-    if (!itemResult.success) return itemResult;
-    const item = itemResult.data;
-
-    sortedKeysHandler.delete(parent.sortedKeys, item);
-    delete parent.contents[itemTitle];
-    await this.saveAndRender();
-    return { success: true, data: item };
-  }
-
-  deleteV2(path: string[]): Promise<Result<Content>> {
-    const parentPath = path.slice(0, -1);
-    const itemTitle = path[path.length - 1];
-    return this.getV2(parentPath, 'folder').next(parent => {
-      return this.getV2(path).next(item => {
+    const parentPath = this.getParentPath(path)
+    return await this.get(parentPath, 'folder').next(async parent => {
+      return await this.get(path).next(item => {
         sortedKeysHandler.delete(parent.sortedKeys, item);
         delete parent.contents[itemTitle];
         this.saveAndRender();
@@ -387,76 +712,26 @@ export default class Vault {
     });
   }
 
-  async rename(newTitle: string, path: string[]): Promise<ResultObj<Content>> {
-    const parentResult = this.get(path.slice(0, -1), 'folder');
-    if (!parentResult.success) return parentResult;
-    const parent = parentResult.data;
-
-    const deleteResult = await this.delete(path);
-    if (!deleteResult.success) return deleteResult;
-    const item = deleteResult.data;
-    sortedKeysHandler.delete(parent.sortedKeys, item);
-
-    item.title = newTitle;
-    const addResult = await this.add(item, path.slice(0, -1));
-    if (!addResult.success) return addResult;
-    const addedItem = addResult.data;
-    sortedKeysHandler.add(parent.sortedKeys, addedItem);
-
-    return { success: true, data: item };
-  }
-
-  async renameV2(path: string[], newTitle: string): Promise<Result<Content>> {
+  async rename(path: string[], newTitle: string): Promise<Result<Content>> {
     const parentPath = path.slice(0, -1);
-    return (await this.deleteV2(path)).next((item) => {
+    return (await this.delete(path)).next((item) => {
       item.title = newTitle;
-      return this.addV2(parentPath, item);
+      return this.add(parentPath, item);
     });
   }
 
-  async move(path: string[], newPath: string[]): Promise<ResultObj<Content>> {
-    const itemResult = this.get(path);
-    if (!itemResult.success) return itemResult;
-    const item = itemResult.data;
-
-    const addResult = await this.add(item, newPath);
-    if (!addResult.success) return addResult;
-
-    const deleteResult = await this.delete(path);
-    if (!deleteResult.success) return deleteResult;
-
-    return { success: true, data: item };
+  async move(path: string[], newPath: string[]): Promise<Result<Content>> {
+    return (await this.delete(path)).next(item => this.add(newPath, item));
   }
 
-  async moveV2(path: string[], newPath: string[]): Promise<Result<Content>> {
-    return (await this.deleteV2(path)).next(item => this.addV2(newPath, item));
-  }
 
-  async copy(
-    path: string[],
-    attempt = 1
-  ): Promise<ResultObj<Content>> {
-    const itemResult = this.get(path);
-    if (!itemResult.success) return itemResult;
-    const item = itemResult.data;
-
-    const itemCopy: typeof item = JSON.parse(JSON.stringify(item));
-    itemCopy.title = `${item.title}${'-COPY'.repeat(attempt)}`;
-
-    const addResult = await this.add(itemCopy, path.slice(0, -1));
-    if (!addResult.success) {
-      return this.copy(path, attempt + 1);
-    };
-    return addResult;
-  }
-
-  async copyV2(path: string[], attempt = 1): Promise<Result<Content>> {
+  async copy(path: string[], attempt = 1): Promise<Result<Content>> {
     const parentPath = path.slice(0, -1);
-    return this.getV2(path).next(async item => {
+    return this.get(path).next(async item => {
       const itemCopy: typeof item = JSON.parse(JSON.stringify(item));
       itemCopy.title = `${item.title}${'-COPY'.repeat(attempt)}`;
-      const addResult = await this.addV2(parentPath, itemCopy);
-      if (!addResult.success()) return this.copyV2(path, attempt + 1);
+      const addResult = await this.add(parentPath, itemCopy);
+      if (!addResult.success()) return this.copy(path, attempt + 1);
       return addResult;
     });
   }
@@ -464,23 +739,8 @@ export default class Vault {
   async enableEncryption(
     path: string[],
     password: string
-  ): Promise<ResultObj<Content<'folder'>>> {
-    const folderResult = this.get(path, 'folder');
-    if (!folderResult.success) return folderResult;
-    const folder = folderResult.data;
-    const iv = getRandomBase64('iv');
-    const salt = getRandomBase64('salt');
-    const key = await getKey(password, salt);
-    folder.encryption = { key, salt, iv };
-    await this.saveAndRender();
-    return { success: true, data: folder };
-  }
-
-  async enableEncryptionV2(
-    path: string[],
-    password: string
   ): Promise<Result<Content<'folder'>>> {
-    return this.getV2(path, 'folder').next(async (folder) => {
+    return this.get(path, 'folder').next(async (folder) => {
       const iv = getRandomBase64('iv');
       const salt = getRandomBase64('salt');
       const key = await getKey(password, salt);
@@ -492,25 +752,8 @@ export default class Vault {
 
   async disableEncryption(
     path: string[]
-  ): Promise<ResultObj<Content<'folder'>>> {
-    const folderResult = this.get(path, 'folder');
-    if (!folderResult.success) return folderResult;
-    const folder = folderResult.data;
-    if (!folder.encryption) {
-      return {
-        success: false,
-        error: 'Item does not have encryption enabled'
-      }
-    }
-    delete folder.encryption;
-    await this.saveAndRender();
-    return { success: true, data: folder };
-  }
-
-  async disableEncryptionV2(
-    path: string[]
   ): Promise<Result<Content<'folder'>>> {
-    return this.getV2(path, 'folder').next(async folder => {
+    return this.get(path, 'folder').next(async folder => {
       if (!folder.encryption) {
         return Result.failure('Item does not have encryption enabled');
       }
@@ -522,65 +765,9 @@ export default class Vault {
 
   async encrypt(
     path: string[],
-    preserve?: 'preserve',
-  ): Promise<ResultObj<Content<'encryptedFolder'>>> {
-    const folderResult = this.get(path, 'folder');
-    if (!folderResult.success) return folderResult;
-    const folder = folderResult.data;
-    if (!folder.encryption) {
-      return {
-        success: false,
-        error: `Folder ${path.join('/')} does not have encryption enabled`,
-      }
-    }
-
-    const { encryption, contents, pinned, title, tags, sortedKeys } = folder;
-
-    const packedContents = await asyncReduce(
-      Object.keys(contents),
-      async (packedContents, title) => {
-        const item = contents[title];
-        if (item.type === 'folder' && item.encryption) {
-          const encrypted = throwOnFail(
-            await this.encrypt(path.concat(title), preserve)
-          );
-          packedContents[title] = encrypted;
-        } else {
-          packedContents[title] = item;
-        }
-        return packedContents;
-      },
-      {} as Content<'folder'>['contents']
-    );
-
-    const toEncrypt: Encrypted = {
-      contents: packedContents,
-      tags,
-      sortedKeys,
-    }
-
-    const encryptedFolder: Content<'encryptedFolder'> = {
-      type: 'encryptedFolder',
-      title,
-      pinned, 
-      data: await encrypt(
-        JSON.stringify(toEncrypt),
-        encryption.key,
-        encryption.iv
-      ),
-      salt: encryption.salt,
-      iv: encryption.iv,
-    }
-    if (!preserve) replaceObject(folder, encryptedFolder);
-    this.render();
-    return { success: true, data: encryptedFolder };
-  }
-
-  async encryptV2(
-    path: string[],
-    preserve: 'preserve'
+    preserve?: 'preserve'
   ): Promise<Result<Content<'encryptedFolder'>>> {
-    return this.getV2(path, 'folder').next(async (folder) => {
+    return this.get(path, 'folder').next(async (folder) => {
       if (!folder.encryption) {
         return Result.failure(
           `Folder ${path.join('/')} does not have encryption enabled`
@@ -594,7 +781,7 @@ export default class Vault {
           const item = contents[title];
           if (item.type === 'folder' && item.encryption) {
             const encrypted = (
-              await this.encryptV2(path.concat(title), preserve)
+              await this.encrypt(path.concat(title), preserve)
             ).throw().data();
             packedContents[title] = encrypted;
           } else {
@@ -629,49 +816,11 @@ export default class Vault {
     });
   }
 
-  // FIX ME does not preserve directory for nested encrypted folders
-  // i.e. if currentDir is [ 'encFolder1', 'encFolder2' ]
-  // after decrypting 'encFolder1' currentDir is set to 'encFolder1'
-  // we want the preserver currentDir until use manually navigates away
   async decrypt(
     path: string[],
     password: string
-  ): Promise<ResultObj<Content<'folder'>>> {
-    const encryptedFolderResult = this.get(path, 'encryptedFolder');
-    if (!encryptedFolderResult.success) return encryptedFolderResult;
-    const encryptedFolder = encryptedFolderResult.data;
-    const { iv, salt, data } = encryptedFolder;
-    const key = await getKey(password, salt);
-    let decryptedData: Encrypted;
-    try {
-      decryptedData = JSON.parse(await decrypt(data, key, iv));
-    } catch {
-      return { success: false, error: 'Failed to decrypt' };
-    }
-    const newIv = getRandomBase64('iv');
-    const newSalt = getRandomBase64('salt');
-    const newKey = await getKey(password, newSalt);
-    const decryptedFolder: Content<'folder'> = {
-      type: 'folder',
-      title: encryptedFolder.title,
-      pinned: encryptedFolder.pinned,
-      ...decryptedData,
-      encryption: {
-        key: newKey,
-        salt: newSalt,
-        iv: newIv,
-      },
-    }
-    replaceObject(encryptedFolder, decryptedFolder);
-    this.render();
-    return { success: true, data: decryptedFolder };
-  }
-
-  async decryptV2(
-    path: string[],
-    password: string
   ): Promise<Result<Content<'folder'>>> {
-    return this.getV2(path, 'encryptedFolder').next(async (encryptedFolder) => {
+    return this.get(path, 'encryptedFolder').next(async (encryptedFolder) => {
       const { iv, salt, data } = encryptedFolder;
       const key = await getKey(password, salt);
       let decryptedData: Encrypted;
@@ -700,161 +849,87 @@ export default class Vault {
     });
   }
 
-  async pack(path: string[] = []): Promise<ResultObj<Content<'folder'>>> {
-    const folderResult = this.get(path, 'folder');
-    if (!folderResult.success) return folderResult;
-    const folder = folderResult.data;
-    
-    // FIX ME try to use asyncReduce
-    // write tests first so we can verify async reduce works as expected
-    const packedContents = Object.fromEntries(
-      await Promise.all(
-        Object.keys(folder.contents).map(async (title) => {
+  async pack(path: string[] = []): Promise<Result<Content<'folder'>>> {
+    return await this.get(path, 'folder').next(async folder => {
+      const packedContents = await asyncReduce(
+        Object.keys(folder.contents),
+        async (packedContents, title) => {
           const item = folder.contents[title];
           if (item.type === 'folder' && item.encryption) {
-            const encrypted = throwOnFail(
+            const encrypted = (
               await this.encrypt(path.concat(title), 'preserve')
-            );
-            return [ title, encrypted ];
+            ).throw().data();
+            packedContents[title] = encrypted;
           } else if (item.type === 'folder') {
-            const packed = throwOnFail(await this.pack(path.concat(title)));
-            return [ title, packed ];
+            const packed = (
+              await this.pack(path.concat(title))
+            ).throw().data();
+            packedContents[title] = packed;
           } else {
-            return [ title, item ];
+            packedContents[title] = item;
           }
-        })
-      )
-    );
-
-    return {
-      success: true,
-      data: {
-        ...folder,
-        contents: packedContents,
-      }
-    }
+          return packedContents;
+        },
+        {} as Content<'folder'>['contents']
+      );
+      return Result.success({ ...folder, contents: packedContents });
+    });
   }
 
-  getItemPath(item: Content): string[] {
-    return this.path.concat(item.title);
-  }
-
-  getParentPath(path: string[]): string[] {
-    return path.slice(0, -1);
-  }
-
-  // FIX ME rename to getViewPath
-  //  - make sure up arrow will respect viewPath
-  //    - if in [ 'encFolder1', 'encFolder2' ], decrypt prompt for 'encFolder1' should be rendered
-  //      - if user clicks up arrow, should set currentPath to [], because viewDir will just be [ 'encFolder1' ]
-  getViewDir(path: string[]): string[] {
-    return path.reduce((newPath, segment) => {
-      const item = throwOnFail(this.get(newPath));
-      if (item.type === 'encryptedFolder') return newPath;
-      return newPath.concat(segment);
-    }, [] as string[]);
-  }
-
-  // FIX ME
-  // make action second arg
-  // make tags a spread arg so multiple tags can be added or deleted at once
   async editTags(
-    path: string[],
-    tag: string,
-    action: Actions,
-  ): Promise<ResultObj<Content<'folder' | 'link' | 'watched'>>> {
-    const itemResult = this.get(path, 'folder', 'link', 'watched');
-    if (!itemResult.success) return itemResult;
-    const item = itemResult.data;
-    item.tags = tagHandler[action](item.tags, tag);
-    await this.saveAndRender();
-    return { success: true, data: item };
-  }
-
-  async editTagsV2(
     path: string[],
     action: Actions,
     ...tags: string[]
   ): Promise<Result<Content<'folder' | 'link' | 'watched'>>> {
-    return this.getV2(path, 'folder', 'link', 'watched').next(async (item) => {
+    return this.get(path, 'folder', 'link', 'watched').next(async (item) => {
       tags.forEach(tag => tagHandler[action](item.tags, tag));
       await this.saveAndRender();
       return Result.success(item);
     });
   }
 
-  // maybe change to toggleWatched, second arg could be force: boolean
-  // if no force arg is includes just toggle, otherwise set to value of force
-  setWatched(
-    path: string[],
-    val: boolean,
-  ): ResultObj<Content<'link' | 'watched'>> {
-    return returnOnFail(
-      this.get(path, 'link', 'watched'),
-      (item) => returnOnFail(
-        this.get(path.slice(0, -1), 'folder'),
-        (parent) => {
-          if (item.type === 'watched' && val === false) {
-            const { watched, ...rest } = item;
-            const link: Content<'link'> = {
-              ...rest,
-              type: 'link',
-            }
-            if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
-            replaceObject(item, link);
-            if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, link);
-          } else if (item.type === 'link' && val === true) {
-            const watched: Content<'watched'> = {
-              ...item,
-              type: 'watched',
-              watched: Date.now(),
-            }
-            if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
-            replaceObject(item, watched);
-            if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, watched);
+  async toggleWatched(path: string[], force?: boolean) {
+    return await this.get(this.getParentPath(path), 'folder').next(async parent => {
+      return await this.get(path, 'link', 'watched').next(async item => {
+        if (item.type === 'link') {
+          if (force === false) return Result.success(item);
+          const watched: Content<'watched'> = {
+            ...item,
+            type: 'watched',
+            watched: Date.now(),
           }
-          return { success: true, data: item };
+          if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+          replaceObject(item, watched);
+          if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, watched);
+        } else if (item.type === 'watched') {
+          if (force === true) return Result.success(item);
+          const { watched, ...rest } = item;
+          const link: Content<'link'> = {
+            ...rest,
+            type: 'link',
+          }
+          if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+          replaceObject(item, link);
+          if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, link);
         }
-      )
-    );
+        return Result.success(item);
+      });
+    });
   }
 
-  swapPriority(path: string[], diff: number): ResultObj<Content<'link'>> {
-    return returnOnFail(
-      this.get(path, 'link'),
-      (link) => returnOnFail(
-        this.get(path.slice(0, -1), 'folder'),
-        (parent) => {
-          sortedKeysHandler.move(
-            parent.sortedKeys,
-            link,
-            diff,
-          );
-          return { success: true, data: link };
-        }
-      )
-    );
+  async swapPriority(path: string[], diff: number): Promise<Result<Content<'link'>>> {
+    return await this.get(this.getParentPath(path), 'folder').next(async parent => {
+      return await this.get(path, 'link').next(async link => {
+        sortedKeysHandler.move(parent.sortedKeys, link, diff);
+        return Result.success(link);
+      });
+    });
   }
 
-  // FIX ME
-  // this could also be a toggle like setWatched
-  setPinned(path: string[], val: boolean): ResultObj<Content> {
-    return returnOnFail(
-      this.get(path),
-      (item) => {
-        item.pinned = val;
-        return { success: true, data: item };
-      }
-    );
+  async togglePinned(path: string[], force?: boolean): Promise<Result<Content>> {
+    return await this.get(path).next(item => {
+      item.pinned = force || !item.pinned;
+      return Result.success(item);
+    });
   }
-
-  // FIX ME 
-  // make query function
-  //  - dfs directory from a given path
-  //  - run user defined function on each item
-  //  - build up some accumulator value and return it
-  // This would could be used to help simplify a couple functions like:
-  //  - getAllTags
-  //  - pack
-  //  - would also be very useful if we add a search bar in the future
 }

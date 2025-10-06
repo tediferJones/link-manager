@@ -31,7 +31,7 @@ export default function LinkItem({ link }: { link: Content<'link'> }) {
         <Icon name={ChevronDown} />
       </button>
       <button className='transition-all duration-300'
-        onClick={() => UserVault.setWatched(
+        onClick={() => UserVault.toggleWatched(
           UserVault.getItemPath(link),
           true
         )}

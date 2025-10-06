@@ -22,8 +22,8 @@ export default function DecryptPrompt() {
           UserVault.path,
           password
         );
-        if (!decryptResult.success) {
-          showError(errorId, decryptResult.error);
+        if (!decryptResult.success()) {
+          showError(errorId, decryptResult.error());
         }
       }}
     >

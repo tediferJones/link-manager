@@ -3,7 +3,6 @@ import Icon from '@/components/icon';
 import { closeModal } from '@/components/modal';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
-import throwOnFail from '@/lib/throwOnFail';
 import { Content } from '@/types';
 
 // FIX ME extract autocomplete dropdown logic to its own component
@@ -93,7 +92,7 @@ function updatePathAutocomplete(
 
 function PathAutocomplete({ path, item }: { path: string[], item: Content }) {
   const newSegment = getElement<HTMLInputElement>('#pathInput').value;
-  const folder = throwOnFail(UserVault.get(path, 'folder'));
+  const folder = UserVault.get(path, 'folder').throw().data();
   const opts = Object.keys(folder.contents).filter(title => {
     if (folder.contents[title].type !== 'folder') return;
     if (!title.toLowerCase().includes(newSegment.toLowerCase())) return;
@@ -190,10 +189,9 @@ export default function PathManager({ item }: { item: Content }) {
         disabled
         type='button'
         onClick={async () => {
-          const result = await UserVault.move(
+          (await UserVault.move(
             UserVault.path.concat(item.title), path
-          );
-          if (!result.success) throw Error(result.error);
+          )).throw();
           closeModal();
         }}
       >Move</button>

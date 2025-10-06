@@ -58,15 +58,15 @@ export default function ItemSettings({ item }: { item: Content }) {
                   UserVault.getItemPath(item),
                   password
                 );
-                if (!enableResult.success) throw Error(enableResult.error);
+                if (!enableResult.success()) throw Error(enableResult.error());
               }
               if (title !== item.title) {
                 const result = await UserVault.rename(
+                  UserVault.getItemPath(item),
                   title,
-                  UserVault.getItemPath(item)
                 );
-                if (!result.success) {
-                  return showError(renameErrorId, result.error);
+                if (!result.success()) {
+                  return showError(renameErrorId, result.error());
                 }
               }
               closeModal();
@@ -108,11 +108,11 @@ export default function ItemSettings({ item }: { item: Content }) {
             <label htmlFor='itemSettingsPinned'>Pinned:</label>
             <Checkbox id='itemSettingsPinned'
               checked={item.pinned}
-              onChange={(e) => {
-                UserVault.setPinned(
+              onChange={async (e) => {
+                (await UserVault.togglePinned(
                   UserVault.getItemPath(item),
                   e.currentTarget.checked
-                );
+                )).throw();
               }}
             />
           </div>
@@ -126,10 +126,7 @@ export default function ItemSettings({ item }: { item: Content }) {
       <div className='flex gap-2 justify-stretch'>
         <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
           onClick={async () => {
-            const copyResult = await UserVault.copy(
-              UserVault.getItemPath(item)
-            );
-            if (!copyResult.success) throw Error(copyResult.error);
+            (await UserVault.copy(UserVault.getItemPath(item))).throw();
           }}
         >
           Copy

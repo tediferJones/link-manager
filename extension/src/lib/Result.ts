@@ -1,11 +1,28 @@
 import { ResultObj } from '@/types';
 
-// delete throwOnFail and returnOnFail functions
+class ResultChain<T> implements PromiseLike<Result<T>> {
+  constructor(private promise: Promise<Result<T>>) {}
+
+  next<K>(handler: (data: T) => Result<K> | Promise<Result<K>>): ResultChain<K> {
+    const p = this.promise
+      .then(res => {
+        if (!res.success()) return Result.failure<K>(res.error());
+        return Promise.resolve(handler(res.data()));
+      })
+      .then(r => r);
+    return new ResultChain<K>(p);
+  }
+
+  then<TResult1 = Result<T>, TResult2 = never>(
+    onfulfilled?: (value: Result<T>) => TResult1 | PromiseLike<TResult1>,
+    onrejected?: (reason: any) => TResult2 | PromiseLike<TResult2>
+  ): Promise<TResult1 | TResult2> {
+    return this.promise.then(onfulfilled as any, onrejected as any);
+  }
+}
 
 export default class Result<T> {
-  private constructor(
-    public readonly inner: ResultObj<T>
-  ) {}
+  private constructor(public readonly inner: ResultObj<T>) {}
 
   static success<T>(data: T): Result<T> {
     return new Result<T>({ success: true, data });
@@ -15,14 +32,13 @@ export default class Result<T> {
     return new Result<T>({ success: false, error });
   }
 
-  async next<K>(
+  next<K>(
     handler: (data: T) => Result<K> | Promise<Result<K>>
-  ): Promise<Result<K>> {
-    if (this.inner.success) {
-      return await handler(this.inner.data);
-    } else {
-      return Result.failure(this.inner.error);
-    }
+  ): ResultChain<K> {
+    const p = this.inner.success
+      ? Promise.resolve(handler(this.inner.data))
+      : Promise.resolve(Result.failure<K>(this.inner.error));
+    return new ResultChain<K>(p);
   }
 
   throw(): Result<T> {

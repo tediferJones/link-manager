@@ -1,4 +1,4 @@
-import { FolderKey, Folder as FolderIcon, Lock, Settings2, Pin } from 'lucide';
+import { FolderKey, Folder, Lock, Settings2, Pin } from 'lucide';
 import ItemSettings from '@/components/itemSettings';
 import Icon from '@/components/icon';
 import { openModal } from '@/components/modal';
@@ -16,15 +16,12 @@ export default function FolderItem({ folder }: { folder: Content<'folder'> }) {
           <Icon name={Pin} className='stroke-green-500' />
         )}
         <div className='flex-shrink-0'>
-          <Icon name={folder.encryption ? FolderKey : FolderIcon} />
+          <Icon name={folder.encryption ? FolderKey : Folder} />
         </div>
         <span className='truncate'>{folder.title}</span>
       </button>
       {folder.encryption && <button onClick={async () => {
-        const encryptResult = await UserVault.encrypt(
-          UserVault.getItemPath(folder)
-        );
-        if (!encryptResult.success) throw Error(encryptResult.error);
+        (await UserVault.encrypt(UserVault.getItemPath(folder))).throw();
       }}>
         <Icon name={Lock} />
       </button>}

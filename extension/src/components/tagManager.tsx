@@ -3,7 +3,6 @@ import Icon from '@/components/icon';
 import getElement from '@/lib/getElement';
 import UserVault from '@/lib/userVault';
 import { Content } from '@/types';
-import throwOnFail from '@/lib/throwOnFail';
 
 // FIX ME compare to pathManager, try to make this as similar as possible
 
@@ -30,12 +29,11 @@ export default function TagManager(
               {tag}
               <button type='button'
                 onClick={async () => {
-                  const editTagsResult = await UserVault.editTags(
+                  (await UserVault.editTags(
                     UserVault.path.concat(item.title),
+                    'delete',
                     tag,
-                    'delete'
-                  );
-                  throwOnFail(editTagsResult);
+                  )).throw();
                   refreshTags();
                 }}
               >
@@ -49,13 +47,12 @@ export default function TagManager(
   }
 
   async function addTag(newTag: string) {
-    console.log('newTag', newTag)
-    const editTagsResult = await UserVault.editTags(
+    console.log('newTag', newTag);
+    (await UserVault.editTags(
       UserVault.path.concat(item.title),
+      'add',
       newTag,
-      'add'
-    );
-    throwOnFail(editTagsResult);
+    )).throw();
     const newTagInput = getElement<HTMLInputElement>('#newTagInput');
     newTagInput.value = '';
     const suggestionContainer = getElement('#newTagSuggestions');

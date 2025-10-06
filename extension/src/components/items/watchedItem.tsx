@@ -21,7 +21,7 @@ export default function WatchedItem({ watched }: { watched: Content<'watched'> }
         <span className='truncate'>{watched.title}</span>
       </a>
       <button className='transition-all duration-300 opacity-100'
-        onClick={() => UserVault.setWatched(
+        onClick={() => UserVault.toggleWatched(
           UserVault.getItemPath(watched),
           false
         )}

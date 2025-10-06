@@ -55,15 +55,15 @@ export default function AddItem() {
         const title = titleInput.value;
         const href =  hrefInput.value;
         if (href) {
-          UserVault.add({
+          UserVault.add(UserVault.path, {
             type: 'link',
             title,
             href,
             tags: [],
             pinned: false,
-          }, UserVault.path);
+          });
         } else {
-          UserVault.add({
+          UserVault.add(UserVault.path, {
             type: 'folder',
             title,
             contents: {},
@@ -75,7 +75,7 @@ export default function AddItem() {
               link: [],
               watched: [],
             }
-          }, UserVault.path);
+          });
         }
         closeModal();
 

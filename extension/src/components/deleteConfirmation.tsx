@@ -11,8 +11,7 @@ export default function DeleteConfirmation({ item }: { item: Content }) {
     <form className='flex flex-col gap-4'
       onSubmit={async (e) => {
         e.preventDefault();
-        const result = await UserVault.delete(UserVault.getItemPath(item));
-        if (!result.success) throw Error(result.error);
+        (await UserVault.delete(UserVault.getItemPath(item))).throw();
         closeModal();
       }}
     >
