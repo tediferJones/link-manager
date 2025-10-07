@@ -83,10 +83,18 @@ export default function TagManager(
           id='newTagInput'
           type='text'
           placeholder='New Tag'
-          onInput={(e) => {
+          onInput={async (e) => {
             const newTag = e.currentTarget.value.toLowerCase();
-            const extTags = UserVault.getExistingTags();
-            if (!extTags) return;
+            const extTags = (await UserVault.query(
+              [],
+              (extTags, item) => {
+                if (item.type !== 'encryptedFolder') {
+                  return extTags.concat(item.tags);
+                }
+                return extTags;
+              },
+              [] as string[]
+            )).throw().data();
             // FIX ME
             // filter out tags that are already associate with the item
             const tagSuggestions = extTags.filter(extTag => {

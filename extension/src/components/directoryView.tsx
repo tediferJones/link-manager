@@ -16,7 +16,7 @@ export default function DirectoryView({ item }: { item: Content<'folder' | 'encr
 
   return (
     <>
-      <Breadcrumbs path={UserVault.getViewDir(UserVault.path)} />
+      <Breadcrumbs path={UserVault.getViewPath()} />
       <hr className='border-1' />
       <div className='flex-1 flex flex-col gap-2 overflow-y-auto'
         id='directoryViewItems'

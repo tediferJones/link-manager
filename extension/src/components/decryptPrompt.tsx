@@ -8,7 +8,7 @@ export default function DecryptPrompt() {
   setTimeout(() => {
     getElement<HTMLInputElement>('#directoryViewPassword').focus();
   });
-  const [ title ] = UserVault.getViewDir(UserVault.path).slice(-1);
+  const [ title ] = UserVault.getViewPath().slice(-1);
   const errorId = 'decryptError';
   return (
     <form className='flex flex-col gap-4 items-center defaultBorder w-min m-auto'

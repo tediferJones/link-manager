@@ -60,7 +60,7 @@ export default function App({ type }: { type: SizeTypes }) {
             title='Go to parent directory'
             onClick={() => {
               if (UserVault.path.length) {
-                UserVault.setDir(UserVault.path.slice(0, -1));
+                UserVault.setDir(UserVault.getViewPath().slice(0, -1));
               }
             }}
           >

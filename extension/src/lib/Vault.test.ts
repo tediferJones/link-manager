@@ -1,8 +1,7 @@
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
-// import { testResultFailure, testResultSuccess } from '@/lib/testHelpers';
 import Vault from '@/lib/Vault';
+import Result from '@/lib/Result';
 import { Content } from '@/types';
-import Result from './Result';
 
 function createLink(title: string): Content<'link'> {
   return {
@@ -37,7 +36,7 @@ async function addItem(title: string, type: 'folder' | 'link', path: string[]) {
   }[type];
   const item = itemFactory(title);
   const addedResult = await vault.add(path, item);
-  return { result: addedResult, path: path.concat(item.title) }
+  return { result: addedResult, path: path.concat(item.title) };
 }
 
 function testResultFailure<T>(result: Result<T>) {
@@ -74,14 +73,6 @@ function describeWithSetup(name: string, func: () => void) {
   });
 }
 
-// FIX ME simplify tests and minimize repeated code with helper functions
-// use addItem function
-// stop doing:
-//  const someResult = vault.something();
-//  testResult(someResult);
-// just do:
-// testResult(vault.something());
-
 describeWithSetup('Add item', () => {
   test('Add item to vault', async () => {
     const { result } = await addItem('link1', 'link', rootPath);
@@ -101,39 +92,34 @@ describeWithSetup('Add item', () => {
 
 describeWithSetup('Delete item', () => {
   test('Delete item from vault', async () => {
-    const linkTitle = 'testLink';
-    const { result, path } = await addItem('link1', 'link', rootPath);
+    const linkTitle = 'link1';
+    const { result, path } = await addItem(linkTitle, 'link', rootPath);
     testResultSuccess(result);
-    await vault.delete(path);
+    testResultSuccess(await vault.delete(path));
     expect(vault.root.contents[linkTitle]).toBeUndefined();
     expect(vault.root.sortedKeys.link).not.toContain(linkTitle);
   });
 
   test('Attempt to delete item that does not exist', async () => {
-    const attemptDeleteResult = await vault.delete(dnePath);
-    testResultFailure(attemptDeleteResult);
+    testResultFailure(await vault.delete(dnePath));
   });
 });
 
 describeWithSetup('Get item', async () => {
   test('Get any item', async () => {
     const { path } = await addItem('link1', 'link', rootPath);
-    const itemResult = vault.get(path);
-    testResultSuccess(itemResult);
+    testResultSuccess(vault.get(path));
   });
 
   test('Get typed link', async () => {
-    // await vault.add(createLink(linkTitle), rootPath)
-    const { path } = await addItem('link1', 'link', rootPath)
-    const itemResult = vault.get(path, 'link');
-    const item = testResultSuccess(itemResult);
-    expect(item.type).toBe('link')
+    const { path } = await addItem('link1', 'link', rootPath);
+    const item = testResultSuccess(vault.get(path, 'link'));
+    expect(item.type).toBe('link');
   });
 
   test('Get item with wrong type', async () => {
-    const { path } = await addItem('link1', 'link', rootPath)
-    const itemResult = vault.get(path, 'folder');
-    testResultFailure(itemResult);
+    const { path } = await addItem('link1', 'link', rootPath);
+    testResultFailure(vault.get(path, 'folder'));
   });
 
   // FIX ME should probably make tests for more combos of item types
@@ -148,8 +134,7 @@ describeWithSetup('Rename item', () => {
     const newTitle = `${linkTitle}-RENAMED`
     const renamedPath = rootPath.concat(newTitle);
     testResultSuccess(await vault.rename(path, newTitle));
-    const renamedItemResult = vault.get(renamedPath);
-    const renamedItem = testResultSuccess(renamedItemResult);
+    const renamedItem = testResultSuccess(vault.get(renamedPath));
     expect(renamedItem).toBe(item);
   });
 
@@ -211,8 +196,7 @@ describeWithSetup('Copy item', async () => {
   test('Copy with title collision', async () => {
     const linkTitle = 'link1';
     const { path } = await addItem(linkTitle, 'link', rootPath);
-    const copyResult = await vault.copy(path);
-    testResultSuccess(copyResult);
+    testResultSuccess(await vault.copy(path));
     const copyDuplicateResult = await vault.copy(path);
     const copyDuplicate = testResultSuccess(copyDuplicateResult);
     expect(copyDuplicate.title).toBe(`${linkTitle}-COPY-COPY`);
@@ -240,9 +224,7 @@ describeWithSetup('Toggle encryption status', async () => {
 
   test('Attempt to enable encryption of non-folder item', async () => {
     const { path } = await addItem('link1', 'link', rootPath);
-    testResultFailure(
-      await vault.enableEncryption(path, password)
-    );
+    testResultFailure(await vault.enableEncryption(path, password));
   });
 
   test('Disable encryption', async () => {
@@ -262,341 +244,354 @@ describeWithSetup('Toggle encryption status', async () => {
   );
 });
 
-// describeWithSetup('Encryption', () => {
-//   test('Encrypt folder', async () => {
-//     const folderTitle = 'testFolder';
-//     const pathToFolder = [ folderTitle ];
-//     await vault.add(createFolder(folderTitle), rootPath);
-//     await vault.enableEncryption(pathToFolder, password);
-//     await vault.encrypt(pathToFolder);
-//     const encryptedResult = vault.get(pathToFolder, 'encryptedFolder');
-//     const encrypted = testResultSuccess(encryptedResult);
-//     expect(encrypted.iv).toBeTypeOf('string');
-//     expect(encrypted.salt).toBeTypeOf('string');
-//     expect(encrypted.data).toBeTypeOf('string');
-//     expect('contents' in encrypted).toBe(false);
-//     expect('tags' in encrypted).toBe(false);
-//     expect('sortedKeys' in encrypted).toBe(false);
-//   });
-// 
-//   test('Attempt encrypting folder without encryption enabled', async () => {
-//     const folderTitle = 'testFolder';
-//     const itemPath = [ folderTitle ];
-//     await vault.add(createFolder(folderTitle), rootPath);
-//     const folderResult = vault.get(itemPath);
-//     testResultSuccess(folderResult);
-//     const failedEncryptResult = await vault.encrypt(itemPath);
-//     testResultFailure(failedEncryptResult);
-//   });
-// 
-//   test('Encrypt with preserve arg', async () => {
-//     const folderTitle = 'testFolder';
-//     const itemPath = [ folderTitle ];
-//     await vault.add(createFolder(folderTitle), rootPath);
-//     const enableEncryptionResult = await vault.enableEncryption(
-//       itemPath,
-//       password
-//     );
-//     const encryptableFolder = testResultSuccess(enableEncryptionResult);
-//     const encryptedResult = await vault.encrypt(
-//       itemPath,
-//       'preserve'
-//     );
-//     testResultSuccess(encryptedResult);
-//     const encryptedWithPreserveResult = vault.get(itemPath);
-//     const encryptedWithPreserve = testResultSuccess(
-//       encryptedWithPreserveResult
-//     );
-//     expect(encryptedWithPreserve).toBe(encryptableFolder);
-//   });
-// 
-//   test('Encrypt without preserve arg', async () => {
-//     const folderTitle = 'testFolder';
-//     const itemPath = [ folderTitle ];
-//     await vault.add(createFolder(folderTitle), rootPath);
-//     const enableEncryptionResult = await vault.enableEncryption(
-//       itemPath,
-//       password
-//     );
-//     const encryptableFolder = testResultSuccess(enableEncryptionResult);
-//     const encryptedResult = await vault.encrypt(itemPath);
-//     testResultSuccess(encryptedResult);
-//     // FIX ME make a function that will differentiate between folders and encryptedFolders based on keys
-//     // ideally this should be directly linked to the types file
-//     // maybe create const arrays for these keys and derive types from these arrays?
-//     // then export those arrays and use them here for testing
-//     expect('data' in encryptableFolder).toBe(true);
-//     expect('iv' in encryptableFolder).toBe(true);
-//     expect('salt' in encryptableFolder).toBe(true);
-//     expect('content' in encryptableFolder).toBe(false);
-//     expect('tags' in encryptableFolder).toBe(false);
-//     expect('sortedKeys' in encryptableFolder).toBe(false);
-//   });
-// });
-// 
-// describeWithSetup('Decryption', () => {
-//   test('Decrypt encrypted folder', async () => {
-//     const folderTitle = 'testFolder';
-//     const itemPath = [ folderTitle ];
-//     const addResult = await vault.add(createFolder(folderTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const enableEncryptionResult = await vault.enableEncryption(
-//       itemPath,
-//       password
-//     );
-//     testResultSuccess(enableEncryptionResult);
-//     const encryptedResult = await vault.encrypt(itemPath);
-//     testResultSuccess(encryptedResult);
-//     const decryptedResult = await vault.decrypt(itemPath, password);
-//     const decryptedItem = testResultSuccess(decryptedResult);
-//     expect(decryptedItem.type).toBe('folder');
-//     expect('contents' in decryptedItem).toBe(true);
-//     expect('sortedKeys' in decryptedItem).toBe(true);
-//     expect('tags' in decryptedItem).toBe(true);
-//     expect('encryption' in decryptedItem).toBe(true);
-//     if (decryptedItem.encryption) {
-//       expect('key' in decryptedItem.encryption).toBe(true);
-//       expect('iv' in decryptedItem.encryption).toBe(true);
-//       expect('salt' in decryptedItem.encryption).toBe(true);
-//     }
-//   });
-// 
-//   test('Attempt decrypt with wrong password', async () => {
-//     const folderTitle = 'testFolder';
-//     const itemPath = [ folderTitle ];
-//     const addResult = await vault.add(createFolder(folderTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const enableEncryptionResult = await vault.enableEncryption(
-//       itemPath,
-//       password
-//     );
-//     testResultSuccess(enableEncryptionResult);
-//     const encryptedResult = await vault.encrypt(itemPath);
-//     testResultSuccess(encryptedResult);
-//     const decryptedResult = await vault.decrypt(itemPath, 'wrongPassword');
-//     testResultFailure(decryptedResult);
-//   });
-// 
-//   test('Attempt decrypt with invalid path', async () => {
-//     const decryptResult = await vault.decrypt([ 'invalidPath' ], password);
-//     testResultFailure(decryptResult);
-//   });
-// 
-//   test('Attempt decrypt of not encrypted item', async () => {
-//     const folderTitle = 'testFolder';
-//     const itemPath = [ folderTitle ];
-//     const addResult = await vault.add(createFolder(folderTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const decryptedResult = await vault.decrypt(itemPath, password);
-//     testResultFailure(decryptedResult);
-//   });
-// });
-// 
-// // FIX ME test vault.pack
-// 
-// describeWithSetup('Get view path', () => {
-//   test('Stop at encrypted folder', async () => {
-//     const folderTitle1 = 'folder1';
-//     const addResult1 = await vault.add(createFolder(folderTitle1), rootPath);
-//     testResultSuccess(addResult1);
-//     const folderPath1 = rootPath.concat(folderTitle1);
-//     const folderTitle2 = 'folder2';
-//     const addResult2 = await vault.add(createFolder(folderTitle2), folderPath1);
-//     testResultSuccess(addResult2);
-//     const folderPath2 = folderPath1.concat(folderTitle2);
-//     const folderTitle3 = 'folder3';
-//     const addResult3 = await vault.add(createFolder(folderTitle3), folderPath2);
-//     testResultSuccess(addResult3);
-//     const folderPath3 = folderPath2.concat(folderTitle3);
-// 
-//     const enableEncryptionResult = await vault.enableEncryption(
-//       folderPath2,
-//       password
-//     );
-//     testResultSuccess(enableEncryptionResult);
-//     const encryptResult = await vault.encrypt(folderPath2);
-//     testResultSuccess(encryptResult);
-// 
-//     const viewPath = vault.getViewDir(folderPath3);
-//     expect(viewPath).toEqual(folderPath2);
-//   });
-// 
-//   test('Return full path if no children are encrypted', async () => {
-//     const folderTitle1 = 'folder1';
-//     const addResult1 = await vault.add(createFolder(folderTitle1), rootPath);
-//     testResultSuccess(addResult1);
-//     const folderPath1 = rootPath.concat(folderTitle1);
-//     const folderTitle2 = 'folder2';
-//     const addResult2 = await vault.add(createFolder(folderTitle2), folderPath1);
-//     testResultSuccess(addResult2);
-//     const folderPath2 = folderPath1.concat(folderTitle2);
-//     const folderTitle3 = 'folder3';
-//     const addResult3 = await vault.add(createFolder(folderTitle3), folderPath2);
-//     testResultSuccess(addResult3);
-//     const folderPath3 = folderPath2.concat(folderTitle3);
-//     const viewPath = vault.getViewDir(folderPath3);
-//     expect(viewPath).toEqual(folderPath3);
-//   });
-// });
-// 
-// describeWithSetup('Edit tags', () => {
-//   test('Add tag', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const newTag = 'testTag';
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const addTagResult = await vault.editTags(itemPath, newTag, 'add');
-//     const item = testResultSuccess(addTagResult);
-//     expect(item.tags).toContain(newTag);
-//   });
-// 
-//   test('Remove tag', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const newTag = 'testTag';
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const addTagResult = await vault.editTags(itemPath, newTag, 'add');
-//     const itemWithTag = testResultSuccess(addTagResult);
-//     expect(itemWithTag.tags).toContain(newTag);
-//     const deleteTagResult = await vault.editTags(itemPath, newTag, 'delete');
-//     const itemWithoutTag = testResultSuccess(deleteTagResult);
-//     expect(itemWithoutTag.tags).not.toContain(newTag);
-//   });
-// 
-//   test('Fail to add tag to encrypted folder', async () => {
-//     const folderTitle = 'folderTitle';
-//     const itemPath = [ folderTitle ];
-//     const newTag = 'testTag';
-//     const addResult = await vault.add(createFolder(folderTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const enableEncryptionResult = await vault.enableEncryption(
-//       itemPath,
-//       password
-//     );
-//     testResultSuccess(enableEncryptionResult);
-//     const encryptedResult = await vault.encrypt(itemPath);
-//     testResultSuccess(encryptedResult);
-//     const addTagResult = await vault.editTags(itemPath, newTag, 'add');
-//     testResultFailure(addTagResult);
-//   });
-// });
-// 
-// describeWithSetup('Set watched', () => {
-//   test('Change link to watched', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const setWatchedResult = vault.setWatched(itemPath, true);
-//     const watched = testResultSuccess(setWatchedResult);
-//     expect(watched.type).toBe('watched');
-//     expect('watched' in watched).toBe(true);
-//   });
-// 
-//   test('Change watched to link', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const setWatchedResult = vault.setWatched(itemPath, true);
-//     testResultSuccess(setWatchedResult);
-//     const setLinkResult = vault.setWatched(itemPath, false);
-//     const link = testResultSuccess(setLinkResult);
-//     expect(link.type).toBe('link');
-//     expect('watched' in link).toBe(false);
-//   });
-// 
-//   test('Change link to link', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const setLinkResult = vault.setWatched(itemPath, false);
-//     const link = testResultSuccess(setLinkResult);
-//     expect(link.type).toBe('link');
-//     expect('watched' in link).toBe(false);
-//   });
-// 
-//   test('Change watched to watched', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const setWatchedResult = vault.setWatched(itemPath, true);
-//     testResultSuccess(setWatchedResult);
-//     const setWatchedResult2 = vault.setWatched(itemPath, true);
-//     const watched = testResultSuccess(setWatchedResult2);
-//     expect(watched.type).toBe('watched');
-//     expect('watched' in watched).toBe(true);
-//   });
-// });
-// 
-// describeWithSetup('Swap priority', () => {
-//   test('Swap +1', async () => {
-//     await addItem('link1', 'link', rootPath);
-//     const { path, item } = await addItem('link2', 'link', rootPath);
-//     await addItem('link3', 'link', rootPath);
-//     testResultSuccess(vault.swapPriority(path, 1));
-//     const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
-//     expect(parent.sortedKeys.link[2]).toBe(item.title);
-//   });
-// 
-//   test('Swap -1', async () => {
-//     await addItem('link1', 'link', rootPath);
-//     const { path, item } = await addItem('link2', 'link', rootPath);
-//     await addItem('link3', 'link', rootPath);
-//     testResultSuccess(vault.swapPriority(path, -1));
-//     const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
-//     expect(parent.sortedKeys.link[0]).toBe(item.title);
-//   });
-// 
-//   test('Swap to first position', async () => {
-//     const addedItems = await Promise.all(
-//       Array(5).fill(0).map(async (_, i) => {
-//         return await addItem(`link${i}`, 'link', rootPath);
-//       })
-//     );
-//     const { path, item } = addedItems[4];
-//     testResultSuccess(vault.swapPriority(path, -Infinity));
-//     const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
-//     expect(parent.sortedKeys.link[0]).toBe(item.title);
-//   });
-// 
-//   test('Swap to last position', async () => {
-//     const addedItems = await Promise.all(
-//       Array(5).fill(0).map(async (_, i) => {
-//         return await addItem(`link${i}`, 'link', rootPath);
-//       })
-//     );
-//     const { path, item } = addedItems[1];
-//     testResultSuccess(vault.swapPriority(path, Infinity));
-//     const parent = testResultSuccess(vault.get(path.slice(0, -1), 'folder'));
-//     expect(parent.sortedKeys.link[4]).toBe(item.title);
-//   });
-// });
-// 
-// describeWithSetup('Set pinned', () => {
-//   test('Set pinned true', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const setPinnedResult = vault.setPinned(itemPath, true);
-//     const item = testResultSuccess(setPinnedResult);
-//     expect(item.pinned).toBe(true);
-//   });
-// 
-//   test('Set pinned false', async () => {
-//     const linkTitle = 'linkTitle';
-//     const itemPath = [ linkTitle ];
-//     const addResult = await vault.add(createLink(linkTitle), rootPath);
-//     testResultSuccess(addResult);
-//     const setPinnedTrueResult = vault.setPinned(itemPath, true);
-//     testResultSuccess(setPinnedTrueResult);
-//     const setPinnedFalseResult = vault.setPinned(itemPath, false);
-//     const item = testResultSuccess(setPinnedFalseResult);
-//     expect(item.pinned).toBe(false);
-//   });
-// });
+describeWithSetup('Encryption', () => {
+  test('Encrypt folder', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    await vault.enableEncryption(path, password);
+    await vault.encrypt(path);
+    const encryptedResult = vault.get(path, 'encryptedFolder');
+    const encrypted = testResultSuccess(encryptedResult);
+    expect(encrypted.iv).toBeTypeOf('string');
+    expect(encrypted.salt).toBeTypeOf('string');
+    expect(encrypted.data).toBeTypeOf('string');
+    expect('contents' in encrypted).toBe(false);
+    expect('tags' in encrypted).toBe(false);
+    expect('sortedKeys' in encrypted).toBe(false);
+  });
+
+  test('Attempt encrypting folder without encryption enabled', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    testResultSuccess(vault.get(path));
+    testResultFailure(await vault.encrypt(path));
+  });
+
+  test('Encrypt with preserve arg', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    const enableEncryptionResult = await vault.enableEncryption(
+      path,
+      password
+    );
+    const encryptableFolder = testResultSuccess(enableEncryptionResult);
+    testResultSuccess(await vault.encrypt(path, 'preserve'));
+    const encryptedWithPreserve = testResultSuccess(vault.get(path));
+    expect(encryptedWithPreserve).toBe(encryptableFolder);
+  });
+
+  test('Encrypt without preserve arg', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    const encryptableFolder = testResultSuccess(
+      await vault.enableEncryption(path, password)
+    );
+    testResultSuccess(await vault.encrypt(path));
+    // FIX ME make a function that will differentiate between folders and encryptedFolders based on keys
+    // ideally this should be directly linked to the types file
+    // maybe create const arrays for these keys and derive types from these arrays?
+    // then export those arrays and use them here for testing
+    expect('data' in encryptableFolder).toBe(true);
+    expect('iv' in encryptableFolder).toBe(true);
+    expect('salt' in encryptableFolder).toBe(true);
+    expect('content' in encryptableFolder).toBe(false);
+    expect('tags' in encryptableFolder).toBe(false);
+    expect('sortedKeys' in encryptableFolder).toBe(false);
+  });
+});
+
+describeWithSetup('Decryption', () => {
+  test('Decrypt encrypted folder', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    testResultSuccess(await vault.enableEncryption(path, password));
+    testResultSuccess(await vault.encrypt(path));
+    const decryptedItem = testResultSuccess(
+      await vault.decrypt(path, password)
+    );
+    expect(decryptedItem.type).toBe('folder');
+    expect('contents' in decryptedItem).toBe(true);
+    expect('sortedKeys' in decryptedItem).toBe(true);
+    expect('tags' in decryptedItem).toBe(true);
+    expect('encryption' in decryptedItem).toBe(true);
+    if (decryptedItem.encryption) {
+      expect('key' in decryptedItem.encryption).toBe(true);
+      expect('iv' in decryptedItem.encryption).toBe(true);
+      expect('salt' in decryptedItem.encryption).toBe(true);
+    }
+  });
+
+  test('Attempt decrypt with wrong password', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    testResultSuccess(await vault.enableEncryption(path, password));
+    testResultSuccess(await vault.encrypt(path));
+    testResultFailure(await vault.decrypt(path, 'wrongPassword'));
+  });
+
+  test('Attempt decrypt with invalid path', async () => {
+    testResultFailure(await vault.decrypt(dnePath, password));
+  });
+
+  test('Attempt decrypt of not encrypted item', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    testResultFailure(await vault.decrypt(path, password));
+  });
+});
+
+// FIX ME test vault.pack
+
+describeWithSetup('Get view path', () => {
+  test('Stop at encrypted folder', async () => {
+    const { path: path1 } = await addItem('folder1', 'folder', rootPath);
+    const { path: path2 } = await addItem('folder2', 'folder', path1);
+    const { path: path3 } = await addItem('folder3', 'folder', path2);
+
+    testResultSuccess(await vault.enableEncryption(path2, password));
+    testResultSuccess(await vault.encrypt(path2));
+
+    const viewPath = vault.getViewPath(path3);
+    expect(viewPath).toEqual(path2);
+  });
+
+  test('Return full path if no children are encrypted', async () => {
+    const { path: path1 } = await addItem('folder1', 'folder', rootPath);
+    const { path: path2 } = await addItem('folder2', 'folder', path1);
+    const { path: path3 } = await addItem('folder3', 'folder', path2);
+
+    const viewPath = vault.getViewPath(path3);
+    expect(viewPath).toEqual(path3);
+  });
+});
+
+describeWithSetup('Edit tags', () => {
+  const newTag = 'testTag';
+  test('Add tag', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    const addTagResult = await vault.editTags(path, 'add', newTag);
+    const item = testResultSuccess(addTagResult);
+    expect(item.tags).toContain(newTag);
+  });
+
+  test('Remove tag', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    const addTagResult = await vault.editTags(path, 'add', newTag);
+    const itemWithTag = testResultSuccess(addTagResult);
+    expect(itemWithTag.tags).toContain(newTag);
+    const deleteTagResult = await vault.editTags(path, 'delete', newTag);
+    const itemWithoutTag = testResultSuccess(deleteTagResult);
+    expect(itemWithoutTag.tags).not.toContain(newTag);
+  });
+
+  test('Fail to add tag to encrypted folder', async () => {
+    const { path } = await addItem('folder1', 'folder', rootPath);
+    testResultSuccess(await vault.enableEncryption(path, password));
+    testResultSuccess(await vault.encrypt(path));
+    testResultFailure(await vault.editTags(path, 'add', newTag));
+  });
+
+  // FIX ME add tests for adding/deleting multiple tags at once
+});
+
+describeWithSetup('Set watched', () => {
+  test('Toggle link to watched', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    const setWatchedResult = await vault.toggleWatched(path);
+    const watched = testResultSuccess(setWatchedResult);
+    expect(watched.type).toBe('watched');
+    expect('watched' in watched).toBe(true);
+  });
+
+  test('Toggle watched to link', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    testResultSuccess(await vault.toggleWatched(path));
+    const link = testResultSuccess(await vault.toggleWatched(path));
+    expect(link.type).toBe('link');
+    expect('watched' in link).toBe(false);
+  });
+
+  test('Force change link to watched', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    const forceWatched = testResultSuccess(await vault.toggleWatched(path, true));
+    expect(forceWatched.type).toBe('watched');
+    expect('watched' in forceWatched).toBe(true);
+  });
+
+  test('Force change watched to link', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    const watched = testResultSuccess(await vault.toggleWatched(path));
+    expect(watched.type).toBe('watched');
+    expect('watched' in watched).toBe(true);
+    const forceLink = testResultSuccess(await vault.toggleWatched(path, false));
+    expect(forceLink.type).toBe('link');
+    expect('watched' in forceLink).toBe(false);
+  });
+
+  test('Force link to link', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    const link = testResultSuccess(await vault.toggleWatched(path, false));
+    expect(link.type).toBe('link');
+    expect('watched' in link).toBe(false);
+  });
+
+  test('Force watched to watched', async () => {
+    const { path } = await addItem('link1', 'link', rootPath);
+    testResultSuccess(await vault.toggleWatched(path));
+    const watched = testResultSuccess(await vault.toggleWatched(path, true));
+    expect(watched.type).toBe('watched');
+    expect('watched' in watched).toBe(true);
+  });
+});
+
+describeWithSetup('Swap priority', () => {
+  test('Swap +1', async () => {
+    await addItem('link1', 'link', rootPath);
+    const { path, result } = await addItem('link2', 'link', rootPath);
+    const item = testResultSuccess(result);
+    await addItem('link3', 'link', rootPath);
+    testResultSuccess(await vault.swapPriority(path, 1));
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.link[2]).toBe(item.title);
+  });
+
+  test('Swap -1', async () => {
+    await addItem('link1', 'link', rootPath);
+    const { path, result } = await addItem('link2', 'link', rootPath);
+    const item = testResultSuccess(result);
+    await addItem('link3', 'link', rootPath);
+    testResultSuccess(await vault.swapPriority(path, -1));
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.link[0]).toBe(item.title);
+  });
+
+  test('Swap to first position', async () => {
+    const addedItems = await Promise.all(
+      Array(5).fill(0).map(async (_, i) => {
+        return await addItem(`link${i}`, 'link', rootPath);
+      })
+    );
+    const { path, result } = addedItems[4];
+    const item = testResultSuccess(result);
+    testResultSuccess(await vault.swapPriority(path, -Infinity));
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.link[0]).toBe(item.title);
+  });
+
+  test('Swap to last position', async () => {
+    const addedItems = await Promise.all(
+      Array(5).fill(0).map(async (_, i) => {
+        return await addItem(`link${i}`, 'link', rootPath);
+      })
+    );
+    const { path, result } = addedItems[1];
+    const item = testResultSuccess(result);
+    testResultSuccess(await vault.swapPriority(path, Infinity));
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.link[4]).toBe(item.title);
+  });
+});
+
+describeWithSetup('Set pinned', () => {
+  const linkTitle = 'link1'
+
+  test('Toggle pinned true', async () => {
+    const { path } = await addItem(linkTitle, 'link', rootPath);
+    const item = testResultSuccess(await vault.togglePinned(path));
+    expect(item.pinned).toBe(true);
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.pinned).toContain(linkTitle);
+    expect(parent.sortedKeys.link).not.toContain(linkTitle);
+  });
+
+  test('Toggle pinned false', async () => {
+    const { path } = await addItem(linkTitle, 'link', rootPath);
+    testResultSuccess(await vault.togglePinned(path));
+    const item = testResultSuccess(await vault.togglePinned(path));
+    expect(item.pinned).toBe(false);
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.link).toContain(linkTitle);
+    expect(parent.sortedKeys.pinned).not.toContain(linkTitle);
+  });
+
+  test('Force pinned true', async () => {
+    const { path } = await addItem(linkTitle, 'link', rootPath);
+    const item = testResultSuccess(await vault.togglePinned(path, true));
+    expect(item.pinned).toBe(true);
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.pinned).toContain(linkTitle);
+    expect(parent.sortedKeys.link).not.toContain(linkTitle);
+  });
+
+  test('Force pinned false', async () => {
+    const { path } = await addItem(linkTitle, 'link', rootPath);
+    testResultSuccess(await vault.togglePinned(path));
+    const item = testResultSuccess(await vault.togglePinned(path, false));
+    expect(item.pinned).toBe(false);
+    const parent = testResultSuccess(
+      vault.get(vault.getParentPath(path), 'folder')
+    );
+    expect(parent.sortedKeys.link).toContain(linkTitle);
+    expect(parent.sortedKeys.pinned).not.toContain(linkTitle);
+  });
+});
+
+describeWithSetup('Query vault', () => {
+  test('Basic query', async () => {
+    const { result } = await addItem('link1', 'link', rootPath);
+    const item = testResultSuccess(result)
+    await addItem('folder1', 'folder', rootPath);
+    const queryResult = testResultSuccess(
+      await vault.query(
+        [],
+        (found, item) => item.title === 'link1' ? item : found,
+        {} as Content
+      )
+    );
+    expect(queryResult).toBe(item);
+  });
+
+  test('Crawl nested directories', async () => {
+    const { path: path1 } = await addItem('folder1', 'folder', rootPath);
+    const { path: path2 } = await addItem('folder2', 'folder', path1);
+    const { path: path3 } = await addItem('folder3', 'folder', path1);
+    await addItem('folder4', 'folder', path2);
+    await addItem('link1', 'folder', path2);
+    await addItem('folder5', 'folder', path3)
+    await addItem('link2', 'folder', path3);
+    const queryResult = testResultSuccess(
+      await vault.query(
+        rootPath,
+        (allItems, item) => allItems.concat(item),
+        [] as Content[],
+      )
+    );
+    // 7 items + root = 8
+    expect(queryResult).toHaveLength(8);
+  });
+
+  test('Crawl from given path', async () => {
+    const { path: path1 } = await addItem('folder1', 'folder', rootPath);
+    const { path: path2 } = await addItem('folder2', 'folder', path1);
+    const { path: path3 } = await addItem('folder3', 'folder', path1);
+    await addItem('folder4', 'folder', path2);
+    await addItem('link1', 'folder', path2);
+    await addItem('folder5', 'folder', path3)
+    await addItem('link2', 'folder', path3);
+    const queryResult = testResultSuccess(
+      await vault.query(
+        path2,
+        (allItems, item) => allItems.concat(item),
+        [] as Content[],
+      )
+    );
+    expect(queryResult).toHaveLength(3);
+  });
+});
