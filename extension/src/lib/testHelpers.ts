@@ -1,13 +1,14 @@
 import { expect } from 'vitest';
-import { ResultObj } from '@/types';
+import Result from '@/lib/Result';
 
-export function testResultFailure<T>(result: ResultObj<T>) {
-  expect(result.success).toBe(false);
-  if (!result.success) expect(result.error).toBeTruthy();
+export function testResultFailure<T>(result: Result<T>) {
+  expect(result.success()).toBe(false);
+  expect(result.error()).toBeTypeOf('string');
+  expect(result.error()).toBeTruthy();
 }
 
-export function testResultSuccess<T>(result: ResultObj<T>): T {
-  expect(result.success).toBe(true);
-  if (!result.success) throw Error('Result success failed');
-  return result.data;
+export function testResultSuccess<T>(result: Result<T>) {
+  expect(result.success()).toBe(true);
+  expect(result.data()).toBeDefined();
+  return result.data();
 }

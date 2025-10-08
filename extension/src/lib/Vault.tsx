@@ -1,4 +1,6 @@
 import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
+import modifySortedKeys from '@/lib/vaultUtils/modifySortedKeys';
+import modifyTags from '@/lib/vaultUtils/modifyTags';
 import { compress, decompress } from '@/lib/compression';
 import replaceObject from '@/lib/replaceObject';
 import asyncReduce from '@/lib/asyncReduce';
@@ -10,64 +12,7 @@ import {
   ContentTypes,
   Encrypted,
   SavedVault,
-  SortedKeys,
-  SortedKeysTypes,
-  TagHandler,
 } from '@/types.ts';
-
-function getItemType(item: Content): SortedKeysTypes {
-  if (item.pinned) return 'pinned';
-  if (item.type === 'encryptedFolder') return 'folder';
-  return item.type;
-}
-
-// FIX ME move to its own file
-const sortedKeysHandler = {
-  add: (sortedKeys: SortedKeys, item: Content) => {
-    const key = getItemType(item);
-    if (key === 'pinned' || key === 'folder') {
-      sortedKeys[key].push(item.title);
-    } else {
-      sortedKeys[key].unshift(item.title);
-    }
-    if (key === 'folder') {
-      // FIX ME binary insert would be faster
-      sortedKeys[key].sort(
-        (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
-      );
-    }
-  },
-  delete: (sortedKeys: SortedKeys, item: Content) => {
-    const key = getItemType(item);
-    sortedKeys[key] = sortedKeys[key].filter(title => title !== item.title);
-  },
-  move: (sortedKeys: SortedKeys, item: Content, diff: number) => {
-    const key = getItemType(item);
-    const currentIndex = sortedKeys[key].indexOf(item.title);
-    let newIndex = currentIndex + diff;
-    if (newIndex < 0) {
-      newIndex = 0;
-    } else if (newIndex > sortedKeys[key].length) {
-      newIndex = sortedKeys[key].length - 1;
-    }
-    [ 
-      sortedKeys[key][currentIndex],
-      sortedKeys[key][newIndex],
-    ] = [
-        sortedKeys[key][newIndex],
-        sortedKeys[key][currentIndex],
-      ];
-  }
-}
-
-// FIX ME move to its own file
-const tagHandler: TagHandler = {
-  add: (tags, inputTag) => (
-    tags.includes(inputTag) ? tags : tags.concat(inputTag)
-  ),
-  delete: (tags, inputTag) => tags.filter(tag => tag !== inputTag),
-};
-
 
 // FIX ME rename .ts if we don't reference any components
 
@@ -202,7 +147,7 @@ export default class Vault {
         return Result.failure('Title already used');
       }
       parent.contents[item.title] = item;
-      sortedKeysHandler.add(parent.sortedKeys, item);
+      modifySortedKeys.add(parent.sortedKeys, item);
       await this.saveAndRender();
       return Result.success(item);
     });
@@ -213,7 +158,7 @@ export default class Vault {
     const parentPath = this.getParentPath(path)
     return await this.get(parentPath, 'folder').next(async parent => {
       return await this.get(path).next(item => {
-        sortedKeysHandler.delete(parent.sortedKeys, item);
+        modifySortedKeys.delete(parent.sortedKeys, item);
         delete parent.contents[itemTitle];
         this.saveAndRender();
         return Result.success(item);
@@ -282,7 +227,15 @@ export default class Vault {
           `Folder ${path.join('/')} does not have encryption enabled`
         );
       }
-      const { encryption, contents, pinned, title, tags, sortedKeys } = folder;
+      const {
+        encryption,
+        contents,
+        pinned,
+        title,
+        tags,
+        sortedKeys,
+        date,
+      } = folder;
 
       const packedContents = await asyncReduce(
         Object.keys(contents),
@@ -311,6 +264,7 @@ export default class Vault {
         type: 'encryptedFolder',
         title,
         pinned, 
+        date,
         data: await encrypt(
           JSON.stringify(toEncrypt),
           encryption.key,
@@ -345,6 +299,7 @@ export default class Vault {
         type: 'folder',
         title: encryptedFolder.title,
         pinned: encryptedFolder.pinned,
+        date: encryptedFolder.date,
         ...decryptedData,
         encryption: {
           key: newKey,
@@ -391,7 +346,7 @@ export default class Vault {
     ...tags: string[]
   ): Promise<Result<Content<'folder' | 'link' | 'watched'>>> {
     return this.get(path, 'folder', 'link', 'watched').next(async (item) => {
-      tags.forEach(tag => item.tags = tagHandler[action](item.tags, tag));
+      tags.forEach(tag => item.tags = modifyTags[action](item.tags, tag));
       await this.saveAndRender();
       return Result.success(item);
     });
@@ -407,9 +362,9 @@ export default class Vault {
             type: 'watched',
             watched: Date.now(),
           }
-          if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+          if (!item.pinned) modifySortedKeys.delete(parent.sortedKeys, item);
           replaceObject(item, watched);
-          if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, watched);
+          if (!item.pinned) modifySortedKeys.add(parent.sortedKeys, watched);
         } else if (item.type === 'watched') {
           if (force === true) return Result.success(item);
           // FIX ME typescript will not throw an error if extra items are spread into Content<'link'>
@@ -419,9 +374,9 @@ export default class Vault {
             ...rest,
             type: 'link',
           }
-          if (!item.pinned) sortedKeysHandler.delete(parent.sortedKeys, item);
+          if (!item.pinned) modifySortedKeys.delete(parent.sortedKeys, item);
           replaceObject(item, link);
-          if (!item.pinned) sortedKeysHandler.add(parent.sortedKeys, link);
+          if (!item.pinned) modifySortedKeys.add(parent.sortedKeys, link);
         }
         await this.saveAndRender();
         return Result.success(item);
@@ -433,7 +388,7 @@ export default class Vault {
   async swapPriority(path: string[], diff: number): Promise<Result<Content<'link'>>> {
     return await this.get(this.getParentPath(path), 'folder').next(async parent => {
       return await this.get(path, 'link').next(async link => {
-        sortedKeysHandler.move(parent.sortedKeys, link, diff);
+        modifySortedKeys.move(parent.sortedKeys, link, diff);
         await this.saveAndRender();
         return Result.success(link);
       });
@@ -443,9 +398,9 @@ export default class Vault {
   async togglePinned(path: string[], force?: boolean): Promise<Result<Content>> {
     return await this.get(this.getParentPath(path), 'folder').next(async parent => {
       return await this.get(path).next(async item => {
-        sortedKeysHandler.delete(parent.sortedKeys, item);
+        modifySortedKeys.delete(parent.sortedKeys, item);
         item.pinned = force || !item.pinned;
-        sortedKeysHandler.add(parent.sortedKeys, item);
+        modifySortedKeys.add(parent.sortedKeys, item);
         await this.saveAndRender();
         return Result.success(item);
       });

@@ -13,5 +13,6 @@ export default function getNewVault(): Content<'folder'> {
       link: [],
       watched: [],
     },
+    date: Date.now(),
   }
 }

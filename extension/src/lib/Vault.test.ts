@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
+import { testResultFailure, testResultSuccess } from '@/lib/testHelpers';
 import Vault from '@/lib/Vault';
-import Result from '@/lib/Result';
 import { Content } from '@/types';
 
 function createLink(title: string): Content<'link'> {
@@ -10,6 +10,7 @@ function createLink(title: string): Content<'link'> {
     href: 'https://example.com',
     tags: [],
     pinned: false,
+    date: Date.now(),
   }
 }
 
@@ -26,6 +27,7 @@ function createFolder(title: string): Content<'folder'> {
       link: [],
       watched: [],
     },
+    date: Date.now(),
   }
 }
 
@@ -37,18 +39,6 @@ async function addItem(title: string, type: 'folder' | 'link', path: string[]) {
   const item = itemFactory(title);
   const addedResult = await vault.add(path, item);
   return { result: addedResult, path: path.concat(item.title) };
-}
-
-function testResultFailure<T>(result: Result<T>) {
-  expect(result.success()).toBe(false);
-  expect(result.error()).toBeTypeOf('string');
-  expect(result.error()).toBeTruthy();
-}
-
-function testResultSuccess<T>(result: Result<T>) {
-  expect(result.success()).toBe(true);
-  expect(result.data()).toBeDefined();
-  return result.data();
 }
 
 // FIX ME write function to populate a vault with some generic items

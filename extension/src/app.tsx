@@ -41,6 +41,9 @@ import { SizeTypes } from '@/types';
 //  - add goofy padding to make items appear centered
 //  - only exception could be directoryView component
 // Address FIX ME comments
+// Break up lib/components folder into sub folders
+//  - lib could have utils/, vaultUtils/, etc...
+//  - would be good to break up vault functions too
 
 export default function App({ type }: { type: SizeTypes }) {
   console.log('vault', UserVault);
