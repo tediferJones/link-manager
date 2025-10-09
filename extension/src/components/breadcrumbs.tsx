@@ -1,6 +1,6 @@
 import { ChevronRight, Home } from 'lucide';
 import Icon from '@/components/icon';
-import UserVault from '@/lib/userVault';
+import UserVault from '@/lib/app/userVault';
 
 export default function Breadcrumbs({ path }: { path: string[] }) {
   return (

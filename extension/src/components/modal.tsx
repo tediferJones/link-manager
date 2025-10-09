@@ -1,7 +1,7 @@
 import { ChevronLeft, X } from 'lucide';
 import Icon from '@/components/icon';
-import getElement from '@/lib/getElement';
-import { disableHotKeys, enableHotKeys } from '@/lib/hotkeys';
+import getElement from '@/lib/utils/getElement';
+import { disableHotKeys, enableHotKeys } from '@/lib/app/hotkeys';
 
 const openClasses = [ 'pointer-events-auto', 'opacity-100' ];
 const closedClasses = [ 'pointer-events-none', 'opacity-0' ];

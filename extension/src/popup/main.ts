@@ -1,3 +1,3 @@
-import start from '@/lib/start';
+import start from '@/lib/app/start';
 
 start('popup');

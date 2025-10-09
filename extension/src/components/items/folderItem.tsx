@@ -2,7 +2,7 @@ import { FolderKey, Folder, Lock, Settings2, Pin } from 'lucide';
 import ItemSettings from '@/components/itemSettings';
 import Icon from '@/components/icon';
 import { openModal } from '@/components/modal';
-import UserVault from '@/lib/userVault';
+import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
 export default function FolderItem({ folder }: { folder: Content<'folder'> }) {

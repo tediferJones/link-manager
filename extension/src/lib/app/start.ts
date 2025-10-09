@@ -1,10 +1,10 @@
 import '@/style.css';
 import App from '@/app';
-import setTheme from '@/lib/setTheme';
-import { enableHotKeys } from '@/lib/hotkeys';
-import { SizeTypes } from '@/types';
-import getElement from './getElement';
 import DirectoryView from '@/components/directoryView';
+import getElement from '@/lib/utils/getElement';
+import setTheme from '@/lib/app/setTheme';
+import { enableHotKeys } from '@/lib/app/hotkeys';
+import { SizeTypes } from '@/types';
 
 export default function start(type: SizeTypes) {
   setTheme();

@@ -1,7 +1,7 @@
 import { closeModal } from '@/components/modal';
-import getElement from '@/lib/getElement';
-import UserVault from '@/lib/userVault';
-import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
+import getElement from '@/lib/utils/getElement';
+import UserVault from '@/lib/app/userVault';
+import { inline, btnClassNames } from '@/lib/app/buttonToggleClasses';
 import { Content } from '@/types';
 
 // FIX ME, add better labels now that this is nested

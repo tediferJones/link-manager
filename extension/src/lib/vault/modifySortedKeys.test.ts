@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import modifySortedKeys, { getItemType } from '@/lib/vaultUtils/modifySortedKeys';
+import modifySortedKeys, { getItemType } from '@/lib/vault/modifySortedKeys';
 import { Content, SortedKeys } from '@/types';
 
 const link: Content<'link'> = {

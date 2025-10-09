@@ -1,8 +1,8 @@
 import { ChevronRight, Home } from 'lucide';
 import Icon from '@/components/icon';
 import { closeModal } from '@/components/modal';
-import getElement from '@/lib/getElement';
-import UserVault from '@/lib/userVault';
+import UserVault from '@/lib/app/userVault';
+import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
 
 // FIX ME extract autocomplete dropdown logic to its own component

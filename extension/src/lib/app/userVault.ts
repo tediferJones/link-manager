@@ -1,4 +1,4 @@
-import Vault from '@/lib/Vault';
+import Vault from '@/lib/vault/Vault';
 
 const UserVault = new Vault();
 // FIX ME, for debug purposes only

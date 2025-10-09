@@ -1,6 +1,6 @@
 import ErrorMsg, { hideError, showError } from '@/components/errorMsg';
-import getElement from '@/lib/getElement';
-import UserVault from '@/lib/userVault';
+import getElement from '@/lib/utils/getElement';
+import UserVault from '@/lib/app/userVault';
 
 // FIX ME disable hotkeys when input is focused
 

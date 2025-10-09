@@ -4,7 +4,7 @@ import AddItem from '@/components/addItem';
 import Icon from '@/components/icon';
 import Dropdown from '@/components/dropdown';
 import Loading from '@/components/loading';
-import UserVault from '@/lib/userVault';
+import UserVault from '@/lib/app/userVault';
 import { SizeTypes } from '@/types';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
@@ -44,6 +44,16 @@ import { SizeTypes } from '@/types';
 // Break up lib/components folder into sub folders
 //  - lib could have utils/, vaultUtils/, etc...
 //  - would be good to break up vault functions too
+// If it seems reasonable, write tests for /lib/app
+// Consider creating index.ts files to unify exports for lib folders
+//  - for example: 
+//    - create /lib/utils/index.ts
+//    - do export * from './file.ts'
+//    - then instead of doing:
+//        import { file } from '@/lib/utils/file'
+//        import { file2 } from '@/lib/utils/file2'
+//    - you can just do:
+//        import { file, file2 } from '@/lib/utils'
 
 export default function App({ type }: { type: SizeTypes }) {
   console.log('vault', UserVault);

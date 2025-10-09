@@ -1,4 +1,4 @@
-import getElement from '@/lib/getElement';
+import getElement from '@/lib/utils/getElement';
 
 export function showError(id: string, msg: string) {
   const container = getElement(`#${id}`);

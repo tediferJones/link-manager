@@ -1,7 +1,7 @@
 import { X } from 'lucide';
 import Icon from '@/components/icon';
-import getElement from '@/lib/getElement';
-import UserVault from '@/lib/userVault';
+import getElement from '@/lib/utils/getElement';
+import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
 // FIX ME compare to pathManager, try to make this as similar as possible

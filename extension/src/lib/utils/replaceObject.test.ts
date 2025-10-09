@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import replaceObject from '@/lib/replaceObject';
+import replaceObject from '@/lib/utils/replaceObject';
 
 test('Replace', () => {
   const result = replaceObject({ prop1: true }, { prop2: false });

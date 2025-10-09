@@ -1,5 +1,5 @@
-import getElement from '@/lib/getElement';
-import UserVault from '@/lib/userVault';
+import getElement from '@/lib/utils/getElement';
+import UserVault from '@/lib/app/userVault';
 import { HotKeyOpts } from '@/types';
 
 function isHotKey(key: string): key is HotKeyOpts {

@@ -4,9 +4,9 @@ import PathManager from '@/components/pathManager';
 import TagManager from '@/components/tagManager';
 import Checkbox from '@/components/checkbox';
 import ErrorMsg, { hideError, showError } from '@/components/errorMsg';
-import getElement from '@/lib/getElement';
-import UserVault from '@/lib/userVault';
-import { inline, btnClassNames } from '@/lib/buttonToggleClasses';
+import UserVault from '@/lib/app/userVault';
+import { inline, btnClassNames } from '@/lib/app/buttonToggleClasses';
+import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
 
 function handleInputChange(item: Content) {

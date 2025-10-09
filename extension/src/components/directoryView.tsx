@@ -1,7 +1,7 @@
 import Breadcrumbs from '@/components/breadcrumbs';
 import DecryptPrompt from '@/components/decryptPrompt';
 import RenderItem from '@/components/renderItem';
-import UserVault from '@/lib/userVault';
+import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
 export default function DirectoryView({ item }: { item: Content<'folder' | 'encryptedFolder'> }) {

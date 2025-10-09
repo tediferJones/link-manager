@@ -1,11 +1,16 @@
-import { decrypt, encrypt, getKey, getRandomBase64 } from '@/lib/encryption';
-import modifySortedKeys from '@/lib/vaultUtils/modifySortedKeys';
-import modifyTags from '@/lib/vaultUtils/modifyTags';
-import { compress, decompress } from '@/lib/compression';
-import replaceObject from '@/lib/replaceObject';
-import asyncReduce from '@/lib/asyncReduce';
-import getNewVault from '@/lib/getNewVault';
-import Result from '@/lib/Result';
+import modifySortedKeys from '@/lib/vault/modifySortedKeys';
+import modifyTags from '@/lib/vault/modifyTags';
+import getNewVault from '@/lib/vault/getNewVault';
+import replaceObject from '@/lib/utils/replaceObject';
+import asyncReduce from '@/lib/utils/asyncReduce';
+import {
+  decrypt,
+  encrypt,
+  getKey,
+  getRandomBase64
+} from '@/lib/utils/encryption';
+import { compress, decompress } from '@/lib/utils/compression';
+import Result from '@/lib/vault/Result';
 import {
   Actions,
   Content,
@@ -19,6 +24,10 @@ import {
 // FIX ME where possible don't use title to identify resource
 // pass the item to the method, and then use Object.assign(item, changedItem)
 // this will maintain the reference and allow updates
+
+// FIX ME consider moving saving/loading logic outside of this class
+// this class should take a vault and path as constructor inputs
+// everything else could be handled outside the class
 
 // This class is getting very large
 // consider only keep core functionality in class like add, update, delete, etc...

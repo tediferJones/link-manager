@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import Result from '@/lib/Result';
+import Result from '@/lib/vault/Result';
 
 test('Result success', () => {
   const result = Result.success(0);

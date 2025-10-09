@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
-import { testResultFailure, testResultSuccess } from '@/lib/testHelpers';
-import Vault from '@/lib/Vault';
+import { testResultFailure, testResultSuccess } from '@/lib/test/testResult';
+import Vault from '@/lib/vault/Vault';
 import { Content } from '@/types';
 
 function createLink(title: string): Content<'link'> {

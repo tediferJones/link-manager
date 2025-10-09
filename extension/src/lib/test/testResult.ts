@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import Result from '@/lib/Result';
+import Result from '@/lib/vault/Result';
 
 export function testResultFailure<T>(result: Result<T>) {
   expect(result.success()).toBe(false);

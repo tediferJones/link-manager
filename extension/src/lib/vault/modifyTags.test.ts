@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import modifyTags from '@/lib/vaultUtils/modifyTags';
+import modifyTags from '@/lib/vault/modifyTags';
 
 const testTag = 'newTag';
 
