@@ -1,5 +1,5 @@
 import { X } from 'lucide';
-import Icon from '@/components/icon';
+import { Icon } from '@/components/ui';
 import getElement from '@/lib/utils/getElement';
 import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';

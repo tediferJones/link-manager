@@ -1,6 +1,6 @@
 import { Folder, Link2 } from 'lucide';
-import Icon from '@/components/icon';
 import { closeModal } from '@/components/modal';
+import { Icon } from '@/components/ui';
 import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
 

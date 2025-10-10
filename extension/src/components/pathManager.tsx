@@ -1,5 +1,5 @@
 import { ChevronRight, Home } from 'lucide';
-import Icon from '@/components/icon';
+import { Icon } from '@/components/ui';
 import { closeModal } from '@/components/modal';
 import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';

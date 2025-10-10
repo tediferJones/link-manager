@@ -1,5 +1,5 @@
 import { FolderLock, Pin, Settings2 } from 'lucide';
-import Icon from '@/components/icon';
+import { Icon } from '@/components/ui';
 import ItemSettings from '@/components/itemSettings';
 import { openModal } from '@/components/modal';
 import UserVault from '@/lib/app/userVault';

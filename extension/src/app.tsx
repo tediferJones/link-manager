@@ -1,9 +1,8 @@
 import { ChevronUp, CloudUpload, Link, Plus, User } from 'lucide';
 import { Modal, openModal } from '@/components/modal';
+import { Icon, Loading } from '@/components/ui';
 import AddItem from '@/components/addItem';
-import Icon from '@/components/icon';
 import Dropdown from '@/components/dropdown';
-import Loading from '@/components/loading';
 import UserVault from '@/lib/app/userVault';
 import { SizeTypes } from '@/types';
 
@@ -54,6 +53,8 @@ import { SizeTypes } from '@/types';
 //        import { file2 } from '@/lib/utils/file2'
 //    - you can just do:
 //        import { file, file2 } from '@/lib/utils'
+// In theory, in vite.config.ts test.environment should be jsdom, but some APIs don't exist
+//  - Most test should be fine with jsdom, instead of specifying jsdom maybe specify node where needed
 
 export default function App({ type }: { type: SizeTypes }) {
   console.log('vault', UserVault);
