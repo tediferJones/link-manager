@@ -1,8 +1,7 @@
 import { ChevronUp, CloudUpload, Link, Plus, User } from 'lucide';
 import { Modal, openModal } from '@/components/modal';
-import { Icon, Loading } from '@/components/ui';
+import { Dropdown, Icon, Loading } from '@/components/ui';
 import AddItem from '@/components/addItem';
-import Dropdown from '@/components/dropdown';
 import UserVault from '@/lib/app/userVault';
 import { SizeTypes } from '@/types';
 
@@ -68,6 +67,7 @@ export default function App({ type }: { type: SizeTypes }) {
   return (
     // FIX ME, look at pop up, consider a wider min width (maybe 480px) and settings a min height
     <div className={`p-4 flex flex-col gap-4 m-auto ${typeClasses[type]}`}>
+      {/* // FIX ME consider moving header to its own component */}
       <div className='flex items-center justify-between gap-2'>
         <div className='flex justify-between gap-4'>
           <button className='text-xl defaultBorder'

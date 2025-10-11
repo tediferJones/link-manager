@@ -102,3 +102,7 @@ export type SavedVault = { vault: Content<'folder'>, path: string[] }
 export type TagHandler = {
   [K in Actions]: (tags: string[], inputTag: string) => string[]
 }
+
+export type RenderOpts = {
+  [K in ContentTypes]: (item: Content<K>) => ReactElement
+}

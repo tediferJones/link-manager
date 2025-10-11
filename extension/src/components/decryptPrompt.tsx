@@ -1,4 +1,5 @@
-import ErrorMsg, { hideError, showError } from '@/components/errorMsg';
+import { ErrorMsg } from '@/components/ui';
+import { hideError, showError } from '@/effects';
 import getElement from '@/lib/utils/getElement';
 import UserVault from '@/lib/app/userVault';
 

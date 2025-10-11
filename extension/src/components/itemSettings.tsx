@@ -2,12 +2,12 @@ import { closeModal, navigateModal } from '@/components/modal';
 import DeleteConfirmation from '@/components/deleteConfirmation';
 import PathManager from '@/components/pathManager';
 import TagManager from '@/components/tagManager';
-import ErrorMsg, { hideError, showError } from '@/components/errorMsg';
+import { Checkbox, ErrorMsg } from '@/components/ui';
+import { hideError, showError } from '@/effects';
 import UserVault from '@/lib/app/userVault';
 import { inline, btnClassNames } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
-import { Checkbox } from '@/components/ui';
 
 function handleInputChange(item: Content) {
   const checkForChange: ((item: Content) => boolean)[] = [

@@ -14,7 +14,7 @@ export default function Dropdown(
     children: [ ReactElement, ReactElement ],
   }
 ) {
-  const contentId = `${key}-dropdown`;
+  const contentId = `dropdown-${key}`;
 
   const alignmentClasses = {
     left: [ 'left-0' ],
