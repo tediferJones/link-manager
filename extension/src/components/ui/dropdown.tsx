@@ -15,6 +15,7 @@ export default function Dropdown(
   }
 ) {
   const contentId = `dropdown-${key}`;
+  const containerId = `${contentId}-container`;
 
   const alignmentClasses = {
     left: [ 'left-0' ],
@@ -51,17 +52,18 @@ export default function Dropdown(
   }
 
   function toggleVisibility() {
-    const dropdown = getElement<HTMLDivElement>(`#${contentId}`);
+    const dropdown = getElement(`#${contentId}`);
+    const container = getElement<HTMLDivElement>(`#${containerId}`);
     if (isOpen()) {
       dropdown.classList.add(...toggleClasses.closed);
       dropdown.classList.remove(...toggleClasses.open);
       dropdown.setAttribute('inert', '');
-      removeEventListener('keydown', handleKeydown);
+      container.removeEventListener('keydown', handleKeydown);
     } else {
       dropdown.classList.add(...toggleClasses.open);
       dropdown.classList.remove(...toggleClasses.closed);
       dropdown.removeAttribute('inert');
-      addEventListener('keydown', handleKeydown);
+      container.addEventListener('keydown', handleKeydown);
     }
   }
 
@@ -74,6 +76,7 @@ export default function Dropdown(
 
   return (
     <div className='relative'
+      id={containerId}
       onBlurCapture={(e) => {
         if (!isOpen()) return;
         const next = e.relatedTarget;

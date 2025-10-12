@@ -95,7 +95,7 @@ export default class Vault {
       'encryptedFolder'
     ).throw().data();
     const event = new CustomEvent('render', { detail: item });
-    dispatchEvent(event);
+    window.dispatchEvent(event);
   }
 
   async saveAndRender() {

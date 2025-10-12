@@ -8,7 +8,7 @@ function handleFormInput() {
   const titleElement = getElement<HTMLInputElement>('#titleInput');
   titleElement.setCustomValidity('');
   const title = titleElement.value;
-  const hrefElement = getElement<HTMLInputElement>('#hrefInput')
+  const hrefElement = getElement<HTMLInputElement>('#hrefInput');
   hrefElement.setCustomValidity('');
   const href = hrefElement.value;
   const submitBtn = getElement<HTMLButtonElement>('#submitItemBtn');

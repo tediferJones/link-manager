@@ -66,12 +66,48 @@ describe('Dropdown', () => {
     document.body.appendChild(element);
     const [ trigger, content ] = element.children;
     (trigger as HTMLDivElement).click();
-    // FIX ME there is problem with this event firing
     const event = new KeyboardEvent('keydown', { key: 'Escape' });
-    dispatchEvent(event);
-    console.log(content.className)
-    // expect(content.className).toContain('opacity-0');
-    // expect(content.className).toContain('pointer-events-none');
-    // expect(content.getAttribute('inert')).not.toBeNull();
+    element.dispatchEvent(event);
+    expect(content.className).toContain('opacity-0');
+    expect(content.className).toContain('pointer-events-none');
+    expect(content.getAttribute('inert')).not.toBeNull();
   });
+
+  test('Hide content when focus is lost', () => {
+    const element = (
+      <Dropdown key={key} align='center'>
+        <div>Trigger</div>
+        <div>Content</div>
+      </Dropdown>
+    );
+    document.body.appendChild(element);
+    const [ trigger, content ] = element.children;
+    (trigger as HTMLDivElement).click();
+    const event = new FocusEvent('blur', { bubbles: true, cancelable: true });
+    element.dispatchEvent(event);
+    expect(content.className).toContain('opacity-0');
+    expect(content.className).toContain('pointer-events-none');
+    expect(content.getAttribute('inert')).not.toBeNull();
+  });
+
+  test('Keep content visible when focus changes within dropdown', () => {
+    const element = (
+      <Dropdown key={key} align='center'>
+        <div>Trigger</div>
+        <div>Content</div>
+      </Dropdown>
+    );
+    document.body.appendChild(element);
+    const [ trigger, content ] = element.children;
+    (trigger as HTMLDivElement).click();
+    expect(content.className).toContain('opacity-100');
+    expect(content.className).toContain('pointer-events-auto');
+    expect(content.getAttribute('inert')).toBeNull();
+    (content as HTMLDivElement).click();
+    expect(content.className).toContain('opacity-100');
+    expect(content.className).toContain('pointer-events-auto');
+    expect(content.getAttribute('inert')).toBeNull();
+  });
+
+  test('')
 });
