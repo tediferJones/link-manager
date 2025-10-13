@@ -1,16 +1,23 @@
 import { closeModal } from '@/components/modal';
-import getElement from '@/lib/utils/getElement';
+import { handleDeleteItemInput } from '@/effects/deleteItem';
 import UserVault from '@/lib/app/userVault';
-import { inline, btnClassNames } from '@/lib/app/buttonToggleClasses';
+import { inline } from '@/lib/app/buttonToggleClasses';
+import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
+
+export const submitBtnId = 'deleteItemSubmitBtn';
+export const titleInputId = 'titleInputId';
 
 // FIX ME, add better labels now that this is nested
 // i.e. navigate to this component in the UI, it looks kinda ugly, fix that
-export default function DeleteConfirmation({ item }: { item: Content }) {
+export default function DeleteItem({ item }: { item: Content }) {
   return (
     <form className='flex flex-col gap-4'
       onSubmit={async (e) => {
         e.preventDefault();
+        const titleInput = getElement<HTMLInputElement>(`#${titleInputId}`);
+        // FIX ME maybe add an error message instead of just returning
+        if (titleInput.value !== item.title) return
         (await UserVault.delete(UserVault.getItemPath(item))).throw();
         closeModal();
       }}
@@ -19,24 +26,13 @@ export default function DeleteConfirmation({ item }: { item: Content }) {
       <input className='defaultBorder'
         type='text'
         placeholder='Enter title to confirm deletion'
-        onInput={(e) => {
-          const submitBtn = getElement<HTMLButtonElement>(
-            '#deleteConfirmationSubmitBtn'
-          );
-          const match = e.currentTarget.value === item.title;
-          submitBtn.disabled = !match;
-          const { enabled, disabled } = btnClassNames;
-          if (match) {
-            submitBtn.classList.remove(...disabled);
-            submitBtn.classList.add(...enabled);
-          } else {
-            submitBtn.classList.remove(...enabled);
-            submitBtn.classList.add(...disabled);
-          }
-        }}
+        id={titleInputId}
+        onInput={() => handleDeleteItemInput(item.title)}
+        required
+        // FIX ME maybe add pattern here so that we can use form validation to block submit
       />
       <button className={`bg-red-500 p-2 rounded-lg ${inline('animate')} ${inline('disabled')}`}
-        id='deleteConfirmationSubmitBtn'
+        id={submitBtnId}
         disabled={true}
       >Delete</button>
     </form>

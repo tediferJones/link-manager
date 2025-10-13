@@ -1,7 +1,3 @@
-/**
- * @vitest-environment jsdom
- */
-
 import { beforeEach, describe, expect, test } from 'vitest';
 import { ErrorMsg } from '@/components/ui';
 import { hideError, showError } from '@/effects';

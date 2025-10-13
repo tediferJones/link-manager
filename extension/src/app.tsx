@@ -1,7 +1,7 @@
 import { ChevronUp, CloudUpload, Link, Plus, User } from 'lucide';
 import { Modal, openModal } from '@/components/modal';
 import { Dropdown, Icon, Loading } from '@/components/ui';
-import AddItem from '@/components/addItem';
+import { AddItem } from '@/components/forms';
 import UserVault from '@/lib/app/userVault';
 import { SizeTypes } from '@/types';
 

@@ -1,0 +1,76 @@
+import { closeModal } from '@/components/modal';
+import { handleAddItemInput } from '@/effects';
+import UserVault from '@/lib/app/userVault';
+import getElement from '@/lib/utils/getElement';
+
+// FIX ME consider moving these (and other exported ids) into their own file or something
+// gets a little bit messy here when it comes to using the index.ts file
+// maybe @/lib/constants/ids.ts
+export const titleInputId = 'titleInput';
+export const hrefInputId = 'hrefInput';
+export const submitBtnId = 'addItemSubmitBtn';
+
+export default function AddItem() {
+  setTimeout(() => getElement<HTMLInputElement>(`#${titleInputId}`).focus());
+  return (
+    <form className='w-full grid grid-cols-3 gap-4 transition-all duration-300'
+      onSubmit={(e) => {
+        e.preventDefault();
+        const titleInput = getElement<HTMLInputElement>(`#${titleInputId}`);
+        const hrefInput = getElement<HTMLInputElement>(`#${hrefInputId}`);
+        const title = titleInput.value;
+        const href =  hrefInput.value;
+        if (!title) return;
+        // FIX ME should show an error message if add fails
+        if (href) {
+          UserVault.add(UserVault.path, {
+            type: 'link',
+            title,
+            href,
+            tags: [],
+            pinned: false,
+            date: Date.now(),
+          });
+        } else {
+          UserVault.add(UserVault.path, {
+            type: 'folder',
+            title,
+            contents: {},
+            tags: [],
+            pinned: false,
+            sortedKeys: {
+              pinned: [],
+              folder: [],
+              link: [],
+              watched: [],
+            },
+            date: Date.now(),
+          });
+        }
+        closeModal();
+      }}
+    >
+      <label className='m-auto' htmlFor={titleInputId}>Title</label>
+      <input className='defaultBorder flex-1 col-span-2'
+        type='text'
+        placeholder='Title'
+        id={titleInputId}
+        onInput={handleAddItemInput}
+        required
+      />
+      <label className='m-auto' htmlFor={hrefInputId}>Link</label>
+      <input className='defaultBorder flex-1 col-span-2'
+        type='url'
+        placeholder='Link'
+        id={hrefInputId}
+        onInput={handleAddItemInput}
+      />
+      {/* FIX ME consider adding a 'keep open' checkbox here */}
+      {/* might useful when adding many links */}
+      <button className='!cursor-not-allowed bg-primary text-bg p-2 rounded-lg opacity-50 col-span-full'
+        id={submitBtnId}
+        disabled={true}
+      >Add</button>
+    </form>
+  )
+}

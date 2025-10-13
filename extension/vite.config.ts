@@ -7,7 +7,8 @@ import { name, version } from './package.json'
 
 export default defineConfig({
   test: {
-    setupFiles: './vitest.init.ts'
+    setupFiles: './vitest.init.ts',
+    environment: 'jsdom',
   },
   resolve: {
     alias: {

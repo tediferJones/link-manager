@@ -1,7 +1,3 @@
-/**
- * @vitest-environment jsdom
- */
-
 import { describe, expect, test } from 'vitest';
 import { X } from 'lucide';
 import { Icon } from '@/components/ui';

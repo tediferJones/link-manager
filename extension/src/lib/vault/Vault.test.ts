@@ -1,7 +1,3 @@
-/**
- * @vitest-environment jsdom
- */
-
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
 import { testResultFailure, testResultSuccess } from '@/lib/test/testResult';
 import Vault from '@/lib/vault/Vault';

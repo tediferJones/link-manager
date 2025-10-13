@@ -1,5 +1,5 @@
 import { closeModal, navigateModal } from '@/components/modal';
-import DeleteConfirmation from '@/components/deleteConfirmation';
+import { DeleteItem } from '@/components/forms';
 import PathManager from '@/components/pathManager';
 import TagManager from '@/components/tagManager';
 import { Checkbox, ErrorMsg } from '@/components/ui';
@@ -135,7 +135,7 @@ export default function ItemSettings({ item }: { item: Content }) {
           onClick={() => {
             navigateModal(
               `Delete ${item.title}`,
-              <DeleteConfirmation item={item} />,
+              <DeleteItem item={item} />,
               {
                 title: 'Settings',
                 element: <ItemSettings item={item} />,

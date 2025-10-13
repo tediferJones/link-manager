@@ -1,7 +1,3 @@
-/**
- * @vitest-environment jsdom
- */
-
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { Checkbox } from '@/components/ui';
 import getElement from '@/lib/utils/getElement';
