@@ -1,4 +1,4 @@
-import { ReactElement } from 'jsx-dom';
+import { JSX, ReactElement } from 'jsx-dom';
 
 // FIX ME double check that exported types actually get used somewhere
 // if not used then delete them
@@ -106,3 +106,14 @@ export type TagHandler = {
 export type RenderOpts = {
   [K in ContentTypes]: (item: Content<K>) => ReactElement
 }
+
+export type EventHandler<
+  T extends HTMLElement = HTMLElement,
+  E extends Event = Event,
+> = E & { currentTarget: T }
+
+export type OptPromise<T = any> = Promise<T> | T
+
+export type JSXElement<
+  T extends keyof JSX.IntrinsicElements
+> = JSX.IntrinsicElements[T]

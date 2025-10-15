@@ -20,6 +20,10 @@ import { SizeTypes } from '@/types';
 // https://tailwindcss.com/docs/installation/using-vite
 // https://www.youtube.com/watch?v=bupetqS1SMU
 // see style.css for example primary color definition
+// Tailwind problems could be fixed by creating a new project
+// I have no idea why postcss is installed 
+//  - which could be causing problems with defining special classes like hover:ring
+//  - will also probably need to update LSP
 
 // CHECKLIST
 // Add dates to all items (just created at dates)

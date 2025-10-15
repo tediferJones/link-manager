@@ -5,6 +5,7 @@ import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
 // FIX ME compare to pathManager, try to make this as similar as possible
+// FIX ME rename to TagEditor
 
 export default function TagManager(
   {
@@ -36,7 +37,7 @@ export default function TagManager(
       <Autocomplete id={autocompleteId}
         placeholder='New tag'
         containerClassName='col-span-2'
-        onSubmit={async () => {
+        onSubmit={async (e) => {
           const tagInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
           const newTag = tagInput.value;
           (await UserVault.editTags(
@@ -45,26 +46,24 @@ export default function TagManager(
             newTag,
           )).throw();
           tagInput.value = '';
+          // FIX ME this is hacky and kinda ugly, try to remove type casting
+          (e.target as HTMLFormElement).parentElement?.dispatchEvent(e);
         }}
         generator={async (e) => {
           const tagValue = e.currentTarget.value.toLowerCase();
-          const existingTags = (await UserVault.query(
+          return (await UserVault.query(
             [],
-            (extTags, item) => {
-              if (item.type !== 'encryptedFolder') {
-                return extTags.concat(item.tags);
-              }
-              return extTags;
+            (extTags, queryItem) => {
+              if (queryItem.type === 'encryptedFolder') return extTags;
+              const matchingTags = queryItem.tags.filter(tag => {
+                if (extTags.includes(tag)) return;
+                if (item.tags.includes(tag)) return;
+                return tag.toLowerCase().includes(tagValue);
+              });
+              return extTags.concat(matchingTags);
             },
             [] as string[]
           )).throw().data();
-
-          // FIX ME move this logic into the query function
-          // no need to return results we're just gunna filter out anyways
-          return existingTags.filter(existingTag => {
-            if (item.tags.includes(existingTag)) return;
-            return existingTag.toLowerCase().includes(tagValue);
-          });
         }}
       />
     </form>

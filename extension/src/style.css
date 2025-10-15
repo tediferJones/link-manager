@@ -49,7 +49,34 @@
   }
 }
 
-/* // FIX ME try to make a class called 'border' that will do this */
+@layer utilities {
+  /*
+// FIX ME does not work with things like hover:ring or focus-within:ring
+* */
+  .ring {
+    @apply outline-none;
+    @apply ring-2;
+    @apply ring-primary;
+    @apply ring-offset-2;
+    @apply ring-offset-bg;
+    @apply rounded-lg;
+    @apply transition-all;
+    @apply duration-300;
+  }
+
+  .border {
+    @apply rounded-lg;
+    @apply border-primary;
+    @apply border-2;
+    @apply p-2;
+  }
+}
+
+/*
+// FIX ME try to make a class called 'border' that will do this
+// FIX ME see @layer utilities
+    - if it works replace defaultBorder references and delete this class
+* */
 .defaultBorder {
   @apply rounded-lg;
   @apply border-primary;
@@ -90,9 +117,9 @@ input::placeholder {
 }
 
 /*
-// FIX ME consider using fancy custom outline
+// FIX ME should be able to just recycle ring class here
 * */
-:focus-visible {
+:focus-visible:not(.noFocus) {
   @apply outline-none;
   @apply ring-2;
   @apply ring-primary;
