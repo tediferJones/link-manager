@@ -1,8 +1,6 @@
 import { X } from 'lucide';
 import { Icon } from '@/components/ui';
 
-// FIX ME write tests for this component
-
 export default function Tag(
   {
     value,

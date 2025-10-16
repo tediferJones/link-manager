@@ -5,6 +5,9 @@ import getElement from '@/lib/utils/getElement';
 import { EventHandler, JSXElement, OptPromise } from '@/types';
 
 // FIX ME write tests for this component
+// FIX ME is this component even really necessary?
+// all it does is add an X button for clearing the content
+// makes navigating via tab trickier
 
 export default function Input(
   {

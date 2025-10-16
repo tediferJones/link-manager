@@ -1,5 +1,5 @@
 import { Autocomplete } from '@/components/ui';
-import TagDisplay from '@/components/TagDisplay';
+import TagDisplay from '@/components/tagDisplay';
 import getElement from '@/lib/utils/getElement';
 import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
@@ -16,15 +16,20 @@ export default function TagManager(
 ) {
   const autocompleteId = 'newTagInput';
   const tagContainerId = 'tagsContainer';
+  const tagEditorId = 'tagEditorForm';
+
+  setTimeout(() => {
+    getElement(`#${tagEditorId}`).addEventListener(
+      'autocompleteSubmit',
+      () => getElement(`#${tagContainerId}`).replaceChildren(
+        <TagDisplay item={item} />
+      )
+    );
+  });
 
   return (
     <form className='grid grid-cols-3 gap-4'
-      onSubmitCapture={(e) => {
-        e.preventDefault();
-        getElement(`#${tagContainerId}`).replaceChildren(
-          <TagDisplay item={item} />
-        );
-      }}
+      id={tagEditorId}
     >
       <div className='defaultBorder flex gap-2 flex-wrap justify-stretch col-span-full'
         id={tagContainerId}
@@ -37,7 +42,7 @@ export default function TagManager(
       <Autocomplete id={autocompleteId}
         placeholder='New tag'
         containerClassName='col-span-2'
-        onSubmit={async (e) => {
+        onSubmit={async () => {
           const tagInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
           const newTag = tagInput.value;
           (await UserVault.editTags(
@@ -46,8 +51,6 @@ export default function TagManager(
             newTag,
           )).throw();
           tagInput.value = '';
-          // FIX ME this is hacky and kinda ugly, try to remove type casting
-          (e.target as HTMLFormElement).parentElement?.dispatchEvent(e);
         }}
         generator={async (e) => {
           const tagValue = e.currentTarget.value.toLowerCase();

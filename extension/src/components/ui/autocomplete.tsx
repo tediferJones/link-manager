@@ -2,56 +2,17 @@ import { Input } from '@/components/ui';
 import getElement from '@/lib/utils/getElement';
 import { EventHandler, JSXElement, OptPromise } from '@/types';
 
-// FIX ME getting this working and implement it in tagManager and pathManager
 // FIX ME write tests for this component
-// FIX ME make sure autocomplete container does not overflow screen when too many options are present
-//  - see pathManager for example logic
-//  - add prop for choosing if autocomplete container should go above or below input
-//    - or auto (automatically chose side with most space)
-//    - container height should respond to scrolling
-//  - if autocomplete contents is taller than container add a scollbar
-// FIX ME make a generic event type like MyEvent<HTMLElement>
-//  - would simplify all these Event & { currentTarget: Element } types
-//  - while we're at it maybe make a generic ElementProps type 
-//    - essentially just JSX.IntrinsicElements[T]
 
-// Logic for preventing results overflowing screen
-// function updatePathAutocomplete(
-//   {
-//     path,
-//     item
-//   }: {
-//     path: string[],
-//     item: Content
-//   }
-// ) {
-//   const pathAutocomplete = getElement<HTMLDivElement>('#pathAutocomplete');
-//   pathAutocomplete.innerHTML = '';
-//   pathAutocomplete.appendChild(<PathAutocomplete path={path} item={item} />);
-// 
-//   // FIX ME apply this height limiting stuff to tagManager
-//   const pathInputRect = getElement('#pathInput').getBoundingClientRect();
-//   const modalContentRect = getElement('#modalContent').getBoundingClientRect();
-//   const spaceBelow = modalContentRect.bottom - pathInputRect.bottom;
-//   pathAutocomplete.style.maxHeight = `${spaceBelow - 8}px`;
-//   // FIX ME do we want autocomplete to ever be on top?
-//   // if so it will cover path display
-//   // const spaceAbove = pathInputRect.top - modalContentRect.top;
-//   // if (spaceAbove > spaceBelow) {
-//   //   console.log('render on top')
-//   //   pathAutocomplete.classList.remove('top-full');
-//   //   pathAutocomplete.classList.add('bottom-full');
-//   //   pathAutocomplete.style.maxHeight = `${spaceAbove - 8}px`;
-//   // } else {
-//   //   console.log('render on bottom')
-//   //   pathAutocomplete.classList.remove('bottom-full');
-//   //   pathAutocomplete.classList.add('top-full');
-//   //   pathAutocomplete.style.maxHeight = `${spaceBelow - 8}px`;
-//   // }
-// }
+// FIX ME move to constants folder (if we ended up choosing that route)
+export const classes = {
+  hide: [ 'hidden' ],
+  show: [ 'flex' ],
+}
 
 export default function Autocomplete(
   {
+    direction = 'auto',
     generator,
     onSubmit,
     containerClassName,
@@ -60,20 +21,16 @@ export default function Autocomplete(
     onInput,
     ...inputProps
   }: {
+    id: string,
     generator: (e: EventHandler<HTMLInputElement>) => OptPromise<string[]>,
     onSubmit: (e: EventHandler<HTMLFormElement>) => OptPromise<void>,
+    direction?: 'top' | 'bottom' | 'auto',
+    containerClassName?: string,
     onFocus?: (e: EventHandler<HTMLInputElement>) => OptPromise<void>,
     onInput?: (e: EventHandler<HTMLInputElement>) => OptPromise<void>,
-    containerClassName?: string,
-    id: string,
   } & JSXElement<'input'>
 ) {
   const autocompleteId = `autocomplete-${id}`;
-
-  const classes = {
-    hide: [ 'hidden' ],
-    show: [ 'flex' ],
-  }
 
   // FIX ME does this belong in @/effects?
   // maybe not because it depends on forming a closure around the generator function
@@ -83,20 +40,55 @@ export default function Autocomplete(
     const container = getElement(`#${autocompleteId}`);
     if (children.length) {
       container.replaceChildren(
-        ...children.filter(Boolean).map((tagElement, i) => (
+        ...children.filter(Boolean).map((value, i) => (
           <>
             {i > 0 && <hr />}
-            <button onClick={(e) => {
+            <button className='overflow-x-clip overflow-ellipsis'
+              title={value}
+              onClick={(e) => {
               const input = getElement<HTMLInputElement>(`#${id}`);
               input.value = e.currentTarget.textContent!;
             }}
-            >{tagElement}</button>
+            >{value}</button>
           </>
         ))
       );
     } else {
       container.replaceChildren('No Results');
     }
+    setContainer();
+  }
+
+  // FIX ME optional
+  //  - autocomplete container should react to scrolling (flip direction, change height, etc...)
+  function setContainer() {
+    const heightPadding = 24;
+    const inputRect = getElement(`#${id}`).getBoundingClientRect();
+    // FIX ME make modalContent id a prop, should make testing easier
+    const modalContentRect = document.querySelector('#modalContent')?.getBoundingClientRect();
+    if (!modalContentRect) return;
+    const container = getElement<HTMLDivElement>(`#${autocompleteId}`);
+    
+    const spaceBelow = modalContentRect.bottom - inputRect.bottom;
+    const spaceAbove = inputRect.top - modalContentRect.top;
+    let tempDirection = direction;
+    if (tempDirection === 'auto') {
+      tempDirection = spaceAbove > spaceBelow ? 'top' : 'bottom';
+    };
+    
+    const positionClasses = {
+      top: (container: HTMLDivElement) => {
+        container.classList.remove('top-full');
+        container.classList.add('bottom-full');
+        container.style.maxHeight = `${spaceAbove - heightPadding}px`;
+      },
+      bottom: (container: HTMLDivElement) => {
+        container.classList.remove('bottom-full');
+        container.classList.add('top-full');
+        container.style.maxHeight = `${spaceBelow - heightPadding}px`;
+      },
+    }
+    positionClasses[tempDirection](container);
   }
 
   return (
@@ -104,13 +96,12 @@ export default function Autocomplete(
       onSubmit={async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        // FIX ME, make sure tagEditor still works as expected
-        // const formParent = e.currentTarget.parentElement;
+        const form = e.currentTarget;
         await onSubmit(e);
         getElement(`#${id}`).dispatchEvent(
           new Event('input', { bubbles: true })
         );
-        // if (formParent) formParent.dispatchEvent(e);
+        form.dispatchEvent(new Event('autocompleteSubmit', { bubbles: true }));
       }}
       onBlurCapture={(e) => {
         const next = e.relatedTarget;
