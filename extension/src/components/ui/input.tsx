@@ -1,5 +1,5 @@
 import { X } from 'lucide';
-import Icon from '@/components/ui/icon';
+import { Icon } from '@/components/ui';
 import { inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';
 import { EventHandler, JSXElement, OptPromise } from '@/types';
@@ -8,6 +8,13 @@ import { EventHandler, JSXElement, OptPromise } from '@/types';
 // FIX ME is this component even really necessary?
 // all it does is add an X button for clearing the content
 // makes navigating via tab trickier
+// also breaks autocomplete refocusing input after selection
+
+// FIX ME move to constants
+export const classes = {
+  show: [ 'opacity-100', 'pointer-events-auto' ],
+  hide: [ 'opacity-0', 'pointer-events-none' ],
+}
 
 export default function Input(
   {
@@ -20,8 +27,6 @@ export default function Input(
     onKeyDown?: (e: EventHandler<HTMLInputElement, KeyboardEvent>) => OptPromise<void>,
   } & JSXElement<'input'>
 ) {
-  const focusClasses = [ 'opacity-100' ];
-  const blurClasses = [ 'opacity-0' ];
   const clearBtnId = `input-${id}-clear`;
 
   return (
@@ -30,13 +35,13 @@ export default function Input(
     <div className='border flex gap-2'
       onFocusCapture={() => {
         const clearBtn = getElement(`#${clearBtnId}`);
-        clearBtn.classList.add(...focusClasses);
-        clearBtn.classList.remove(...blurClasses);
+        clearBtn.classList.add(...classes.show);
+        clearBtn.classList.remove(...classes.hide);
       }}
       onBlurCapture={() => {
         const clearBtn = getElement(`#${clearBtnId}`);
-        clearBtn.classList.add(...blurClasses);
-        clearBtn.classList.remove(...focusClasses);
+        clearBtn.classList.add(...classes.hide);
+        clearBtn.classList.remove(...classes.show);
       }}
     >
       <input className={`noFocus outline-none w-full ${className || ''}`}
@@ -50,7 +55,7 @@ export default function Input(
         }} 
         {...inputProps}
       />
-      <button className={`${blurClasses.join(' ')} ${inline('animate')}`}
+      <button className={`${classes.hide.join(' ')} ${inline('animate')}`}
         id={clearBtnId}
         type='button'
         onClick={() => {

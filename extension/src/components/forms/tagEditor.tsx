@@ -1,11 +1,41 @@
-import { Autocomplete } from '@/components/ui';
-import TagDisplay from '@/components/tagDisplay';
+import { Autocomplete, Tag } from '@/components/ui';
 import getElement from '@/lib/utils/getElement';
 import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
 // FIX ME compare to pathManager, try to make this as similar as possible
 // FIX ME rename to TagEditor
+
+function TagDisplay(
+  {
+    item,
+  }: {
+    item: Content<'folder' | 'link' | 'watched'>,
+  }
+) {
+  return !item.tags.length ? (
+    <div className='m-auto text-muted font-bold'>
+      No Tags
+    </div>
+  ) : (
+      <>
+        {item.tags.map(tag => (
+          <Tag value={tag} xFunc={async () => {
+            (await UserVault.editTags(
+              UserVault.getItemPath(item),
+              'delete',
+              tag,
+            )).throw();
+          }} />
+        ))}
+      </>
+    )
+}
+
+// FIX ME move to constants
+export const autocompleteId = 'newTagInput';
+export const tagContainerId = 'tagsContainer';
+export const tagEditorId = 'tagEditorForm';
 
 export default function TagManager(
   {
@@ -14,22 +44,26 @@ export default function TagManager(
     item: Content<'folder' | 'link' | 'watched'>,
   }
 ) {
-  const autocompleteId = 'newTagInput';
-  const tagContainerId = 'tagsContainer';
-  const tagEditorId = 'tagEditorForm';
+  function updateTagDisplay() {
+    getElement(`#${tagContainerId}`).replaceChildren(
+      <TagDisplay item={item} />
+    );
+  }
 
   setTimeout(() => {
     getElement(`#${tagEditorId}`).addEventListener(
       'autocompleteSubmit',
-      () => getElement(`#${tagContainerId}`).replaceChildren(
-        <TagDisplay item={item} />
-      )
+      updateTagDisplay,
     );
   });
 
   return (
     <form className='grid grid-cols-3 gap-4'
       id={tagEditorId}
+      onSubmit={(e) => {
+        e.preventDefault();
+        updateTagDisplay();
+      }}
     >
       <div className='defaultBorder flex gap-2 flex-wrap justify-stretch col-span-full'
         id={tagContainerId}

@@ -2,8 +2,6 @@ import { Input } from '@/components/ui';
 import getElement from '@/lib/utils/getElement';
 import { EventHandler, JSXElement, OptPromise } from '@/types';
 
-// FIX ME write tests for this component
-
 // FIX ME move to constants folder (if we ended up choosing that route)
 export const classes = {
   hide: [ 'hidden' ],
@@ -16,6 +14,7 @@ export default function Autocomplete(
     generator,
     onSubmit,
     containerClassName,
+    boundingId,
     id,
     onFocus,
     onInput,
@@ -25,6 +24,7 @@ export default function Autocomplete(
     generator: (e: EventHandler<HTMLInputElement>) => OptPromise<string[]>,
     onSubmit: (e: EventHandler<HTMLFormElement>) => OptPromise<void>,
     direction?: 'top' | 'bottom' | 'auto',
+    boundingId?: string,
     containerClassName?: string,
     onFocus?: (e: EventHandler<HTMLInputElement>) => OptPromise<void>,
     onInput?: (e: EventHandler<HTMLInputElement>) => OptPromise<void>,
@@ -62,10 +62,10 @@ export default function Autocomplete(
   // FIX ME optional
   //  - autocomplete container should react to scrolling (flip direction, change height, etc...)
   function setContainer() {
+    if (!boundingId) return;
     const heightPadding = 24;
     const inputRect = getElement(`#${id}`).getBoundingClientRect();
-    // FIX ME make modalContent id a prop, should make testing easier
-    const modalContentRect = document.querySelector('#modalContent')?.getBoundingClientRect();
+    const modalContentRect = getElement(`#${boundingId}`).getBoundingClientRect();
     if (!modalContentRect) return;
     const container = getElement<HTMLDivElement>(`#${autocompleteId}`);
     
@@ -98,10 +98,10 @@ export default function Autocomplete(
         e.stopPropagation();
         const form = e.currentTarget;
         await onSubmit(e);
-        getElement(`#${id}`).dispatchEvent(
-          new Event('input', { bubbles: true })
-        );
+        const input = getElement<HTMLInputElement>(`#${id}`)
+        input.dispatchEvent(new Event('input', { bubbles: true }));
         form.dispatchEvent(new Event('autocompleteSubmit', { bubbles: true }));
+        input.focus();
       }}
       onBlurCapture={(e) => {
         const next = e.relatedTarget;

@@ -149,9 +149,7 @@ describe('Autocomplete', () => {
     }
   );
 
-  test('Displays results', () => {
-    // FIX ME get this test working
-    // does not show results, just shows loading text
+  test('Displays results', async () => {
     const results = [ 'item1', 'item2', 'item3' ];
     document.body.appendChild(
       <Autocomplete id={id}
@@ -165,10 +163,9 @@ describe('Autocomplete', () => {
     classes.show.forEach(className => {
       expect(container.className).toContain(className);
     });
-    // console.log(container.textContent)
-    // results.forEach((result, i) => {
-    //   console.log(container.children)
-    //   expect(container.children[i  * 2].textContent).toBe(result);
-    // })
-  })
+    await Promise.resolve();
+    results.forEach((result, i) => {
+      expect(container.children[i  * 2].textContent).toBe(result);
+    });
+  });
 });

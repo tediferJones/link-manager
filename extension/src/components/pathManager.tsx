@@ -51,7 +51,6 @@ export default function PathManger({ item }: { item: Content }) {
             path.concat(item.title),
             UserVault.path.concat(item.title)
           );
-          pathInput.focus();
         }}
         onFocus={(e) => {
           if (e.currentTarget.value === '') {

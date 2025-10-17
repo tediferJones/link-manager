@@ -19,7 +19,12 @@ import {
   SavedVault,
 } from '@/types.ts';
 
-// FIX ME rename .ts if we don't reference any components
+// FIX ME if we end going back to the non class style Result
+// consider just breaking this class up into functions
+// then we would have no classes, just functions
+// since we were gunna break this file up into separate functions and just import them here anyways
+// the full functional approach is just simpler
+// and in this scenario userVault would just be the root folder and path
 
 // FIX ME where possible don't use title to identify resource
 // pass the item to the method, and then use Object.assign(item, changedItem)

@@ -1,7 +1,6 @@
 import { closeModal, navigateModal } from '@/components/modal';
-import { DeleteItem } from '@/components/forms';
+import { DeleteItem, TagEditor } from '@/components/forms';
 import PathManager from '@/components/pathManager';
-import TagManager from '@/components/tagManager';
 import { Checkbox, ErrorMsg } from '@/components/ui';
 import { hideError, showError } from '@/effects';
 import UserVault from '@/lib/app/userVault';
@@ -43,6 +42,7 @@ export default function ItemSettings({ item }: { item: Content }) {
     <div className='flex flex-col gap-4'>
       {(item.type === 'folder' || item.type === 'link' || item.type === 'watched') && (
         <>
+          {/* // FIX ME move this form to its own component, maybe call it editItem? */}
           <form className='grid grid-cols-3 gap-4'
             onSubmit={async (e) => {
               e.preventDefault();
@@ -117,7 +117,7 @@ export default function ItemSettings({ item }: { item: Content }) {
             />
           </div>
           <hr className='col-span-full' />
-          <TagManager item={item} />
+          <TagEditor item={item} />
           <hr className='col-span-full' />
           <PathManager item={item} />
           <hr />
