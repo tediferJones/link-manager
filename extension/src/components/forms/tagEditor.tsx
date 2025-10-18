@@ -4,7 +4,8 @@ import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
 // FIX ME compare to pathManager, try to make this as similar as possible
-// FIX ME rename to TagEditor
+// FIX ME do we want to add a submit button?
+//  - Maybe just a little plus sign next to the input
 
 function TagDisplay(
   {
@@ -37,7 +38,7 @@ export const autocompleteId = 'newTagInput';
 export const tagContainerId = 'tagsContainer';
 export const tagEditorId = 'tagEditorForm';
 
-export default function TagManager(
+export default function TagEditor(
   {
     item,
   }: {

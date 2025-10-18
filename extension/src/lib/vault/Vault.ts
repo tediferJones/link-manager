@@ -7,7 +7,7 @@ import {
   decrypt,
   encrypt,
   getKey,
-  getRandomBase64
+  getRandomBase64,
 } from '@/lib/utils/encryption';
 import { compress, decompress } from '@/lib/utils/compression';
 import Result from '@/lib/vault/Result';

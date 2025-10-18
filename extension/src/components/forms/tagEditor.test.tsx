@@ -6,6 +6,7 @@ import { Content } from '@/types';
 
 // FIX ME write more tests
 
+// FIX ME extract to it's own file, gets reused in pathEditor
 function getTestItem() {
   return {
     type: 'link',
@@ -18,6 +19,8 @@ function getTestItem() {
 }
 
 describe('Tag editor', () => {
+  const testTags = [ 'testTag1', 'testTag2', 'testTag3' ];
+
   beforeEach(() => document.body.innerHTML = '');
 
   test('Display No Tags if tags array is empty', () => {
@@ -27,10 +30,24 @@ describe('Tag editor', () => {
 
   test('Displays tags in the correct order', () => {
     const testItem = getTestItem();
-    const testTags = [ 'testTag1', 'testTag2', 'testTag3' ];
     testItem.tags = testTags;
     document.body.appendChild(<TagEditor item={testItem} />);
     const tagElements = getElement(`#${tagContainerId}`).children;
+    [ ...tagElements ].forEach((tag, i) => {
+      expect(tag.textContent).toBe(testTags[i]);
+    });
+  });
+
+  test('Updates tags when submitted', () => {
+    const splitIndex = 1;
+    const testItem = getTestItem();
+    testItem.tags = testTags.slice(0, splitIndex);
+    document.body.appendChild(<TagEditor item={testItem} />);
+    const tagContainer = getElement(`#${tagContainerId}`);
+    testItem.tags = testItem.tags.concat(testTags.slice(splitIndex));
+    const event = new Event('submit', { bubbles: true, cancelable: true });
+    tagContainer.dispatchEvent(event);
+    const tagElements = tagContainer.children;
     [ ...tagElements ].forEach((tag, i) => {
       expect(tag.textContent).toBe(testTags[i]);
     });

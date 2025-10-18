@@ -17,7 +17,8 @@ export default function Autocomplete(
     boundingId,
     id,
     onFocus,
-    onInput,
+    onKeyDown,
+    // onInput,
     ...inputProps
   }: {
     id: string,
@@ -27,7 +28,8 @@ export default function Autocomplete(
     boundingId?: string,
     containerClassName?: string,
     onFocus?: (e: EventHandler<HTMLInputElement>) => OptPromise<void>,
-    onInput?: (e: EventHandler<HTMLInputElement>) => OptPromise<void>,
+    onKeyDown?: (e: EventHandler<HTMLInputElement, KeyboardEvent>) => OptPromise<void>,
+    // onInput?: (e: EventHandler<HTMLInputElement>) => OptPromise<void>,
   } & JSXElement<'input'>
 ) {
   const autocompleteId = `autocomplete-${id}`;
@@ -99,7 +101,7 @@ export default function Autocomplete(
         const form = e.currentTarget;
         await onSubmit(e);
         const input = getElement<HTMLInputElement>(`#${id}`)
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('keydown', { bubbles: true }));
         form.dispatchEvent(new Event('autocompleteSubmit', { bubbles: true }));
         input.focus();
       }}
@@ -122,8 +124,8 @@ export default function Autocomplete(
           container.classList.remove(...classes.hide);
           container.classList.add(...classes.show);
         }}
-        onInput={(e) => {
-          onInput?.(e);
+        onKeyDown={(e) => {
+          onKeyDown?.(e);
           getResults(e);
         }}
         {...inputProps}

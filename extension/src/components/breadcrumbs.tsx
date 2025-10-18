@@ -17,6 +17,7 @@ export default function Breadcrumbs(
     // if currentDir is [ 'encFolder1', 'encFolder2' ]
     // breadcrumbs will display full path when attempting to decrypt 'encFolder1'
     <div className='flex-shrink-0 flex gap-2 overflow-auto font-semibold no-scrollbar'
+      // FIX ME this id will get duplicated between directoryView and PathEditor
       id='breadcrumbs'
       onWheel={(e) => {
         if (e.deltaY !== 0) {

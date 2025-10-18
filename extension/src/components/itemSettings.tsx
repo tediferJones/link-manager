@@ -1,6 +1,5 @@
 import { closeModal, navigateModal } from '@/components/modal';
-import { DeleteItem, TagEditor } from '@/components/forms';
-import PathManager from '@/components/pathManager';
+import { DeleteItem, TagEditor, PathEditor } from '@/components/forms';
 import { Checkbox, ErrorMsg } from '@/components/ui';
 import { hideError, showError } from '@/effects';
 import UserVault from '@/lib/app/userVault';
@@ -119,7 +118,7 @@ export default function ItemSettings({ item }: { item: Content }) {
           <hr className='col-span-full' />
           <TagEditor item={item} />
           <hr className='col-span-full' />
-          <PathManager item={item} />
+          <PathEditor item={item} path={UserVault.getViewPath()} />
           <hr />
         </>
       )}

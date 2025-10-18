@@ -9,14 +9,42 @@ function pathMatch(path1: string[], path2: string[]) {
   return path1.join('/') === path2.join('/');
 }
 
-export default function PathManger({ item }: { item: Content }) {
-  const path = [ ...UserVault.getViewPath() ];
-  const breadcrumbsId = 'pathEditorBreadcrumbs';
-  const autocompleteId = 'pathEditorAutocomplete';
-  const submitBtnId = 'pathEditorSubmitBtn';
+function updatePath(path: string[], item: Content) {
+  getElement(`#${breadcrumbsId}`).replaceChildren(
+    <Breadcrumbs path={path} />
+  );
+  getElement<HTMLButtonElement>(`#${submitBtnId}`).disabled = pathMatch(
+    path.concat(item.title),
+    UserVault.path.concat(item.title)
+  );
+}
+
+// FIX ME move to constants file
+export const breadcrumbsId = 'pathEditorBreadcrumbs';
+export const autocompleteId = 'pathEditorAutocomplete';
+export const submitBtnId = 'pathEditorSubmitBtn';
+
+export default function PathInput(
+  {
+    item,
+    path
+  }: {
+    item: Content,
+    path: string[]
+  }
+) {
+  path = [ ...path ];
 
   return (
-    <div className='flex flex-col gap-4'>
+    <form className='flex flex-col gap-4'
+      onSubmit={async (e) => {
+        e.preventDefault();
+        (await UserVault.move(
+          UserVault.path.concat(item.title), path
+        )).throw();
+        closeModal();
+      }}
+    >
       <div className='defaultBorder'
         id={breadcrumbsId}
       >
@@ -39,22 +67,20 @@ export default function PathManger({ item }: { item: Content }) {
           });
         }}
         onSubmit={() => {
-          console.log('pathManager submit')
           const pathInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
           path.push(pathInput.value);
           pathInput.value = '';
-          getElement(`#${breadcrumbsId}`).replaceChildren(
-            <Breadcrumbs path={path} />
-          );
-          const submitBtn = getElement<HTMLButtonElement>(`#${submitBtnId}`);
-          submitBtn.disabled = pathMatch(
-            path.concat(item.title),
-            UserVault.path.concat(item.title)
-          );
+          updatePath(path, item);
         }}
         onFocus={(e) => {
           if (e.currentTarget.value === '') {
             e.currentTarget.placeholder = 'Backspace to change parent';
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Backspace' && e.currentTarget.value === '') {
+            path.splice(-1, 1);
+            updatePath(path, item);
           }
         }}
         onBlur={(e) => e.currentTarget.placeholder = 'Change path'}
@@ -62,14 +88,7 @@ export default function PathManger({ item }: { item: Content }) {
       <button className='bg-fg text-bg p-2 rounded-lg disabled:opacity-50 disabled:!cursor-not-allowed'
         id={submitBtnId}
         disabled
-        type='button'
-        onClick={async () => {
-          (await UserVault.move(
-            UserVault.path.concat(item.title), path
-          )).throw();
-          closeModal();
-        }}
       >Move</button>
-    </div>
+    </form>
   )
 }

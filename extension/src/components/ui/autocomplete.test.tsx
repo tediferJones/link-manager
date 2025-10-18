@@ -66,7 +66,7 @@ describe('Autocomplete', () => {
     });
   });
 
-  test('Refresh autocomplete results onInput', () => {
+  test('Refresh autocomplete results onKeydown', () => {
     const func = vi.fn();
     document.body.appendChild(
       <Autocomplete id={id}
@@ -79,7 +79,7 @@ describe('Autocomplete', () => {
     );
     const input = getElement<HTMLInputElement>(`#${id}`);
     input.focus();
-    const event = new Event('input', { bubbles: true, cancelable: true });
+    const event = new Event('keydown', { bubbles: true, cancelable: true });
     input.dispatchEvent(event);
     expect(func).toHaveBeenCalledTimes(2);
   });
