@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PathEditor } from '@/components/forms';
-import { autocompleteId, breadcrumbsId } from '@/components/forms/pathEditor';
+import {
+  autocompleteId,
+  blurredPlaceholder,
+  breadcrumbsId,
+  focusedPlaceholder,
+} from '@/components/forms/pathEditor';
 import getElement from '@/lib/utils/getElement';
-import { Content } from '@/types';
+import { createLink } from '@/lib/test/mockItems';
 
 vi.mock('@/lib/app/userVault', () => ({
   default: {
@@ -17,24 +22,14 @@ vi.mock('@/lib/app/userVault', () => ({
   }
 }));
 
-function getTestItem() {
-  return {
-    type: 'link',
-    title: 'link1',
-    href: 'https://example.com',
-    pinned: false,
-    tags: [] as string[],
-    date: Date.now(),
-  } satisfies Content<'link'>
-}
-
 describe('Path editor', () => {
-  beforeEach(() => document.body.innerHTML = '');
   const testPath = [ 'seg1', 'seg2' ];
+
+  beforeEach(() => document.body.innerHTML = '');
 
   test('Displays correct path', () => {
     document.body.appendChild(
-      <PathEditor item={getTestItem()} path={testPath} />
+      <PathEditor item={createLink('link1')} path={testPath} />
     );
     // FIX ME extract this getBreadcrumbs stuff to a function since it's repeated in almost every test
     const breadcrumbs = getElement(`#${breadcrumbsId}`).firstElementChild!;
@@ -48,7 +43,7 @@ describe('Path editor', () => {
   test('Updates path on autocomplete submit', () => {
     const splitIndex = 1;
     document.body.appendChild(
-      <PathEditor item={getTestItem()} path={testPath.slice(0, splitIndex)} />
+      <PathEditor item={createLink('link1')} path={testPath.slice(0, splitIndex)} />
     );
     const pathInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
     pathInput.value = testPath[splitIndex];
@@ -64,7 +59,7 @@ describe('Path editor', () => {
 
   test('Remove last path segment on backspace if input is empty', () => {
     document.body.appendChild(
-      <PathEditor item={getTestItem()} path={testPath} />
+      <PathEditor item={createLink('link1')} path={testPath} />
     );
     const pathInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
     const event = new KeyboardEvent('keydown', { key: 'Backspace' });
@@ -80,7 +75,7 @@ describe('Path editor', () => {
   test('Do not remove last path segment on backspace if input has a value',
     () => {
       document.body.appendChild(
-        <PathEditor item={getTestItem()} path={testPath} />
+        <PathEditor item={createLink('link1')} path={testPath} />
       );
       const pathInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
       pathInput.value = 'someValue';
@@ -95,5 +90,20 @@ describe('Path editor', () => {
     }
   );
 
-  // FIX ME test if placeholder text changes if focused or not
+  test('Displays correct placeholder when focused', () => {
+    document.body.appendChild(
+      <PathEditor item={createLink('link1')} path={testPath} />
+    );
+    const pathInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
+    pathInput.focus();
+    expect(pathInput.placeholder).toBe(focusedPlaceholder);
+  });
+
+  test('Displays correct placeholder when not focused', () => {
+    document.body.appendChild(
+      <PathEditor item={createLink('link1')} path={testPath} />
+    );
+    const pathInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
+    expect(pathInput.placeholder).toBe(blurredPlaceholder);
+  });
 });

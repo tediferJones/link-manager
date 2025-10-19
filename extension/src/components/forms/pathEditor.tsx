@@ -23,6 +23,8 @@ function updatePath(path: string[], item: Content) {
 export const breadcrumbsId = 'pathEditorBreadcrumbs';
 export const autocompleteId = 'pathEditorAutocomplete';
 export const submitBtnId = 'pathEditorSubmitBtn';
+export const focusedPlaceholder = 'Backspace to change parent';
+export const blurredPlaceholder = 'Change path';
 
 export default function PathInput(
   {
@@ -74,7 +76,7 @@ export default function PathInput(
         }}
         onFocus={(e) => {
           if (e.currentTarget.value === '') {
-            e.currentTarget.placeholder = 'Backspace to change parent';
+            e.currentTarget.placeholder = focusedPlaceholder;
           }
         }}
         onKeyDown={(e) => {
@@ -83,7 +85,7 @@ export default function PathInput(
             updatePath(path, item);
           }
         }}
-        onBlur={(e) => e.currentTarget.placeholder = 'Change path'}
+        onBlur={(e) => e.currentTarget.placeholder = blurredPlaceholder}
       />
       <button className='bg-fg text-bg p-2 rounded-lg disabled:opacity-50 disabled:!cursor-not-allowed'
         id={submitBtnId}

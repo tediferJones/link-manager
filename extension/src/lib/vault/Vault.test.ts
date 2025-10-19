@@ -1,35 +1,8 @@
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
 import { testResultFailure, testResultSuccess } from '@/lib/test/testResult';
+import { createFolder, createLink } from '@/lib/test/mockItems';
 import Vault from '@/lib/vault/Vault';
 import { Content } from '@/types';
-
-function createLink(title: string): Content<'link'> {
-  return {
-    type: 'link',
-    title,
-    href: 'https://example.com',
-    tags: [],
-    pinned: false,
-    date: Date.now(),
-  }
-}
-
-function createFolder(title: string): Content<'folder'> {
-  return {
-    type: 'folder',
-    title,
-    contents: {},
-    tags: [],
-    pinned: false,
-    sortedKeys: {
-      pinned: [],
-      folder: [],
-      link: [],
-      watched: [],
-    },
-    date: Date.now(),
-  }
-}
 
 async function addItem(title: string, type: 'folder' | 'link', path: string[]) {
   const itemFactory = {
