@@ -27,3 +27,17 @@ export function createFolder(title: string): Content<'folder'> {
     date: Date.now(),
   }
 }
+
+export function createEncryptedFolder(
+  title: string
+): Content<'encryptedFolder'> {
+  return {
+    type: 'encryptedFolder',
+    title,
+    data: '',
+    salt: '',
+    iv: '',
+    pinned: false,
+    date: Date.now(),
+  }
+}

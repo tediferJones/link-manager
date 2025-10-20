@@ -1,7 +1,7 @@
 import { FolderKey, Folder, Lock, Settings2, Pin } from 'lucide';
-import ItemSettings from '@/components/itemSettings';
+import { ItemSettings } from '@/components/display';
 import { Icon } from '@/components/ui';
-import { openModal } from '@/components/modal';
+import { openModal } from '@/effects';
 import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 

@@ -1,6 +1,5 @@
-import { closeModal } from '@/components/modal';
 import { ErrorMsg } from '@/components/ui';
-import { hideError, showError } from '@/effects';
+import { hideError, showError, closeModal } from '@/effects';
 import UserVault from '@/lib/app/userVault';
 import { btnClassNames, inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';

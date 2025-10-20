@@ -1,6 +1,11 @@
-import { navigateModal } from '@/components/modal';
-import { DeleteItem, TagEditor, PathEditor, EditItem } from '@/components/forms';
+import {
+  DeleteItem,
+  TagEditor,
+  PathEditor,
+  EditItem,
+} from '@/components/forms';
 import { Checkbox } from '@/components/ui';
+import { openModal } from '@/effects/modal';
 import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
@@ -10,13 +15,17 @@ import { Content } from '@/types';
 //  - D for Delete
 //  - C for Copy
 export default function ItemSettings({ item }: { item: Content }) {
-  // const renameErrorId = 'itemSettingsRenameError';
   return (
     <div className='flex flex-col gap-4'>
       {(item.type !== 'encryptedFolder') && (
         <>
           <EditItem item={item} />
           <hr className='col-span-full' />
+          {/* 
+          // FIX ME move this to own component
+          // Make it extendable, might be a good play to add other checkbox later
+          // maybe name it ItemToggles
+          */}
           <div className='col-span-full flex gap-2 items-center justify-center'>
             <label htmlFor='itemSettingsPinned'>Pinned:</label>
             <Checkbox id='itemSettingsPinned'
@@ -45,16 +54,10 @@ export default function ItemSettings({ item }: { item: Content }) {
           Copy
         </button>
         <button className='flex-1 bg-red-500 p-2 rounded-lg'
-          onClick={() => {
-            navigateModal(
-              `Delete ${item.title}`,
-              <DeleteItem item={item} />,
-              {
-                title: 'Settings',
-                element: <ItemSettings item={item} />,
-              }
-            );
-          }}
+          onClick={() => openModal(
+            `Delete ${item.title}`,
+            <DeleteItem item={item} />
+          )}
         >Delete</button>
       </div>
     </div>

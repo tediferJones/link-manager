@@ -1,9 +1,11 @@
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { DeleteItem } from '@/components/forms';
 import { submitBtnId, titleInputId } from '@/components/forms/deleteItem';
 import { handleDeleteItemInput } from '@/effects';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
+
+vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
 
 describe('Delete item', () => {
   const itemTitle = 'title1';

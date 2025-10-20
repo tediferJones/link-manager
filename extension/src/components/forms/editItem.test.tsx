@@ -1,8 +1,13 @@
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { EditItem } from '@/components/forms';
-import { passwordId, submitBtnId, titleId } from '@/components/forms/editItem';
-import { createFolder, createLink } from '@/lib/test/mockItems';
+import {
+  passwordId,
+  renameErrorId,
+  submitBtnId,
+  titleId
+} from '@/components/forms/editItem';
 import getElement from '@/lib/utils/getElement';
+import { createFolder, createLink } from '@/lib/test/mockItems';
 
 describe('Edit Item', () => {
   const title = 'link1';
@@ -41,5 +46,13 @@ describe('Edit Item', () => {
     expect(submitBtn.disabled).toBe(false);
   });
 
-  // FIX ME test if error message displays if there is a title collision
+  test('Display error on result failure', async () => {
+    document.body.appendChild(<EditItem item={createLink(title)} />);
+    const titleInput = getElement<HTMLInputElement>(`#${titleId}`);
+    titleInput.value = 'someOtherTitle';
+    const event = new Event('submit', { bubbles: true, cancelable: true });
+    titleInput.dispatchEvent(event);
+    const renameError = getElement(`#error-${renameErrorId}`);
+    await vi.waitFor(() => expect(renameError.textContent).toBeTruthy());
+  });
 });

@@ -1,5 +1,5 @@
-import { closeModal } from '@/components/modal';
-import { handleDeleteItemInput } from '@/effects/deleteItem';
+import { handleDeleteItemInput } from '@/effects';
+import { closeModal } from '@/effects/modal';
 import UserVault from '@/lib/app/userVault';
 import { inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';

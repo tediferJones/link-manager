@@ -1,5 +1,4 @@
-import { closeModal } from '@/components/modal';
-import { handleAddItemInput } from '@/effects';
+import { handleAddItemInput, closeModal } from '@/effects';
 import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
 
@@ -22,6 +21,8 @@ export default function AddItem() {
         const href =  hrefInput.value;
         if (!title) return;
         // FIX ME should show an error message if add fails
+        // FIX ME could use createFolder and createLink from @/lib/test/mockItems
+        // if we do use that, move that fill to some other lib folder
         if (href) {
           UserVault.add(UserVault.path, {
             type: 'link',

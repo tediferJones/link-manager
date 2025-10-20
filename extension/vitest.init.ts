@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import * as chrome from 'vitest-chrome/lib/index.esm';
 
 Object.assign(global, chrome);
@@ -12,3 +13,5 @@ if (typeof globalThis.CompressionStream === 'undefined') {
   // Restore Node's native CompressionStream
   globalThis.CompressionStream = (await import('node:zlib') as any).CompressionStream as any;
 }
+
+vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));

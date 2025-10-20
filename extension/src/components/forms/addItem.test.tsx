@@ -1,13 +1,14 @@
 import { describe, test, beforeEach, expect, vi } from 'vitest';
 import { AddItem } from '@/components/forms';
-import { closeModal } from '@/components/modal';
 import { hrefInputId, titleInputId } from '@/components/forms/addItem';
+import { closeModal } from '@/effects/modal';
 import UserVault from '@/lib/app/userVault';
 import Result from '@/lib/vault/Result';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
 
-vi.mock('@/components/modal', () => ({ closeModal: vi.fn() }));
+// FIX ME do not import form @/effects, unless you want to mock everything that gets exported
+vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
 vi.mock('@/lib/app/userVault', () => ({
   default: {
     add: vi.fn().mockResolvedValue({

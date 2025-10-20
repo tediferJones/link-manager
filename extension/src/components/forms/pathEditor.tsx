@@ -1,6 +1,6 @@
 import { Autocomplete } from '@/components/ui';
-import { closeModal } from '@/components/modal';
 import Breadcrumbs from '@/components/breadcrumbs';
+import { closeModal } from '@/effects/modal';
 import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';

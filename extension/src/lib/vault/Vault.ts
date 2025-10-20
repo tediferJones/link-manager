@@ -181,6 +181,8 @@ export default class Vault {
   }
 
   async rename(path: string[], newTitle: string): Promise<Result<Content>> {
+    // FIX ME if title already exists item will just get deleted
+    // this.add will fail but this.delete will have already happened
     const parentPath = path.slice(0, -1);
     return (await this.delete(path)).next((item) => {
       item.title = newTitle;
