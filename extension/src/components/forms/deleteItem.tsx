@@ -1,10 +1,10 @@
-import { handleDeleteItemInput } from '@/effects';
-import { closeModal } from '@/effects/modal';
+import { handleDeleteItemInput, closeModal } from '@/effects';
 import UserVault from '@/lib/app/userVault';
 import { inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
 
+// FIX ME move to constants
 export const submitBtnId = 'deleteItemSubmitBtn';
 export const titleInputId = 'titleInputId';
 

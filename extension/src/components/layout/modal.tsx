@@ -8,6 +8,8 @@ export const closedClasses = [ 'pointer-events-none', 'opacity-0' ];
 export const modalContainerId = 'modalContainer';
 export const modalTitleId = 'modalTitle';
 export const modalContentId = 'modalContent';
+export const modalCardId = 'modalCard';
+export const modalCloseBtnId = 'modalCloseBtn';
 
 // FIX ME write tests
 export default function Modal() {
@@ -18,12 +20,14 @@ export default function Modal() {
     >
       <div className='relative m-auto defaultBorder flex flex-col gap-4 bg-bg max-w-[90vw] max-h-[90vh]'
         onClick={(e) => e.stopPropagation()}
+        id={modalCardId}
       >
         <div className='relative flex items-center gap-4'>
           <div className='absolute left-1/2 -translate-x-1/2 font-semibold text-nowrap'
             id={modalTitleId}
           ></div>
           <button className='defaultBorder ml-auto'
+            id={modalCloseBtnId}
             title='Close'
             onClick={closeModal}
           >
