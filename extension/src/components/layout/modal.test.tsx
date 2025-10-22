@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { Modal } from '@/components/layout';
 import {
   closedClasses,
@@ -11,12 +11,9 @@ import {
 import { closeModal } from '@/effects';
 import getElement from '@/lib/utils/getElement';
 
-describe('Modal', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
-  })
+vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
 
+describe('Modal', () => {
   test('Basic structure and hidden on initial render', () => {
     document.body.appendChild(<Modal />);
     expect(getElement(`#${modalTitleId}`)).toBeTruthy();

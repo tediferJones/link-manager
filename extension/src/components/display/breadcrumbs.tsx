@@ -1,6 +1,7 @@
 import { ChevronRight, Home } from 'lucide';
 import { Icon } from '@/components/ui';
 import UserVault from '@/lib/app/userVault';
+import getElement from '@/lib/utils/getElement';
 
 export default function Breadcrumbs(
   {
@@ -11,6 +12,11 @@ export default function Breadcrumbs(
     navigate?: boolean
   }
 ) {
+  setTimeout(() => {
+    const breadcrumbs = getElement('#breadcrumbs');
+    breadcrumbs.scrollLeft = breadcrumbs.scrollWidth;
+  });
+
   return (
     // FIX ME would be nice to add an ellipse to whichever side is overflowing
     // also display is incorrect when loading nested encrypted folders

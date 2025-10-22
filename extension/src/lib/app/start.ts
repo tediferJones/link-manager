@@ -9,13 +9,9 @@ import { SizeTypes } from '@/types';
 export default function start(type: SizeTypes) {
   setTheme();
   enableHotKeys();
-  addEventListener('render', (e) => {
-    const container = getElement('#directoryView');
-    container.innerHTML = '';
+  window.addEventListener('render', (e) => {
     const item = (e as CustomEvent).detail;
-    container.appendChild(DirectoryView({ item }));
-    const breadcrumbs = getElement('#breadcrumbs');
-    breadcrumbs.scrollLeft = breadcrumbs.scrollWidth;
+    getElement('#directoryView').replaceChildren(DirectoryView({ item }));
   });
-  document.querySelector('#app')!.appendChild(App({ type }));
+  getElement('#app').appendChild(App({ type }));
 }

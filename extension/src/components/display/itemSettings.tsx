@@ -10,6 +10,8 @@ import UserVault from '@/lib/app/userVault';
 import { Content } from '@/types';
 
 // FIX ME autofocus modal when opened
+// FIX ME make labels bigger and thus easier to click on
+//  - right now if you hover over them in inspect mode they occupy the minimum amount of space
 // FIX ME add hotkeys for Move and Delete
 //  - M for Move
 //  - D for Delete

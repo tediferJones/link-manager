@@ -19,7 +19,7 @@ function handleKeyDown(e: KeyboardEvent) {
 // FIX ME pressing escape on a focused input does not cause it to lose focus
 // FIX ME write tests
 export function openModal(title: string, element: Element) {
-  getElement<HTMLDivElement>(`#${modalTitleId}`).innerText = title;
+  getElement<HTMLDivElement>(`#${modalTitleId}`).textContent = title;
   const content = getElement(`#${modalContentId}`);
   content.appendChild(element);
 
@@ -27,7 +27,7 @@ export function openModal(title: string, element: Element) {
   container.classList.remove(...closedClasses);
   container.classList.add(...openClasses);
 
-  addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keydown', handleKeyDown);
   disableHotKeys();
 
   setTimeout(() => {
@@ -41,7 +41,7 @@ export function closeModal() {
   // FIX ME extract animation duration to constants
   // maybe create a duration/animate class to match duration value
   setTimeout(() => {
-    getElement<HTMLDivElement>(`#${modalTitleId}`).innerText = '';
+    getElement<HTMLDivElement>(`#${modalTitleId}`).textContent = '';
     const content = getElement(`#${modalContentId}`);
     content.innerHTML = '';
     content.classList.remove('pr-2');
@@ -51,6 +51,6 @@ export function closeModal() {
   container.classList.remove(...openClasses);
   container.classList.add(...closedClasses);
 
-  removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener('keydown', handleKeyDown);
   enableHotKeys();
 }
