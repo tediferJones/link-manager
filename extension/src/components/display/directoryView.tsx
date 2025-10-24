@@ -31,7 +31,7 @@ export default function DirectoryView(
       <Breadcrumbs path={viewPath} navigate />
       <hr className='border-1' />
       <div className='flex-1 flex flex-col gap-2 overflow-y-auto'
-        id={`#${directoryViewId}`}
+        id={directoryViewId}
       >
         {item.type === 'encryptedFolder' ? <DecryptPrompt path={viewPath} /> :
           !Object.keys(item.contents).length ? 

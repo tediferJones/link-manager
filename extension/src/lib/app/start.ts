@@ -1,9 +1,9 @@
 import '@/style.css';
 import App from '@/app';
-import DirectoryView from '@/components/directoryView';
-import getElement from '@/lib/utils/getElement';
+import { DirectoryView } from '@/components/display';
 import setTheme from '@/lib/app/setTheme';
 import { enableHotKeys } from '@/lib/app/hotkeys';
+import getElement from '@/lib/utils/getElement';
 import { SizeTypes } from '@/types';
 
 export default function start(type: SizeTypes) {
