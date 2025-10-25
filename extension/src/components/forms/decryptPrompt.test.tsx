@@ -56,4 +56,9 @@ describe('Decrypt prompt', () => {
     expect(decryptMock).toHaveBeenCalledWith(testPath, testPassword);
     expect(showError).toHaveBeenCalled();
   });
+
+  test('Displays item title', () => {
+    const element = <DecryptPrompt path={testPath} />;
+    expect(element.textContent).contains(testPath[testPath.length - 1]);
+  });
 });

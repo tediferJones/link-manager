@@ -117,3 +117,7 @@ export type OptPromise<T = any> = Promise<T> | T
 export type JSXElement<
   T extends keyof JSX.IntrinsicElements
 > = JSX.IntrinsicElements[T]
+
+export type MockItemMap = {
+  [K in ContentTypes]: (title: string) => Content<K>
+}

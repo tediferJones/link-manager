@@ -59,6 +59,15 @@ import { SizeTypes } from '@/types';
 //        import { file, file2 } from '@/lib/utils'
 // In theory, in vite.config.ts test.environment should be jsdom, but some APIs don't exist
 //  - Most test should be fine with jsdom, instead of specifying jsdom maybe specify node where needed
+// Make getNewSortedKeys function
+// Consider getting rid of getElement function
+//  - could just be replaced with document.querySelector(someId)!.whateverProp
+//  - only down side is uglier error messages
+//    - getElement tells us exactly what id could not be found
+//    - querySelector just says "cannot read properties of null"
+// Add gestures
+//  - swipe from left to right to navigate up one directory
+//  - pull down from top to refresh
 
 export default function App({ type }: { type: SizeTypes }) {
   console.log('vault', UserVault);

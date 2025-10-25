@@ -7,7 +7,11 @@ import { Content } from '@/types';
 
 // FIX ME move to constants
 export const directoryViewId = 'directoryViewItems';
+export const noContentText = 'No Contents';
+export const paddingClass = 'pr-2';
 
+// FIX ME maybe just rename to Directory
+//  - that fact that it's in the display folder implies it is a view
 export default function DirectoryView(
   {
     item,
@@ -20,7 +24,7 @@ export default function DirectoryView(
   setTimeout(() => {
     const container = getElement(`#${directoryViewId}`);
     if (container && container.scrollHeight > container.clientHeight) {
-      container.classList.add('pr-2');
+      container.classList.add(paddingClass);
     }
   });
 
@@ -36,7 +40,7 @@ export default function DirectoryView(
         {item.type === 'encryptedFolder' ? <DecryptPrompt path={viewPath} /> :
           !Object.keys(item.contents).length ? 
             <div className='text-xl font-bold text-muted text-center m-auto'>
-              No Contents
+              {noContentText}
             </div>
             : [
               ...item.sortedKeys.pinned,
