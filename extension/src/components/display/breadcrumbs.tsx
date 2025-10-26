@@ -3,6 +3,9 @@ import { Icon } from '@/components/ui';
 import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
 
+// FIX ME maybe rename to PathDisplay or just Path
+//  - it's in the display folder so the fact that it's a path is implied
+
 export default function Breadcrumbs(
   {
     path,
