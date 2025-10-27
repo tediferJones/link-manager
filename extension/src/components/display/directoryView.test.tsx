@@ -17,7 +17,7 @@ vi.mock('@/lib/app/userVault', () => ({
   default: { getViewPath: vi.fn(() => []) }
 }));
 
-vi.mock('@/components/renderItem', () => ({
+vi.mock('@/components/display/listItem', () => ({
   default: ({ item }: { item: Content }) => (
     <div class={testListItemClass}>{item.title}</div>
   )

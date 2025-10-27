@@ -1,9 +1,11 @@
 import { Breadcrumbs } from '@/components/display';
 import { DecryptPrompt } from '@/components/forms';
-import RenderItem from '@/components/renderItem';
+// import RenderItem from '@/components/renderItem';
 import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
+// FIX ME import from '@/components/display'
+import ListItem from '@/components/display/listItem';
 
 // FIX ME move to constants
 export const directoryViewId = 'directoryViewItems';
@@ -47,7 +49,8 @@ export default function DirectoryView(
               ...item.sortedKeys.folder,
               ...item.sortedKeys.link,
               ...item.sortedKeys.watched,
-            ].map(title => <RenderItem item={item.contents[title]} />)
+            // ].map(title => <RenderItem item={item.contents[title]} />)
+            ].map(title => <ListItem item={item.contents[title]} />)
         }
       </div>
     </>
