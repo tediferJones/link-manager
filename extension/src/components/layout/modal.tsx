@@ -22,6 +22,11 @@ export default function Modal() {
         onClick={(e) => e.stopPropagation()}
         id={modalCardId}
       >
+        {/*
+        // FIX ME encyptedFolder settings display is borked
+        //  - title overflows container but does not extend container width
+        //  - removing position 'absolute left-1/2 -translate-x-1/2' classes fixes the issue
+        */}
         <div className='relative flex items-center gap-4'>
           <div className='absolute left-1/2 -translate-x-1/2 font-semibold text-nowrap'
             id={modalTitleId}
