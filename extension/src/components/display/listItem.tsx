@@ -21,6 +21,13 @@ import { Content, ContentTypes } from '@/types'
 // FIX ME replace ReactElement types with ReactNode
 //  - ReactNode is superset of ReactElement
 
+// FIX ME maybe splitting this into separate files is not a good idea
+//  - these are all closely related and don't get used individually
+//  - adding a new ContentType will necessitate editing all related files
+//  - if possible move all config objects in this file into one big object
+//    - will probably need a type helper function
+//  - ListItemCore can probably just be moved into ListItem
+
 type ItemIcon = {
   [K in ContentTypes]: (item: Content<K>) => IconNode
 }
