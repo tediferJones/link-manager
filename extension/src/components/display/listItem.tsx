@@ -16,7 +16,7 @@ import { ItemSettings } from '@/components/display';
 import { Icon } from '@/components/ui';
 import { openModal } from '@/effects';
 import UserVault from '@/lib/app/userVault';
-import { Content, ContentTypes } from '@/types'
+import { Content, ContentTypes } from '@/types';
 
 // FIX ME replace ReactElement types with ReactNode
 //  - ReactNode is superset of ReactElement
@@ -28,89 +28,29 @@ import { Content, ContentTypes } from '@/types'
 //    - will probably need a type helper function
 //  - ListItemCore can probably just be moved into ListItem
 
-type ItemIcon = {
-  [K in ContentTypes]: (item: Content<K>) => IconNode
-}
-function ListItemCore<T extends ContentTypes>(
-  {
-    item,
-  }: {
-    item: Content<T>,
+type ItemConfig = {
+  [K in ContentTypes]: (item: Content<K>) => {
+    className?: string,
+    icon: IconNode,
+    wrapper: (props: {
+      item: Content<K>,
+      children: ReactNode,
+      className: string,
+    }) => ReactNode,
+    details?: ReactNode,
   }
-) {
-  const itemIcon: ItemIcon = {
-    link: () => Link2,
-    watched: () => Link2,
-    folder: (item) => item.encryption ? FolderKey : Folder,
-    encryptedFolder: () => FolderLock,
-  };
-
-  return (
-    <>
-      {item.pinned && <Icon name={Pin} className='stroke-green-500' />}
-      <Icon name={itemIcon[item.type](item)} />
-      <span className='truncate'>{item.title}</span>
-    </>
-  )
 }
 
-type ItemWrapper = {
-  [K in ContentTypes]: (
-    item: Content<K>,
-    children: ReactNode,
-    className: string,
-  ) => ReactNode
-}
-function ListItemWrapper<T extends ContentTypes>(
-  {
-    item,
-    children,
-  }: {
-    item: Content<T>,
-    children: ReactNode,
-  }
-) {
-  const itemWrapper: ItemWrapper = {
-    link: (item, children, className) => (
+const itemConfig: ItemConfig = {
+  link: (item) => ({
+    className: 'bg-fg text-bg',
+    icon: Link2,
+    wrapper: ({ item, children, className }) => (
       <a className={className}
         title={`Go to: ${item.href}`} href={item.href}
       >{children}</a>
     ),
-    watched: (item, children, className) => (
-      <a className={className}
-        title={`Go to: ${item.href}`} href={item.href}
-      >{children}</a>
-    ),
-    folder: (item, children, className) => (
-      <button className={className}
-        title={`Enter folder: ${item.title}`}
-        onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
-      >{children}</button>
-    ),
-    encryptedFolder: (item, children, className) => (
-      <button className={className}
-        title={`Enter encrypted folder: ${item.title}`}
-        onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
-      >{children}</button>
-    ),
-  }
-
-  const className = 'flex-1 flex gap-2 cursor-pointer overflow-hidden';
-  return itemWrapper[item.type](item, children, className);
-}
-
-type ItemDetails = {
-  [K in ContentTypes]: (item: Content<K>) => ReactNode
-}
-function ListItemDetails<T extends ContentTypes>(
-  {
-    item,
-  }: {
-    item: Content<T>,
-  }
-) {
-  const itemDetails: ItemDetails = {
-    link: (item) => (
+    details: (
       <>
         {!item.pinned && (
           <>
@@ -127,66 +67,245 @@ function ListItemDetails<T extends ContentTypes>(
           </>
         )}
         <button className='transition-all duration-300'
-          onClick={() => UserVault.toggleWatched(
-            UserVault.getItemPath(item),
-            true
-          )}
+          onClick={() => {
+            UserVault.toggleWatched(UserVault.getItemPath(item), true);
+          }}
         >
           <Icon name={Eye} />
         </button>
       </>
     ),
-    watched: (item) => (
+  }),
+  watched: (item) => ({
+    className: 'bg-fg text-bg opacity-50',
+    icon: Link2,
+    wrapper: ({ item, children, className }) => (
+      <a className={className}
+        title={`Go to: ${item.href}`} href={item.href}
+      >{children}</a>
+    ),
+    details: (
       <button className='transition-all duration-300 opacity-100'
-        onClick={() => UserVault.toggleWatched(
-          UserVault.getItemPath(item),
-          false
-        )}
+        onClick={() => {
+          UserVault.toggleWatched(UserVault.getItemPath(item), false);
+        }}
       >
         <Icon name={Eye} />
       </button>
     ),
-    folder: (item) => (
-      item.encryption && (
-        <button onClick={async () => {
-          (await UserVault.encrypt(UserVault.getItemPath(item))).throw();
-        }}>
-          <Icon name={Lock} />
-        </button>
-      )
+  }),
+  folder: (item) => ({
+    icon: item.encryption ? FolderKey : Folder,
+    wrapper: ({ item, children, className }) => (
+      <button className={className}
+        title={`Enter folder: ${item.title}`}
+        onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
+      >{children}</button>
     ),
-    encryptedFolder: () => undefined,
-  }
-
-  return itemDetails[item.type](item);
+    details: item.encryption && (
+      <button onClick={async () => {
+        (await UserVault.encrypt(UserVault.getItemPath(item))).throw();
+      }}>
+        <Icon name={Lock} />
+      </button>
+    ),
+  }),
+  encryptedFolder: () => ({
+    icon: FolderLock,
+    wrapper: ({ item, children, className }) => (
+      <button className={className}
+        title={`Enter encrypted folder: ${item.title}`}
+        onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
+      >{children}</button>
+    ),
+  }),
 }
 
-type ItemClasses = { [K in ContentTypes]: string }
+function getItemConfig<T extends ContentTypes>(item: Content<T>) {
+  return itemConfig[item.type](item);
+}
+
 export default function ListItem({ item }: { item: Content }) {
-  const itemClasses: ItemClasses = {
-    link: 'bg-fg text-bg',
-    watched: 'bg-fg text-bg opacity-50',
-    folder: '',
-    encryptedFolder: '',
-  }
-
-  const type = item.type[0].toUpperCase() + item.type.slice(1);
-
+  const { wrapper: Wrapper, icon, className, details } = getItemConfig(item);
+  const wrapperClassName = 'flex-1 flex gap-2 cursor-pointer overflow-hidden';
+  const itemType = item.type[0].toUpperCase() + item.type.slice(1);
   return (
-    <div className={`flex gap-4 defaultBorder ${itemClasses[item.type]}`}>
-      <ListItemWrapper item={item}>
-        <ListItemCore item={item} />
-      </ListItemWrapper>
-      <ListItemDetails item={item} />
-      <button title={`${type} Settings: ${item.title}`}
+    <div className={`flex gap-4 defaultBorder ${className}`}>
+      <Wrapper item={item} className={wrapperClassName}>
+        {item.pinned && <Icon name={Pin} className='stroke-green-500' />}
+        <Icon name={icon} />
+        <span className='truncate'>{item.title}</span>
+      </Wrapper>
+      {details}
+      <button title={`${itemType} Settings: ${item.title}`}
         onClick={() => {
-          openModal(`${type} Settings`, <ItemSettings item={item} />)
+          openModal(`${itemType} Settings`, <ItemSettings item={item} />)
         }}>
         <Icon name={Settings2} />
       </button>
     </div>
   )
 }
+
+// type ItemIcon = {
+//   [K in ContentTypes]: (item: Content<K>) => IconNode
+// }
+// function ListItemCore<T extends ContentTypes>(
+//   {
+//     item,
+//   }: {
+//     item: Content<T>,
+//   }
+// ) {
+//   const itemIcon: ItemIcon = {
+//     link: () => Link2,
+//     watched: () => Link2,
+//     folder: (item) => item.encryption ? FolderKey : Folder,
+//     encryptedFolder: () => FolderLock,
+//   };
+// 
+//   return (
+//     <>
+//       {item.pinned && <Icon name={Pin} className='stroke-green-500' />}
+//       <Icon name={itemIcon[item.type](item)} />
+//       <span className='truncate'>{item.title}</span>
+//     </>
+//   )
+// }
+// 
+// type ItemWrapper = {
+//   [K in ContentTypes]: (
+//     item: Content<K>,
+//     children: ReactNode,
+//     className: string,
+//   ) => ReactNode
+// }
+// function ListItemWrapper<T extends ContentTypes>(
+//   {
+//     item,
+//     children,
+//   }: {
+//     item: Content<T>,
+//     children: ReactNode,
+//   }
+// ) {
+//   const itemWrapper: ItemWrapper = {
+//     link: (item, children, className) => (
+//       <a className={className}
+//         title={`Go to: ${item.href}`} href={item.href}
+//       >{children}</a>
+//     ),
+//     watched: (item, children, className) => (
+//       <a className={className}
+//         title={`Go to: ${item.href}`} href={item.href}
+//       >{children}</a>
+//     ),
+//     folder: (item, children, className) => (
+//       <button className={className}
+//         title={`Enter folder: ${item.title}`}
+//         onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
+//       >{children}</button>
+//     ),
+//     encryptedFolder: (item, children, className) => (
+//       <button className={className}
+//         title={`Enter encrypted folder: ${item.title}`}
+//         onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
+//       >{children}</button>
+//     ),
+//   }
+// 
+//   const className = 'flex-1 flex gap-2 cursor-pointer overflow-hidden';
+//   return itemWrapper[item.type](item, children, className);
+// }
+// 
+// type ItemDetails = {
+//   [K in ContentTypes]: (item: Content<K>) => ReactNode
+// }
+// function ListItemDetails<T extends ContentTypes>(
+//   {
+//     item,
+//   }: {
+//     item: Content<T>,
+//   }
+// ) {
+//   const itemDetails: ItemDetails = {
+//     link: (item) => (
+//       <>
+//         {!item.pinned && (
+//           <>
+//             <button onClick={() => {
+//               UserVault.swapPriority(UserVault.getItemPath(item), -1);
+//             }}>
+//               <Icon name={ChevronUp} />
+//             </button>
+//             <button onClick={() => {
+//               UserVault.swapPriority(UserVault.getItemPath(item), 1);
+//             }}>
+//               <Icon name={ChevronDown} />
+//             </button>
+//           </>
+//         )}
+//         <button className='transition-all duration-300'
+//           onClick={() => UserVault.toggleWatched(
+//             UserVault.getItemPath(item),
+//             true
+//           )}
+//         >
+//           <Icon name={Eye} />
+//         </button>
+//       </>
+//     ),
+//     watched: (item) => (
+//       <button className='transition-all duration-300 opacity-100'
+//         onClick={() => UserVault.toggleWatched(
+//           UserVault.getItemPath(item),
+//           false
+//         )}
+//       >
+//         <Icon name={Eye} />
+//       </button>
+//     ),
+//     folder: (item) => (
+//       item.encryption && (
+//         <button onClick={async () => {
+//           (await UserVault.encrypt(UserVault.getItemPath(item))).throw();
+//         }}>
+//           <Icon name={Lock} />
+//         </button>
+//       )
+//     ),
+//     encryptedFolder: () => undefined,
+//   }
+// 
+//   return itemDetails[item.type](item);
+// }
+// 
+// type ItemClasses = { [K in ContentTypes]: string }
+// export default function ListItem({ item }: { item: Content }) {
+//   const itemClasses: ItemClasses = {
+//     link: 'bg-fg text-bg',
+//     watched: 'bg-fg text-bg opacity-50',
+//     folder: '',
+//     encryptedFolder: '',
+//   }
+// 
+//   const type = item.type[0].toUpperCase() + item.type.slice(1);
+// 
+//   return (
+//     <div className={`flex gap-4 defaultBorder ${itemClasses[item.type]}`}>
+//       <ListItemWrapper item={item}>
+//         <ListItemCore item={item} />
+//       </ListItemWrapper>
+//       <ListItemDetails item={item} />
+//       <button title={`${type} Settings: ${item.title}`}
+//         onClick={() => {
+//           openModal(`${type} Settings`, <ItemSettings item={item} />)
+//         }}>
+//         <Icon name={Settings2} />
+//       </button>
+//     </div>
+//   )
+// }
 
 // WORKING but seems overly complicated
 // import {
