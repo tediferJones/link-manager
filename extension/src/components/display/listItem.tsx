@@ -41,6 +41,17 @@ type ItemConfig = {
   }
 }
 
+// FIX ME move to constants
+export const increasePriorityTitle = 'Move up';
+export const decreasePriorityTitle = 'Move down';
+export const toggleWatchedTitle = 'Toggle watched';
+export const lockFolderTitle = 'Re-encrypt folder';
+
+// FIX ME move to @/lib/utils and write some test for it
+export function capitalize(str: string) {
+  return str[0].toUpperCase() + str.slice(1);
+}
+
 const itemConfig: ItemConfig = {
   link: (item) => ({
     className: 'bg-fg text-bg',
@@ -54,19 +65,24 @@ const itemConfig: ItemConfig = {
       <>
         {!item.pinned && (
           <>
-            <button onClick={() => {
-              UserVault.swapPriority(UserVault.getItemPath(item), -1);
-            }}>
+            <button title={decreasePriorityTitle}
+              onClick={() => {
+                UserVault.swapPriority(UserVault.getItemPath(item), -1);
+              }}
+            >
               <Icon name={ChevronUp} />
             </button>
-            <button onClick={() => {
-              UserVault.swapPriority(UserVault.getItemPath(item), 1);
-            }}>
+            <button title={increasePriorityTitle}
+              onClick={() => {
+                UserVault.swapPriority(UserVault.getItemPath(item), 1);
+              }}
+            >
               <Icon name={ChevronDown} />
             </button>
           </>
         )}
         <button className='transition-all duration-300'
+          title={toggleWatchedTitle}
           onClick={() => {
             UserVault.toggleWatched(UserVault.getItemPath(item), true);
           }}
@@ -85,7 +101,8 @@ const itemConfig: ItemConfig = {
       >{children}</a>
     ),
     details: (
-      <button className='transition-all duration-300 opacity-100'
+      <button className='transition-all duration-300'
+        title={toggleWatchedTitle}
         onClick={() => {
           UserVault.toggleWatched(UserVault.getItemPath(item), false);
         }}
@@ -103,9 +120,11 @@ const itemConfig: ItemConfig = {
       >{children}</button>
     ),
     details: item.encryption && (
-      <button onClick={async () => {
-        (await UserVault.encrypt(UserVault.getItemPath(item))).throw();
-      }}>
+      <button title={lockFolderTitle}
+        onClick={async () => {
+          (await UserVault.encrypt(UserVault.getItemPath(item))).throw();
+        }}
+      >
         <Icon name={Lock} />
       </button>
     ),
@@ -128,7 +147,7 @@ function getItemConfig<T extends ContentTypes>(item: Content<T>) {
 export default function ListItem({ item }: { item: Content }) {
   const { wrapper: Wrapper, icon, className, details } = getItemConfig(item);
   const wrapperClassName = 'flex-1 flex gap-2 cursor-pointer overflow-hidden';
-  const itemType = item.type[0].toUpperCase() + item.type.slice(1);
+  const itemType = capitalize(item.type);
   return (
     <div className={`flex gap-4 defaultBorder ${className}`}>
       <Wrapper item={item} className={wrapperClassName}>

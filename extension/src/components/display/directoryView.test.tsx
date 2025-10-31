@@ -17,6 +17,7 @@ vi.mock('@/lib/app/userVault', () => ({
   default: { getViewPath: vi.fn(() => []) }
 }));
 
+// FIX ME can we mock just listItem but import from @/components/display
 vi.mock('@/components/display/listItem', () => ({
   default: ({ item }: { item: Content }) => (
     <div class={testListItemClass}>{item.title}</div>
