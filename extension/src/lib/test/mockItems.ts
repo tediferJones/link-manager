@@ -1,60 +1,6 @@
-import { Content, ContentTypes, MockItemMap } from '@/types'
+import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
+import { Content, ContentTypes, MockItemMap } from '@/types';
 
-export function createFolder(title: string): Content<'folder'> {
-  return {
-    type: 'folder',
-    title,
-    contents: {},
-    tags: [],
-    pinned: false,
-    sortedKeys: {
-      pinned: [],
-      folder: [],
-      link: [],
-      watched: [],
-    },
-    date: Date.now(),
-  }
-}
-
-export function createEncryptedFolder(
-  title: string
-): Content<'encryptedFolder'> {
-  return {
-    type: 'encryptedFolder',
-    title,
-    data: '',
-    salt: '',
-    iv: '',
-    pinned: false,
-    date: Date.now(),
-  }
-}
-
-export function createLink(title: string): Content<'link'> {
-  return {
-    type: 'link',
-    title,
-    href: 'https://example.com',
-    tags: [],
-    pinned: false,
-    date: Date.now(),
-  }
-}
-
-export function createWatched(title: string): Content<'watched'> {
-  return {
-    type: 'watched',
-    title,
-    href: 'https://example.com',
-    tags: [],
-    pinned: false,
-    date: Date.now(),
-    watched: Date.now(),
-  }
-}
-
-// FIX ME replace all other createItem calls with this function
 const items: MockItemMap = {
   link: (title) => ({
     type: 'link',
@@ -78,12 +24,7 @@ const items: MockItemMap = {
     title,
     contents: {},
     tags: [],
-    sortedKeys: {
-      pinned: [],
-      folder: [],
-      link: [],
-      watched: [],
-    },
+    sortedKeys: getNewSortedKeys(),
     pinned: false,
     date: Date.now(),
   }),

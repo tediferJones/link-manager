@@ -1,6 +1,7 @@
 import { handleAddItemInput, closeModal } from '@/effects';
 import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
+import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
 
 // FIX ME consider moving these (and other exported ids) into their own file or something
 // gets a little bit messy here when it comes to using the index.ts file
@@ -39,12 +40,7 @@ export default function AddItem() {
             contents: {},
             tags: [],
             pinned: false,
-            sortedKeys: {
-              pinned: [],
-              folder: [],
-              link: [],
-              watched: [],
-            },
+            sortedKeys: getNewSortedKeys(),
             date: Date.now(),
           });
         }

@@ -6,6 +6,7 @@ import UserVault from '@/lib/app/userVault';
 import Result from '@/lib/vault/Result';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
+import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
 
 // FIX ME do not import form @/effects, unless you want to mock everything that gets exported
 vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
@@ -55,12 +56,7 @@ describe('Add item', () => {
       type: 'folder',
       title,
       contents: {},
-      sortedKeys: {
-        pinned: [],
-        link: [],
-        folder: [],
-        watched: [],
-      },
+      sortedKeys: getNewSortedKeys(),
       tags: [],
       pinned: false,
     } as Omit<Content<'folder'>, 'date'>));

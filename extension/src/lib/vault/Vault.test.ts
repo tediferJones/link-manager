@@ -1,15 +1,11 @@
 import { beforeEach, afterEach, describe, expect, test } from 'vitest';
 import { testResultFailure, testResultSuccess } from '@/lib/test/testResult';
-import { createFolder, createLink } from '@/lib/test/mockItems';
+import { mockItem } from '@/lib/test/mockItems';
 import Vault from '@/lib/vault/Vault';
 import { Content } from '@/types';
 
 async function addItem(title: string, type: 'folder' | 'link', path: string[]) {
-  const itemFactory = {
-    folder: createFolder,
-    link: createLink,
-  }[type];
-  const item = itemFactory(title);
+  const item = mockItem(type, title);
   const addedResult = await vault.add(path, item);
   return { result: addedResult, path: path.concat(item.title) };
 }

@@ -80,6 +80,9 @@ export type SizeTypes = 'sidepanel' | 'popup' | 'website'
 
 export type Encrypted = Pick<Folder, 'contents' | 'tags' | 'sortedKeys'>
 
+// FIX ME maybe change to add and remove
+// delete is a keyword and create is associated with delete (like CRUD)
+// add and remove are associated and neither are keywords
 export type Actions = 'add' | 'delete'
 
 // export type SortedKeysHandler = {

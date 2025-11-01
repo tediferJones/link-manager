@@ -1,53 +1,14 @@
 import { describe, expect, test } from 'vitest';
 import modifySortedKeys, { getItemType } from '@/lib/vault/modifySortedKeys';
-import { Content, SortedKeys } from '@/types';
+import { mockItem, togglePinned } from '@/lib/test/mockItems';
+import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
+import { SortedKeys } from '@/types';
 
-const link: Content<'link'> = {
-  type: 'link',
-  title: 'link1',
-  href: 'https://example.com',
-  tags: [],
-  pinned: false,
-  date: Date.now(),
-}
-
-const watched: Content<'watched'> = {
-  ...link,
-  type: 'watched',
-  title: 'watched1',
-  watched: Date.now(),
-}
-
-const folder: Content<'folder'> = {
-  type: 'folder',
-  title: 'folder1',
-  contents: {},
-  pinned: false,
-  tags: [],
-  sortedKeys: {
-    pinned: [],
-    folder: [],
-    link: [],
-    watched: [],
-  },
-  date: Date.now(),
-}
-
-const encryptedFolder: Content<'encryptedFolder'> = {
-  type: 'encryptedFolder',
-  title: 'encryptedFolder1',
-  data: 'data',
-  iv: 'iv',
-  salt: 'salt',
-  date: Date.now(),
-  pinned: false,
-}
-
-const pinnedFolder: Content<'folder'> = {
-  ...folder,
-  title: 'pinnedFolder1',
-  pinned: true,
-}
+const link = mockItem('link', 'link1');
+const watched = mockItem('watched', 'watched1');
+const folder = mockItem('folder', 'folder1');
+const encryptedFolder = mockItem('encryptedFolder', 'encryptedFolder1');
+const pinnedFolder = togglePinned(mockItem('folder', 'pinnedFolder1'), true);
 
 describe('Get item type', () => {
   test('Get link item type', () => {
@@ -72,15 +33,6 @@ describe('Get item type', () => {
 });
 
 describe('Modify sorted keys', () => {
-  function getNewSortedKeys(): SortedKeys {
-    return {
-      pinned: [],
-      folder: [],
-      link: [],
-      watched: [],
-    }
-  }
-
   function populateSortedKeys(sortedKeys: SortedKeys) {
     const items = Array(5).fill(0).map((_, i) => {
       const item = { ...link, title: `moveTest${i}` }

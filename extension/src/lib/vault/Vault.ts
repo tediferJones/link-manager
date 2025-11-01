@@ -25,6 +25,18 @@ import {
 // since we were gunna break this file up into separate functions and just import them here anyways
 // the full functional approach is just simpler
 // and in this scenario userVault would just be the root folder and path
+//
+// new @/lib/vault structure could have these sub folders
+//  - core (add, remove, etc...)
+//  - details (togglePinned, toggleWatched, etc...)
+//  - encryption (enable/disable encryption, encrypt/decrypt)
+//  - utils (setDir, getViewPath, etc...)
+//  - sync (save, load)
+// where would we want to put render, pack and query?
+//
+// each sub folder can have its own index file
+// vault folder's index file can exports all of the sub folder's index files
+// would still allow for clean imports from '@/lib/vault'
 
 // FIX ME where possible don't use title to identify resource
 // pass the item to the method, and then use Object.assign(item, changedItem)

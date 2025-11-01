@@ -1,4 +1,5 @@
 import { Content } from '@/types';
+import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
 
 export default function getNewVault(): Content<'folder'> {
   return {
@@ -7,12 +8,7 @@ export default function getNewVault(): Content<'folder'> {
     contents: {},
     tags: [],
     pinned: false,
-    sortedKeys: {
-      pinned: [],
-      folder: [],
-      link: [],
-      watched: [],
-    },
+    sortedKeys: getNewSortedKeys(),
     date: Date.now(),
   }
 }
