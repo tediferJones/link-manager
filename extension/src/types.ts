@@ -3,7 +3,22 @@ import { JSX, ReactElement } from 'jsx-dom';
 // FIX ME double check that exported types actually get used somewhere
 // if not used then delete them
 
-export type ContentTypes = 'link' | 'folder' | 'encryptedFolder' | 'watched'
+export type Vault = {
+  root: Content<'folder'>,
+  path: string[],
+  date: number,
+  version: string,
+}
+
+// FIX ME move to constants
+export const contentTypes = [
+  'link',
+  'folder',
+  'encryptedFolder',
+  'watched'
+] as const;
+// export type ContentTypes = 'link' | 'folder' | 'encryptedFolder' | 'watched'
+export type ContentTypes = typeof contentTypes[number]
 
 type ListItem = {
   title: string,
@@ -96,7 +111,7 @@ export type Actions = 'add' | 'delete'
 // FIX ME rename to Result
 // Consider moving this type into Result class, that's the only place it gets used
 // but having all types centralized to this file isn't a bad idea either
-export type ResultObj<T> =
+export type Result<T> =
   | { success: true, data: T }
   | { success: false, error: string }
 

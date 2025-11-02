@@ -1,4 +1,4 @@
-import { ResultObj } from '@/types';
+import { Result as ResultObj } from '@/types';
 
 class ResultChain<T> implements PromiseLike<Result<T>> {
   constructor(private promise: Promise<Result<T>>) {}
