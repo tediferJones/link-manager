@@ -3,7 +3,7 @@ import { Modal } from '@/components/layout';
 import { Dropdown, Icon, Loading } from '@/components/ui';
 import { AddItem } from '@/components/forms';
 import { openModal } from '@/effects';
-import UserVault from '@/lib/app/userVault';
+import UserVault, { newUserVault } from '@/lib/app/userVault';
 import { SizeTypes } from '@/types';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
@@ -71,6 +71,7 @@ import { SizeTypes } from '@/types';
 
 export default function App({ type }: { type: SizeTypes }) {
   console.log('vault', UserVault);
+  console.log('newVault', newUserVault);
 
   const typeClasses: { [K in SizeTypes]: string } = {
     sidepanel: 'w-[100vw] h-screen',

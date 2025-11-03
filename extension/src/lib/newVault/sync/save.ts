@@ -1,5 +1,5 @@
 import { packFolder, unwrap } from '@/lib/newVault';
-import { userVault } from '@/lib/app/newUserVault';
+import { newUserVault } from '@/lib/app/userVault';
 import { compress } from '@/lib/utils/compression';
 import { Vault } from '@/types';
 
@@ -12,8 +12,9 @@ export async function save() {
   //    - if client data is latest push to db
   //    - if server data is latest pull from db
   // also add delay to saving and debounce on next save request
-  const packed = unwrap(await packFolder(userVault.root));
-  const savedVault: Vault = { ...userVault, root: packed }
+  const packedResult = await packFolder(newUserVault.root);
+  const packed = unwrap(packedResult);
+  const savedVault: Vault = { ...newUserVault, root: packed }
   const compressed = await compress(JSON.stringify(savedVault));
   // FIX ME move to constants
   const storageKey = 'userVault';

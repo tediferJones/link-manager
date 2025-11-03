@@ -2,7 +2,7 @@ import {
   returnOnFail,
   getItem,
   modifySortedKeys,
-  saveAndRender
+  saveAndRender,
 } from '@/lib/newVault';
 import { Content, Result, Vault } from '@/types';
 

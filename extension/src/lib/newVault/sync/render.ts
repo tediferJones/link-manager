@@ -1,8 +1,8 @@
-import { userVault } from '@/lib/app/newUserVault';
+import { newUserVault } from '@/lib/app/userVault';
 import { getItem, unwrap } from '@/lib/newVault';
 
 export function render() {
-  const { root, path } = userVault;
+  const { root, path } = newUserVault;
   const item = unwrap(
     getItem(root, path, 'folder', 'encryptedFolder')
   );

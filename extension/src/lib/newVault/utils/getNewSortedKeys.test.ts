@@ -2,8 +2,6 @@ import { expect, test } from 'vitest';
 import { getNewSortedKeys } from '@/lib/newVault';
 import { SortedKeysTypes } from '@/types';
 
-test('test')
-
 test('Sorted keys', () => {
   const newSortedKeys = getNewSortedKeys();
   // FIX ME sortedKeys should be an actual const array in the types file

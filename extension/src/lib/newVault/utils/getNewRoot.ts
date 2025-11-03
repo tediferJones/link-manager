@@ -1,4 +1,4 @@
-import { getNewSortedKeys } from '@/lib/newVault';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
 import { Vault } from '@/types';
 
 export function getNewRoot(): Vault['root'] {

@@ -26,8 +26,5 @@ export function getItem<T extends ContentTypes>(
     }
   }
 
-  return {
-    success: true,
-    data: item as Content<T>,
-  }
+  return { success: true, data: item as Content<T> }
 }

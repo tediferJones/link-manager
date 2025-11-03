@@ -1,4 +1,4 @@
-import { getNewRoot } from '@/lib/newVault';
+import { getNewRoot } from '@/lib/newVault/utils';
 import { Vault } from '@/types';
 
 // FIX ME write tests
@@ -8,7 +8,7 @@ export function getNewVault(): Vault {
     root: getNewRoot(),
     path: [] as string[],
     date: Date.now(),
-    // FIX ME using package.json version
+    // FIX ME use package.json version
     version: '0.0.0',
   }
 }
