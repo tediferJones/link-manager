@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { getNewVault, unwrap } from '@/lib/newVault';
+import { getNewVault } from '@/lib/newVault/utils';
+import { unwrap } from '@/lib/newVault/result';
 import { addMockItem } from '@/lib/test/addMockItem';
 import {
   testNewResultFailure,
@@ -10,7 +11,6 @@ describe('Add item', () => {
   test('Add item to vault', async () => {
     const vault = getNewVault();
     const { root, path } = vault;
-
     const { result } = await addMockItem(root, path, 'link', 'link1');
     const item = unwrap(result);
     expect(vault.root.contents[item.title]).toBe(item);
@@ -18,9 +18,7 @@ describe('Add item', () => {
   });
 
   test('Fail to add duplicate', async () => {
-    const vault = getNewVault();
-    const { root, path } = vault;
-
+    const { root, path } = getNewVault();
     const { result: result1 } = await addMockItem(root, path, 'link', 'link1');
     testNewResultSuccess(result1);
     const { result: result2 } = await addMockItem(root, path, 'link', 'link1');

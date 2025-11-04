@@ -3,7 +3,7 @@ import {
   getNewSortedKeys,
   getSortedKeyType,
   modifySortedKeys,
-} from '@/lib/newVault';
+} from '@/lib/newVault/utils';
 import { mockItem, togglePinned } from '@/lib/test/mockItems';
 import { SortedKeys } from '@/types';
 

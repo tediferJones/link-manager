@@ -1,6 +1,10 @@
-import { encryptFolder, getItem, returnOnFail, unwrap } from '@/lib/newVault';
+import { getItem } from '@/lib/newVault/core';
+import { encryptFolder } from '@/lib/newVault/encryption'
+import { returnOnFail, unwrap } from '@/lib/newVault/result';
 import asyncReduce from '@/lib/utils/asyncReduce';
 import { Content, Result, Vault } from '@/types';
+
+// FIX ME write tests
 
 export async function packFolder(
   root: Vault['root'],

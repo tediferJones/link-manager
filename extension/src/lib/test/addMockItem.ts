@@ -1,4 +1,4 @@
-import { addItem } from '@/lib/newVault';
+import { addItem } from '@/lib/newVault/core';
 import { mockItem } from '@/lib/test/mockItems';
 import { Vault } from '@/types';
 

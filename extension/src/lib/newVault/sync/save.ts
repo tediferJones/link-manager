@@ -1,4 +1,5 @@
-import { packFolder, unwrap } from '@/lib/newVault';
+import { packFolder } from '@/lib/newVault/core';
+import { unwrap } from '@/lib/newVault/result';
 import { newUserVault } from '@/lib/app/userVault';
 import { compress } from '@/lib/utils/compression';
 import { Vault } from '@/types';

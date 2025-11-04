@@ -1,4 +1,6 @@
-import { getItem, render, returnOnFail, unwrap } from '@/lib/newVault';
+import { getItem } from '@/lib/newVault/core';
+import { render } from '@/lib/newVault/sync';
+import { returnOnFail, unwrap } from '@/lib/newVault/result';
 import asyncReduce from '@/lib/utils/asyncReduce';
 import replaceObject from '@/lib/utils/replaceObject';
 import { encrypt } from '@/lib/utils/encryption';

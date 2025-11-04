@@ -1,5 +1,6 @@
 import { newUserVault } from '@/lib/app/userVault';
-import { getItem, unwrap } from '@/lib/newVault';
+import { getItem } from '@/lib/newVault/core';
+import { unwrap } from '@/lib/newVault/result';
 
 export function render() {
   const { root, path } = newUserVault;

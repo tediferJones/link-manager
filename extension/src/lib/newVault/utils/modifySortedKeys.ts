@@ -1,4 +1,4 @@
-import { getSortedKeyType } from '@/lib/newVault';
+import { getSortedKeyType } from '@/lib/newVault/utils';
 import { Content, SortedKeys } from '@/types';
 
 // FIX ME add strict type for object

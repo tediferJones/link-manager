@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { getNewRoot } from '@/lib/newVault';
+import { getNewRoot } from '@/lib/newVault/utils';
 import getTypedKeys from '@/lib/utils/getTypedKeys';
 
 test('Root folder', () => {

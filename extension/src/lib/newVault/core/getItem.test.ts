@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { getItem, getNewVault } from '@/lib/newVault';
+import { getItem } from '@/lib/newVault/core';
+import { getNewVault } from '@/lib/newVault/utils';
 import { addMockItem } from '@/lib/test/addMockItem';
 import {
   testNewResultFailure,
@@ -8,26 +9,21 @@ import {
 
 describe('Get item', async () => {
   test('Get any item', async () => {
-    const vault = getNewVault();
-    const { root, path } = vault;
+    const { root, path } = getNewVault();
 
     const { resultPath } = await addMockItem(root, path, 'link', 'link1');
     testNewResultSuccess(getItem(root, resultPath));
   });
 
   test('Get typed link', async () => {
-    const vault = getNewVault();
-    const { root, path } = vault;
-
+    const { root, path } = getNewVault();
     const { resultPath } = await addMockItem(root, path, 'link', 'link1');
     const item = testNewResultSuccess(getItem(root, resultPath, 'link'));
     expect(item.type).toBe('link');
   });
 
   test('Get item with wrong type', async () => {
-    const vault = getNewVault();
-    const { root, path } = vault;
-
+    const { root, path } = getNewVault();
     const { resultPath } = await addMockItem(root, path, 'link', 'link1');
     testNewResultFailure(getItem(root, resultPath, 'folder'));
   });

@@ -1,10 +1,8 @@
-import {
-  returnOnFail,
-  getItem,
-  modifySortedKeys,
-  saveAndRender,
-} from '@/lib/newVault';
 import { Content, Result, Vault } from '@/types';
+import { getItem } from '@/lib/newVault/core';
+import { returnOnFail } from '@/lib/newVault/result';
+import { saveAndRender } from '@/lib/newVault/sync';
+import { modifySortedKeys } from '@/lib/newVault/utils';
 
 // FIX ME
 // Ideally this should look like this:
