@@ -206,7 +206,6 @@ export default class Vault {
     return (await this.delete(path)).next(item => this.add(newPath, item));
   }
 
-
   async copy(path: string[], attempt = 1): Promise<Result<Content>> {
     const parentPath = path.slice(0, -1);
     return this.get(path).next(async item => {
