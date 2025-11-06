@@ -11,10 +11,10 @@ export async function deleteItem(
   const itemTitle = path[path.length - 1];
   const parentPath = getParentPath(path);
   return returnOnFail(getItem(root, parentPath, 'folder'), async (parent) => {
-    return returnOnFail(getItem(root, path), (item) => {
+    return returnOnFail(getItem(root, path), async (item) => {
       modifySortedKeys.delete(parent.sortedKeys, item);
       delete parent.contents[itemTitle];
-      saveAndRender();
+      await saveAndRender();
       return { success: true, data: item };
     });
   });

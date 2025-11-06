@@ -15,7 +15,7 @@ export async function disableEncryption(
       }
     }
     delete folder.encryption;
-    saveAndRender();
+    await saveAndRender();
     return { success: true, data: folder };
   });
 }

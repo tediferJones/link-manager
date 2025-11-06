@@ -1,6 +1,6 @@
 import { getItem } from '@/lib/newVault/core';
-import { returnOnFail } from '@/lib/newVault/result';
 import { getKey, getRandomBase64 } from '@/lib/utils/encryption';
+import { returnOnFail } from '@/lib/newVault/result';
 import { saveAndRender } from '@/lib/newVault/sync';
 import { Content, Result, Vault } from '@/types';
 
@@ -14,7 +14,7 @@ export async function enableEncryption(
     const salt = getRandomBase64('salt');
     const key = await getKey(password, salt);
     folder.encryption = { key, salt, iv };
-    saveAndRender();
+    await saveAndRender();
     return { success: true, data: folder };
   });
 }
