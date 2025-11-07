@@ -1,4 +1,4 @@
-import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
 import { Content, ContentTypes, MockItemMap } from '@/types';
 
 const items: MockItemMap = {
@@ -46,6 +46,7 @@ export function mockItem<T extends ContentTypes>(
   return items[type](title);
 }
 
+// FIX ME is this really needed since addMockItem now has this functionality built in?
 export function togglePinned(item: Content, force?: boolean) {
   item.pinned = force ?? !item.pinned;
   return item;

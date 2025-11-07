@@ -1,6 +1,7 @@
 import { Breadcrumbs, ListItem } from '@/components/display';
 import { DecryptPrompt } from '@/components/forms';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
+import { getViewPath } from '@/lib/newVault/utils';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
 
@@ -27,7 +28,8 @@ export default function DirectoryView(
     }
   });
 
-  const viewPath = UserVault.getViewPath();
+  const { root, path } = newUserVault;
+  const viewPath = getViewPath(root, path);
 
   return (
     <>

@@ -1,11 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
 import { Breadcrumbs } from '@/components/display';
-import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
+import { setPath } from '@/lib/newVault/sync';
 
-vi.mock('@/lib/app/userVault', () => ({
-  default: { setDir: vi.fn() }
-}));
+vi.mock('@/lib/newVault/sync', () => ({ setPath: vi.fn() }));
 vi.useFakeTimers();
 
 describe('Breadcrumbs', () => {
@@ -23,8 +21,8 @@ describe('Breadcrumbs', () => {
     document.body.appendChild(<Breadcrumbs path={testPath} navigate />);
     const homeBtn = getElement<HTMLButtonElement>('#breadcrumbs button');
     homeBtn.click();
-    expect(UserVault.setDir).toHaveBeenCalledOnce();
-    expect(UserVault.setDir).toHaveBeenCalledWith([]);
+    expect(setPath).toHaveBeenCalledOnce();
+    expect(setPath).toHaveBeenCalledWith([]);
   });
 
   test('Path button sets dir to correct path when navigation is enabled',
@@ -36,9 +34,9 @@ describe('Breadcrumbs', () => {
       );
       const pathButton = buttons[pathIndex];
       pathButton.click();
-      expect(UserVault.setDir).toHaveBeenCalledOnce();
+      expect(setPath).toHaveBeenCalledOnce();
       const expectedPath = testPath.slice(0, pathIndex);
-      expect(UserVault.setDir).toHaveBeenCalledWith(expectedPath);
+      expect(setPath).toHaveBeenCalledWith(expectedPath);
     }
   );
 
@@ -50,7 +48,7 @@ describe('Breadcrumbs', () => {
     const [ homeBtn, ...pathBtns ] = buttons;
     homeBtn.click();
     pathBtns[0].click();
-    expect(UserVault.setDir).not.toHaveBeenCalled();
+    expect(setPath).not.toHaveBeenCalled();
   });
 
   test('Scrolls horizontally on wheel', () => {

@@ -1,8 +1,11 @@
 import { handleDeleteItemInput, closeModal } from '@/effects';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
 import { inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
+import { deleteItem } from '@/lib/newVault/core';
+import { getItemPath } from '@/lib/newVault/utils';
+import { throwOnFail } from '@/lib/newVault/result';
 
 // FIX ME move to constants
 export const submitBtnId = 'deleteItemSubmitBtn';
@@ -18,7 +21,8 @@ export default function DeleteItem({ item }: { item: Content }) {
         const titleInput = getElement<HTMLInputElement>(`#${titleInputId}`);
         // FIX ME maybe add an error message instead of just returning
         if (titleInput.value !== item.title) return
-        (await UserVault.delete(UserVault.getItemPath(item))).throw();
+        const { root, path } = newUserVault;
+        throwOnFail(await deleteItem(root, getItemPath(path, item)));
         closeModal();
       }}
     >

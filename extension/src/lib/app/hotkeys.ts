@@ -1,6 +1,7 @@
 import getElement from '@/lib/utils/getElement';
-import UserVault from '@/lib/app/userVault';
 import { HotKeyOpts } from '@/types';
+import { setPath } from '../newVault/sync';
+import { newUserVault } from './userVault';
 
 function isHotKey(key: string): key is HotKeyOpts {
   return key in hotKeys;
@@ -8,8 +9,8 @@ function isHotKey(key: string): key is HotKeyOpts {
 
 const hotKeys: { [K in HotKeyOpts]: () => void } = {
   '+': () => getElement<HTMLButtonElement>('#addItemBtn').click(),
-  'H': () => UserVault.setDir([]),
-  'U': () => UserVault.setDir(UserVault.path.slice(0, -1)),
+  'H': () => setPath([]),
+  'U': () => setPath(newUserVault.path.slice(0, -1)),
 }
 
 function useHotkeys(e: KeyboardEvent) {

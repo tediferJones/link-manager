@@ -1,9 +1,13 @@
 import { ErrorMsg } from '@/components/ui';
 import { hideError, showError, closeModal } from '@/effects';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
 import { btnClassNames, inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
+import { renameItem } from '@/lib/newVault/core';
+import { getItemPath } from '@/lib/newVault/utils';
+import { throwOnFail } from '@/lib/newVault/result';
+import { enableEncryption } from '@/lib/newVault/encryption';
 
 // FIX ME move to constants file
 export const renameErrorId = 'itemSettingsRenameError';
@@ -50,20 +54,21 @@ export default function EditItem({ item }: { item: Content<'link' | 'watched' | 
         const title = getElement<HTMLInputElement>(`#${titleId}`).value;
         // FIX ME wrap in try catch or something to not sure document.querySelector
         const password = document.querySelector<HTMLInputElement>(`#${passwordId}`)?.value;
+        const { root, path } = newUserVault;
         if (item.type === 'folder' && password) {
-          const enableResult = await UserVault.enableEncryption(
-            UserVault.getItemPath(item),
-            password
+          throwOnFail(
+            await enableEncryption(root, getItemPath(path, item), password)
           );
-          enableResult.throw();
         }
         if (title !== item.title) {
-          const result = await UserVault.rename(
-            UserVault.getItemPath(item),
-            title,
+          const { root, path } = newUserVault;
+          const renameResult = await renameItem(
+            root,
+            getItemPath(path, item),
+            title
           );
-          if (!result.success()) {
-            return showError(renameErrorId, result.error());
+          if (!renameResult.success) {
+            showError(renameErrorId, renameResult.error);
           }
         }
         closeModal();

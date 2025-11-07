@@ -1,6 +1,6 @@
 import { ChevronRight, Home } from 'lucide';
 import { Icon } from '@/components/ui';
-import UserVault from '@/lib/app/userVault';
+import { setPath } from '@/lib/newVault/sync';
 import getElement from '@/lib/utils/getElement';
 
 // FIX ME maybe rename to PathDisplay or just Path
@@ -35,7 +35,7 @@ export default function Breadcrumbs(
         }
       }}
     >
-      <button onClick={() => navigate && UserVault.setDir([])}
+      <button onClick={() => navigate && setPath([])}
         title={navigate ? 'Go to: Home' : undefined}
       >
         <Icon name={Home} />
@@ -46,7 +46,7 @@ export default function Breadcrumbs(
       {path.map((key, i, arr) => (
         <>
           <button className={navigate ? 'underline' : ''}
-            onClick={() => navigate && UserVault.setDir(arr.slice(0, i + 1))}
+            onClick={() => navigate && setPath(arr.slice(0, i + 1))}
             title={navigate ? `Go to: ${key}` : undefined}
           >{key}</button>
           {i < arr.length - 1 && 

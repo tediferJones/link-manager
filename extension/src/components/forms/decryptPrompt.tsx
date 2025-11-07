@@ -1,6 +1,7 @@
 import { ErrorMsg } from '@/components/ui';
 import { hideError, showError } from '@/effects';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
+import { decryptFolder } from '@/lib/newVault/encryption';
 import getElement from '@/lib/utils/getElement';
 
 // FIX ME disable hotkeys when input is focused
@@ -18,13 +19,9 @@ export default function DecryptPrompt({ path }: { path: string[] }) {
         e.preventDefault();
         hideError(errorId);
         const password = getElement<HTMLInputElement>(`#${passwordId}`).value;
-        const decryptResult = await UserVault.decrypt(
-          path,
-          password
-        );
-        if (!decryptResult.success()) {
-          showError(errorId, decryptResult.error());
-        }
+        const { root } = newUserVault;
+        const decryptResult = await decryptFolder(root, path, password);
+        if (!decryptResult.success) showError(errorId, decryptResult.error);
       }}
     >
       <div className='text-center'>

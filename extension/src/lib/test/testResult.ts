@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import Result from '@/lib/vault/Result';
+import Result from '@/lib/vaultClass/Result';
 import { Result as NewResult } from '@/types';
 
 export function testResultFailure<T>(result: Result<T>) {

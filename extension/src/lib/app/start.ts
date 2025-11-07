@@ -5,6 +5,7 @@ import setTheme from '@/lib/app/setTheme';
 import { enableHotKeys } from '@/lib/app/hotkeys';
 import getElement from '@/lib/utils/getElement';
 import { SizeTypes } from '@/types';
+import { load } from '@/lib/newVault/sync';
 
 export default function start(type: SizeTypes) {
   setTheme();
@@ -14,4 +15,5 @@ export default function start(type: SizeTypes) {
     getElement('#directoryView').replaceChildren(DirectoryView({ item }));
   });
   getElement('#app').appendChild(App({ type }));
+  load();
 }

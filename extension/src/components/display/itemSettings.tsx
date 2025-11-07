@@ -6,7 +6,11 @@ import {
 } from '@/components/forms';
 import { Checkbox } from '@/components/ui';
 import { openModal } from '@/effects/modal';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
+import { copyItem } from '@/lib/newVault/core';
+import { togglePinned } from '@/lib/newVault/details';
+import { throwOnFail } from '@/lib/newVault/result';
+import { getItemPath, getViewPath } from '@/lib/newVault/utils';
 import { Content } from '@/types';
 
 // FIX ME autofocus modal when opened
@@ -17,6 +21,7 @@ import { Content } from '@/types';
 //  - D for Delete
 //  - C for Copy
 export default function ItemSettings({ item }: { item: Content }) {
+  const { root, path } = newUserVault;
   return (
     <div className='flex flex-col gap-4'>
       {(item.type !== 'encryptedFolder') && (
@@ -33,24 +38,26 @@ export default function ItemSettings({ item }: { item: Content }) {
             <Checkbox id='itemSettingsPinned'
               checked={item.pinned}
               onChange={async (e) => {
-                (await UserVault.togglePinned(
-                  UserVault.getItemPath(item),
-                  e.currentTarget.checked
-                )).throw();
+                const { root, path } = newUserVault;
+                const itemPath = getItemPath(path, item);
+                throwOnFail(
+                  await togglePinned(root, itemPath, e.currentTarget.checked)
+                );
               }}
             />
           </div>
           <hr className='col-span-full' />
           <TagEditor item={item} />
           <hr className='col-span-full' />
-          <PathEditor item={item} path={UserVault.getViewPath()} />
+          <PathEditor item={item} path={getViewPath(root, path)} />
           <hr />
         </>
       )}
       <div className='flex gap-2 justify-stretch'>
         <button className='flex-1 bg-fg text-bg p-2 rounded-lg'
           onClick={async () => {
-            (await UserVault.copy(UserVault.getItemPath(item))).throw();
+            const { root, path } = newUserVault;
+            throwOnFail(await copyItem(root, getItemPath(path, item)));
           }}
         >
           Copy

@@ -15,8 +15,13 @@ import { ReactNode } from 'jsx-dom';
 import { ItemSettings } from '@/components/display';
 import { Icon } from '@/components/ui';
 import { openModal } from '@/effects';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
 import { Content, ContentTypes } from '@/types';
+import { swapPriority, toggleWatched } from '@/lib/newVault/details';
+import { getItemPath } from '@/lib/newVault/utils';
+import { throwOnFail } from '@/lib/newVault/result';
+import { encryptFolder } from '@/lib/newVault/encryption';
+import { setPath } from '@/lib/newVault/sync';
 
 // FIX ME replace ReactElement types with ReactNode
 //  - ReactNode is superset of ReactElement
@@ -67,14 +72,16 @@ const itemConfig: ItemConfig = {
           <>
             <button title={decreasePriorityTitle}
               onClick={() => {
-                UserVault.swapPriority(UserVault.getItemPath(item), -1);
+                const { root, path } = newUserVault;
+                swapPriority(root, getItemPath(path, item), -1);
               }}
             >
               <Icon name={ChevronUp} />
             </button>
             <button title={increasePriorityTitle}
               onClick={() => {
-                UserVault.swapPriority(UserVault.getItemPath(item), 1);
+                const { root, path } = newUserVault;
+                swapPriority(root, getItemPath(path, item), 1);
               }}
             >
               <Icon name={ChevronDown} />
@@ -84,7 +91,8 @@ const itemConfig: ItemConfig = {
         <button className='transition-all duration-300'
           title={toggleWatchedTitle}
           onClick={() => {
-            UserVault.toggleWatched(UserVault.getItemPath(item), true);
+            const { root, path } = newUserVault;
+            toggleWatched(root, getItemPath(path, item), true);
           }}
         >
           <Icon name={Eye} />
@@ -104,7 +112,8 @@ const itemConfig: ItemConfig = {
       <button className='transition-all duration-300'
         title={toggleWatchedTitle}
         onClick={() => {
-          UserVault.toggleWatched(UserVault.getItemPath(item), false);
+          const { root, path } = newUserVault;
+          toggleWatched(root, getItemPath(path, item), false);
         }}
       >
         <Icon name={Eye} />
@@ -116,13 +125,14 @@ const itemConfig: ItemConfig = {
     wrapper: ({ item, children, className }) => (
       <button className={className}
         title={`Enter folder: ${item.title}`}
-        onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
+        onClick={() => setPath(getItemPath(newUserVault.path, item))}
       >{children}</button>
     ),
     details: item.encryption && (
       <button title={lockFolderTitle}
         onClick={async () => {
-          (await UserVault.encrypt(UserVault.getItemPath(item))).throw();
+          const { root, path } = newUserVault;
+          throwOnFail(await encryptFolder(root, getItemPath(path, item)));
         }}
       >
         <Icon name={Lock} />
@@ -134,7 +144,7 @@ const itemConfig: ItemConfig = {
     wrapper: ({ item, children, className }) => (
       <button className={className}
         title={`Enter encrypted folder: ${item.title}`}
-        onClick={() => UserVault.setDir(UserVault.getItemPath(item))}
+        onClick={() => setPath(getItemPath(newUserVault.path, item))}
       >{children}</button>
     ),
   }),
@@ -166,6 +176,7 @@ export default function ListItem({ item }: { item: Content }) {
   )
 }
 
+// FIX ME delete if not used
 // type ItemIcon = {
 //   [K in ContentTypes]: (item: Content<K>) => IconNode
 // }

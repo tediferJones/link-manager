@@ -1,21 +1,26 @@
 import { Autocomplete } from '@/components/ui';
 import { Breadcrumbs } from '@/components/display';
 import { closeModal } from '@/effects';
-import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
+import { getItem, moveItem } from '@/lib/newVault/core';
+import { newUserVault } from '@/lib/app/userVault';
+import { getItemPath } from '@/lib/newVault/utils';
+import { unwrap } from '@/lib/newVault/result';
 
 function pathMatch(path1: string[], path2: string[]) {
   return path1.join('/') === path2.join('/');
 }
 
 function updatePath(path: string[], item: Content) {
+  const { path: vaultPath } = newUserVault;
+
   getElement(`#${breadcrumbsId}`).replaceChildren(
     <Breadcrumbs path={path} />
   );
   getElement<HTMLButtonElement>(`#${submitBtnId}`).disabled = pathMatch(
     path.concat(item.title),
-    UserVault.path.concat(item.title)
+    getItemPath(vaultPath, item)
   );
 }
 
@@ -41,9 +46,8 @@ export default function PathInput(
     <form className='flex flex-col gap-4'
       onSubmit={async (e) => {
         e.preventDefault();
-        (await UserVault.move(
-          UserVault.path.concat(item.title), path
-        )).throw();
+        const { root, path: vaultPath } = newUserVault;
+        moveItem(root, getItemPath(vaultPath, item), path);
         closeModal();
       }}
     >
@@ -56,13 +60,14 @@ export default function PathInput(
         placeholder='Change path'
         generator={() => {
           const newSegment = getElement<HTMLInputElement>(`#${autocompleteId}`).value;
-          const folder = UserVault.get(path, 'folder').throw().data();
+          const { root, path: vaultPath } = newUserVault;
+          const folder = unwrap(getItem(root, path, 'folder'));
           return Object.keys(folder.contents).filter(title => {
             if (folder.contents[title].type !== 'folder') return;
             if (!title.toLowerCase().includes(newSegment.toLowerCase())) return;
             const invalidPath = pathMatch(
               path.concat(title),
-              UserVault.path.concat(item.title)
+              getItemPath(vaultPath, item)
             );
             if (invalidPath) return;
             return true;

@@ -3,8 +3,10 @@ import { Modal } from '@/components/layout';
 import { Dropdown, Icon, Loading } from '@/components/ui';
 import { AddItem } from '@/components/forms';
 import { openModal } from '@/effects';
-import UserVault, { newUserVault } from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
 import { SizeTypes } from '@/types';
+import { setPath } from './lib/newVault/sync';
+import { getViewPath } from './lib/newVault/utils';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
@@ -70,7 +72,6 @@ import { SizeTypes } from '@/types';
 //  - pull down from top to refresh
 
 export default function App({ type }: { type: SizeTypes }) {
-  console.log('vault', UserVault);
   console.log('newVault', newUserVault);
 
   const typeClasses: { [K in SizeTypes]: string } = {
@@ -88,8 +89,9 @@ export default function App({ type }: { type: SizeTypes }) {
           <button className='text-xl defaultBorder'
             title='Go to parent directory'
             onClick={() => {
-              if (UserVault.path.length) {
-                UserVault.setDir(UserVault.getViewPath().slice(0, -1));
+              const { root, path } = newUserVault;
+              if (newUserVault.path.length) {
+                setPath(getViewPath(root, path).slice(0, -1))
               }
             }}
           >

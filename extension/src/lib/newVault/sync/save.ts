@@ -15,9 +15,10 @@ export async function save() {
   // also add delay to saving and debounce on next save request
   const packedResult = await packFolder(newUserVault.root);
   const packed = unwrap(packedResult);
+  // FIX ME do not compress whole vault, we still want easy access to date and version
   const savedVault: Vault = { ...newUserVault, root: packed }
   const compressed = await compress(JSON.stringify(savedVault));
   // FIX ME move to constants
-  const storageKey = 'userVault';
+  const storageKey = 'newUserVault';
   await chrome.storage.sync.set({ [storageKey]: compressed });
 }

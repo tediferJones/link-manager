@@ -1,7 +1,9 @@
 import { handleAddItemInput, closeModal } from '@/effects';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
+import { addItem } from '@/lib/newVault/core';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
 import getElement from '@/lib/utils/getElement';
-import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
+// import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
 
 // FIX ME consider moving these (and other exported ids) into their own file or something
 // gets a little bit messy here when it comes to using the index.ts file
@@ -24,8 +26,9 @@ export default function AddItem() {
         // FIX ME should show an error message if add fails
         // FIX ME could use createFolder and createLink from @/lib/test/mockItems
         // if we do use that, move that fill to some other lib folder
+        const { root, path } = newUserVault;
         if (href) {
-          UserVault.add(UserVault.path, {
+          addItem(root, path, {
             type: 'link',
             title,
             href,
@@ -34,7 +37,7 @@ export default function AddItem() {
             date: Date.now(),
           });
         } else {
-          UserVault.add(UserVault.path, {
+          addItem(root, path, {
             type: 'folder',
             title,
             contents: {},

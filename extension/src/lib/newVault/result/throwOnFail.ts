@@ -1,11 +1,10 @@
-import { OptPromise, Result } from '@/types';
+import { Result } from '@/types';
 
 // FIX ME delete if not used
 
-export async function throwOnFail<T, K>(
+export async function throwOnFail<T>(
   result: Result<T>,
-  callback: (data: T) => OptPromise<Result<K>>
-): Promise<Result<K>> {
+): Promise<Result<T>> {
   if (!result.success) throw Error(result.error);
-  return await callback(result.data);
+  return result;
 }

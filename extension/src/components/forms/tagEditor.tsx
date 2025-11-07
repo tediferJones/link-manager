@@ -1,7 +1,11 @@
 import { Autocomplete, Tag } from '@/components/ui';
 import getElement from '@/lib/utils/getElement';
-import UserVault from '@/lib/app/userVault';
+import { newUserVault } from '@/lib/app/userVault';
 import { Content } from '@/types';
+import { editItemTags } from '@/lib/newVault/details';
+import { getItemPath } from '@/lib/newVault/utils';
+import { throwOnFail } from '@/lib/newVault/result';
+import { query } from '@/lib/newVault/core';
 
 // FIX ME compare to pathManager, try to make this as similar as possible
 // FIX ME do we want to add a submit button?
@@ -22,11 +26,10 @@ function TagDisplay(
       <>
         {item.tags.map(tag => (
           <Tag value={tag} xFunc={async () => {
-            (await UserVault.editTags(
-              UserVault.getItemPath(item),
-              'delete',
-              tag,
-            )).throw();
+            const { root, path } = newUserVault;
+            throwOnFail(
+              await editItemTags(root, getItemPath(path, item), 'delete', tag)
+            );
           }} />
         ))}
       </>
@@ -80,16 +83,16 @@ export default function TagEditor(
         onSubmit={async () => {
           const tagInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
           const newTag = tagInput.value;
-          (await UserVault.editTags(
-            UserVault.path.concat(item.title),
-            'add',
-            newTag,
-          )).throw();
+          const { root, path } = newUserVault;
+          throwOnFail(
+            await editItemTags(root, getItemPath(path, item), 'add', newTag)
+          );
           tagInput.value = '';
         }}
         generator={async (e) => {
           const tagValue = e.currentTarget.value.toLowerCase();
-          return (await UserVault.query(
+          const queryResult = await query(
+            newUserVault.root,
             [],
             (extTags, queryItem) => {
               if (queryItem.type === 'encryptedFolder') return extTags;
@@ -101,7 +104,9 @@ export default function TagEditor(
               return extTags.concat(matchingTags);
             },
             [] as string[]
-          )).throw().data();
+          )
+          if (!queryResult.success) throw Error(queryResult.error);
+          return queryResult.data;
         }}
       />
     </form>
