@@ -2,13 +2,13 @@ import { describe, expect, test, vi } from 'vitest';
 import { DecryptPrompt } from '@/components/forms';
 import { passwordId, errorId } from '@/components/forms/decryptPrompt';
 import { hideError, showError } from '@/effects';
-import UserVault from '@/lib/app/userVault';
+import { decryptFolder } from '@/lib/newVault/encryption';
+import { newUserVault } from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
+import { Result } from '@/types';
 
-vi.mock('@/effects', () => ({
-  showError: vi.fn(),
-  hideError: vi.fn(),
-}));
+vi.mock('@/effects', () => ({ showError: vi.fn(), hideError: vi.fn() }));
+vi.mock('@/lib/newVault/encryption', () => ({ decryptFolder: vi.fn() }));
 
 vi.useFakeTimers();
 
@@ -24,8 +24,13 @@ describe('Decrypt prompt', () => {
   });
 
   test('Submit triggers decrypt with given password', async () => {
-    const decryptMock = vi.fn(async () => ({ success: () => true }));
-    UserVault.decrypt = decryptMock as any;
+    if (!vi.isMockFunction(decryptFolder)) {
+      throw Error('decryptFolder is not mocked');
+    }
+    decryptFolder.mockResolvedValueOnce({
+      success: true,
+      data: {},
+    } as Result<any>);
 
     document.body.appendChild(<DecryptPrompt path={testPath} />);
     const passwordInput = getElement<HTMLInputElement>(`#${passwordId}`);
@@ -34,17 +39,23 @@ describe('Decrypt prompt', () => {
     passwordInput.dispatchEvent(event);
     await Promise.resolve();
     expect(hideError).toHaveBeenCalledWith(errorId);
-    expect(decryptMock).toHaveBeenCalledWith(testPath, testPassword);
+    expect(decryptFolder).toHaveBeenCalledWith(
+      newUserVault.root,
+      testPath,
+      testPassword
+    );
     expect(showError).not.toHaveBeenCalled();
   });
 
   test('Show error if decrypt fails', async () => {
     const errorMsg = 'Error message';
-    const decryptMock = vi.fn(async () => ({
-      success: () => false,
-      error: () => errorMsg,
-    }));
-    UserVault.decrypt = decryptMock as any;
+    if (!vi.isMockFunction(decryptFolder)) {
+      throw Error('decryptFolder is not mocked');
+    }
+    decryptFolder.mockResolvedValueOnce({
+      success: false,
+      error: errorMsg
+    } as Result<any>);
 
     document.body.appendChild(<DecryptPrompt path={testPath} />);
     const passwordInput = getElement<HTMLInputElement>(`#${passwordId}`);
@@ -53,7 +64,11 @@ describe('Decrypt prompt', () => {
     passwordInput.dispatchEvent(event);
     await Promise.resolve();
     expect(hideError).toHaveBeenCalledWith(errorId);
-    expect(decryptMock).toHaveBeenCalledWith(testPath, testPassword);
+    expect(decryptFolder).toHaveBeenCalledWith(
+      newUserVault.root,
+      testPath,
+      testPassword
+    );
     expect(showError).toHaveBeenCalled();
   });
 

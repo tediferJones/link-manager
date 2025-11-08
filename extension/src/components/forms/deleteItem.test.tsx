@@ -1,25 +1,18 @@
 import { describe, expect, test, vi } from 'vitest';
 import { DeleteItem } from '@/components/forms';
 import { titleInputId } from '@/components/forms/deleteItem';
-import UserVault from '@/lib/app/userVault';
-import Result from '@/lib/vault/Result';
+import { deleteItem } from '@/lib/newVault/core';
+import { newUserVault } from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
-import { Content } from '@/types';
+import { mockItem } from '@/lib/test/mockItems';
+import { Result } from '@/types';
 
 vi.mock('@/effects', () => ({ closeModal: vi.fn() }));
-vi.mock('@/lib/app/userVault', () => ({
-  default: {
-    delete: vi.fn().mockResolvedValue({
-      throw: vi.fn(() => (Result.success(true)))
-    }),
-    path: [],
-    getItemPath: vi.fn(),
-  }
-}));
+vi.mock('@/lib/newVault/core', () => ({ deleteItem: vi.fn() }));
 
 describe('Delete item', () => {
   const itemTitle = 'title1';
-  const item = { title: itemTitle } as Content<'link'>;
+  const item = mockItem('link', itemTitle);
 
   test('Fail to submit when input is empty', () => {
     const form = <DeleteItem item={item} />
@@ -31,7 +24,7 @@ describe('Delete item', () => {
     });
     form.dispatchEvent(submitEvent);
 
-    expect(UserVault.delete).not.toHaveBeenCalled();
+    expect(deleteItem).not.toHaveBeenCalled();
   });
 
   test('Fail to submit if input does not match item title', () => {
@@ -47,10 +40,18 @@ describe('Delete item', () => {
     });
     form.dispatchEvent(submitEvent);
 
-    expect(UserVault.delete).not.toHaveBeenCalled();
+    expect(deleteItem).not.toHaveBeenCalled();
   });
 
   test('Submit if input matches item title', () => {
+    if (!vi.isMockFunction(deleteItem)) {
+      throw Error('deleteItem is not mocked');
+    }
+    deleteItem.mockResolvedValueOnce({
+      success: true,
+      data: {},
+    } as Result<any>);
+
     const form = <DeleteItem item={item} />
     document.body.appendChild(form);
 
@@ -63,6 +64,9 @@ describe('Delete item', () => {
     });
     form.dispatchEvent(submitEvent);
     
-    expect(UserVault.delete).toHaveBeenCalled();
+    expect(deleteItem).toHaveBeenCalledExactlyOnceWith(
+      newUserVault.root,
+      newUserVault.path.concat(itemTitle),
+    );
   });
 });

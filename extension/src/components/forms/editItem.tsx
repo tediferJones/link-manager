@@ -1,13 +1,13 @@
 import { ErrorMsg } from '@/components/ui';
 import { hideError, showError, closeModal } from '@/effects';
+import { renameItem } from '@/lib/newVault/core';
+import { enableEncryption } from '@/lib/newVault/encryption';
+import { throwOnFail } from '@/lib/newVault/result';
+import { getItemPath } from '@/lib/newVault/utils';
 import { newUserVault } from '@/lib/app/userVault';
 import { btnClassNames, inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
-import { renameItem } from '@/lib/newVault/core';
-import { getItemPath } from '@/lib/newVault/utils';
-import { throwOnFail } from '@/lib/newVault/result';
-import { enableEncryption } from '@/lib/newVault/encryption';
 
 // FIX ME move to constants file
 export const renameErrorId = 'itemSettingsRenameError';
@@ -16,7 +16,7 @@ export const passwordId = 'itemSettingsPassword';
 export const submitBtnId = 'itemSettingsSubmitBtn';
 
 export default function EditItem({ item }: { item: Content<'link' | 'watched' | 'folder'> }) {
-  // FIX ME maybe extra to its own effect?
+  // FIX ME maybe extract to its own effect?
   //  - Provide a function that returns true or false and the button's id
   //  - automagically set button's disabled state by running function
   //  - then reuse that effect in other components with similar buttons

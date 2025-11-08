@@ -4,9 +4,9 @@ import { Dropdown, Icon, Loading } from '@/components/ui';
 import { AddItem } from '@/components/forms';
 import { openModal } from '@/effects';
 import { newUserVault } from '@/lib/app/userVault';
+import { setPath } from '@/lib/newVault/sync';
+import { getViewPath } from '@/lib/newVault/utils';
 import { SizeTypes } from '@/types';
-import { setPath } from './lib/newVault/sync';
-import { getViewPath } from './lib/newVault/utils';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
@@ -70,8 +70,15 @@ import { getViewPath } from './lib/newVault/utils';
 // Add gestures
 //  - swipe from left to right to navigate up one directory
 //  - pull down from top to refresh
+// Add symlink type?
+//  - will need to add uuids to all items
+//  - would allows a single item to show up in multiple places which could be useful
+// Add tracking/following to links?
+//  - update link url as user navigates from page to page
 
 export default function App({ type }: { type: SizeTypes }) {
+  // FIX ME, for debug purposes only
+  (window as any).newVault = newUserVault;
   console.log('newVault', newUserVault);
 
   const typeClasses: { [K in SizeTypes]: string } = {

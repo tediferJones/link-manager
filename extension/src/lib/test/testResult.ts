@@ -1,18 +1,7 @@
 import { expect } from 'vitest';
-import Result from '@/lib/vaultClass/Result';
 import { Result as NewResult } from '@/types';
 
-export function testResultFailure<T>(result: Result<T>) {
-  expect(result.success()).toBe(false);
-  expect(result.error()).toBeTypeOf('string');
-  expect(result.error()).toBeTruthy();
-}
-
-export function testResultSuccess<T>(result: Result<T>) {
-  expect(result.success()).toBe(true);
-  expect(result.data()).toBeDefined();
-  return result.data();
-}
+// FIX ME rename to testResultSuccess/Failure and fix all references
 
 export function testNewResultSuccess<T>(result: NewResult<T>) {
   expect(result.success).toBe(true);

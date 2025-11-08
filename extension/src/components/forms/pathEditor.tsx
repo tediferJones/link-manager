@@ -1,12 +1,12 @@
 import { Autocomplete } from '@/components/ui';
 import { Breadcrumbs } from '@/components/display';
 import { closeModal } from '@/effects';
-import getElement from '@/lib/utils/getElement';
-import { Content } from '@/types';
 import { getItem, moveItem } from '@/lib/newVault/core';
-import { newUserVault } from '@/lib/app/userVault';
 import { getItemPath } from '@/lib/newVault/utils';
 import { unwrap } from '@/lib/newVault/result';
+import { newUserVault } from '@/lib/app/userVault';
+import getElement from '@/lib/utils/getElement';
+import { Content } from '@/types';
 
 function pathMatch(path1: string[], path2: string[]) {
   return path1.join('/') === path2.join('/');
@@ -47,7 +47,7 @@ export default function PathInput(
       onSubmit={async (e) => {
         e.preventDefault();
         const { root, path: vaultPath } = newUserVault;
-        moveItem(root, getItemPath(vaultPath, item), path);
+        await moveItem(root, getItemPath(vaultPath, item), path);
         closeModal();
       }}
     >

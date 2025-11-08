@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { DirectoryView } from '@/components/display';
-import UserVault from '@/lib/app/userVault';
 import getElement from '@/lib/utils/getElement';
+import { getViewPath } from '@/lib/newVault/utils';
 import { mockItem, togglePinned } from '@/lib/test/mockItems';
 import { directoryViewId, noContentText, paddingClass } from './directoryView';
 import { Content } from '@/types';
@@ -13,9 +13,10 @@ vi.mock('@/components/forms', () => ({
   DecryptPrompt: vi.fn(() => <div id={mockDecryptPromptId}></div>),
 }));
 
-vi.mock('@/lib/app/userVault', () => ({
-  default: { getViewPath: vi.fn(() => []) }
-}));
+vi.mock('@/lib/newVault/utils', async () => {
+  const actual = await vi.importActual('@/lib/newVault/utils');
+  return { ...actual, getViewPath: vi.fn(() => []) };
+});
 
 // FIX ME can we mock just listItem but import from @/components/display
 vi.mock('@/components/display/listItem', () => ({
@@ -31,7 +32,7 @@ describe('Directory view', () => {
     const item = mockItem('encryptedFolder', 'encrypted1');
     document.body.appendChild(<DirectoryView item={item} />);
     // FIX ME check that this also displays the folder's title
-    expect(UserVault.getViewPath).toHaveBeenCalled();
+    expect(getViewPath).toHaveBeenCalled();
     expect(getElement(`#${mockDecryptPromptId}`)).toBeTruthy();
   });
 

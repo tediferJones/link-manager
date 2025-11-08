@@ -1,11 +1,11 @@
 import { handleDeleteItemInput, closeModal } from '@/effects';
+import { deleteItem } from '@/lib/newVault/core';
+import { throwOnFail } from '@/lib/newVault/result';
+import { getItemPath } from '@/lib/newVault/utils';
 import { newUserVault } from '@/lib/app/userVault';
 import { inline } from '@/lib/app/buttonToggleClasses';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
-import { deleteItem } from '@/lib/newVault/core';
-import { getItemPath } from '@/lib/newVault/utils';
-import { throwOnFail } from '@/lib/newVault/result';
 
 // FIX ME move to constants
 export const submitBtnId = 'deleteItemSubmitBtn';

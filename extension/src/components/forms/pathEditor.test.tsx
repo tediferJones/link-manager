@@ -9,18 +9,21 @@ import {
 import getElement from '@/lib/utils/getElement';
 import { mockItem } from '@/lib/test/mockItems';
 
-vi.mock('@/lib/app/userVault', () => ({
-  default: {
-    path: [],
-    get: vi.fn(() => ({
-      throw: vi.fn(() => ({
-        data: vi.fn(() => ({
-          contents: {}
-        }))
-      }))
-    }))
-  }
-}));
+vi.mock('@/lib/newVault/utils', async () => {
+  const actual = await vi.importActual('@/lib/newVault/utils');
+  return { ...actual, getItemPath: vi.fn(() => []) };
+});
+vi.mock('@/lib/newVault/core', async () => {
+  const actual = await vi.importActual('@/lib/newVault/core');
+  return {
+    ...actual,
+    moveItem: vi.fn(),
+    getItem: vi.fn(() => ({
+      success: true,
+      data: mockItem('folder', 'folder1')
+    })),
+  };
+});
 
 describe('Path editor', () => {
   const testPath = [ 'seg1', 'seg2' ];
@@ -44,7 +47,9 @@ describe('Path editor', () => {
   test('Updates path on autocomplete submit', () => {
     const splitIndex = 1;
     document.body.appendChild(
-      <PathEditor item={mockItem('link', title)} path={testPath.slice(0, splitIndex)} />
+      <PathEditor item={mockItem('link', title)}
+        path={testPath.slice(0, splitIndex)}
+      />
     );
     const pathInput = getElement<HTMLInputElement>(`#${autocompleteId}`);
     pathInput.value = testPath[splitIndex];

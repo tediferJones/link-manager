@@ -2,22 +2,15 @@ import { describe, test, beforeEach, expect, vi } from 'vitest';
 import { AddItem } from '@/components/forms';
 import { hrefInputId, titleInputId } from '@/components/forms/addItem';
 import { closeModal } from '@/effects/modal';
-import UserVault from '@/lib/app/userVault';
-import Result from '@/lib/vault/Result';
 import getElement from '@/lib/utils/getElement';
 import { Content } from '@/types';
-import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
+import { addItem } from '@/lib/newVault/core';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
+import { newUserVault } from '@/lib/app/userVault';
 
 // FIX ME do not import form @/effects, unless you want to mock everything that gets exported
 vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
-vi.mock('@/lib/app/userVault', () => ({
-  default: {
-    add: vi.fn().mockResolvedValue({
-      throw: vi.fn(() => Result.success(true))
-    }),
-    path: [],
-  }
-}));
+vi.mock('@/lib/newVault/core', () => ({ addItem: vi.fn() }))
 
 describe('Add item', () => {
   beforeEach(() => {
@@ -35,7 +28,7 @@ describe('Add item', () => {
     });
     form.dispatchEvent(submitEvent);
 
-    expect(UserVault.add).not.toHaveBeenCalled();
+    expect(addItem).not.toHaveBeenCalled();
   });
 
   test('Adds folder if only title is filled out', () => {
@@ -52,14 +45,18 @@ describe('Add item', () => {
     });
     form.dispatchEvent(submitEvent);
 
-    expect(UserVault.add).toHaveBeenCalledWith([], expect.objectContaining({
-      type: 'folder',
-      title,
-      contents: {},
-      sortedKeys: getNewSortedKeys(),
-      tags: [],
-      pinned: false,
-    } as Omit<Content<'folder'>, 'date'>));
+    expect(addItem).toHaveBeenCalledWith(
+      newUserVault.root,
+      newUserVault.path,
+      expect.objectContaining({
+        type: 'folder',
+        title,
+        contents: {},
+        sortedKeys: getNewSortedKeys(),
+        tags: [],
+        pinned: false,
+      } as Omit<Content<'folder'>, 'date'>)
+    );
 
     expect(closeModal).toHaveBeenCalled();
   });
@@ -81,13 +78,17 @@ describe('Add item', () => {
     });
     form.dispatchEvent(submitEvent);
 
-    expect(UserVault.add).toHaveBeenCalledWith([], expect.objectContaining({
-      type: 'link',
-      title,
-      href,
-      tags: [],
-      pinned: false,
-    } as Omit<Content<'link'>, 'date'>));
+    expect(addItem).toHaveBeenCalledWith(
+      newUserVault.root,
+      newUserVault.path,
+      expect.objectContaining({
+        type: 'link',
+        title,
+        href,
+        tags: [],
+        pinned: false,
+      } as Omit<Content<'link'>, 'date'>)
+    );
 
     expect(closeModal).toHaveBeenCalled();
   });

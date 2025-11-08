@@ -1,11 +1,10 @@
 import { getItem } from '@/lib/newVault/core';
+import { unwrap } from '@/lib/newVault/result';
 import { Vault } from '@/types';
 
 export function getViewPath(root: Vault['root'], path: string[]): string[] {
   return path.reduce((newPath, segment) => {
-    const itemResult = getItem(root, newPath);
-    if (!itemResult.success) throw Error(itemResult.error);
-    const item = itemResult.data;
+    const item = unwrap(getItem(root, newPath));
     if (item.type === 'encryptedFolder') return newPath;
     return newPath.concat(segment);
   }, [] as string[]);

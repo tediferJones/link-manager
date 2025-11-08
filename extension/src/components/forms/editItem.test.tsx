@@ -9,6 +9,11 @@ import {
 import getElement from '@/lib/utils/getElement';
 import { mockItem } from '@/lib/test/mockItems';
 
+vi.mock('@/effects', async () => {
+  const actual = await vi.importActual('@/effects');
+  return { ...actual, closeModal: vi.fn() };
+});
+
 describe('Edit Item', () => {
   const title = 'item1';
 
