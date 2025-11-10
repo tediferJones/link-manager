@@ -104,6 +104,4 @@ describe('Dropdown', () => {
     expect(content.className).toContain('pointer-events-auto');
     expect(content.getAttribute('inert')).toBeNull();
   });
-
-  test('')
 });
