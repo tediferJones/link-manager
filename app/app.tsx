@@ -98,7 +98,7 @@ export default function App({ type }: { type: SizeTypes }) {
             onClick={() => {
               const { root, path } = newUserVault;
               if (newUserVault.path.length) {
-                setPath(getViewPath(root, path).slice(0, -1))
+                setPath(getViewPath(root, path).slice(0, -1));
               }
             }}
           >

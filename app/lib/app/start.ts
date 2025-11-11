@@ -1,13 +1,3 @@
-// import '../../style.css';
-// import { SizeTypes } from '@/types';
-// export default function start(type: SizeTypes) {
-//   console.log(type)
-//   const element = document.createElement('div')
-//   element.textContent = 'helloV2';
-//   element.className = 'bg-red-500';
-//   document.querySelector('#app')?.appendChild(element)
-// }
-
 import '@/style.css';
 import App from '@/app';
 import { DirectoryView } from '@/components/display';

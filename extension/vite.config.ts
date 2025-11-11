@@ -4,7 +4,8 @@ import { defineConfig } from 'vite'
 import zip from 'vite-plugin-zip-pack'
 import manifest from './manifest.config.js'
 import { name, version } from './package.json'
-import tailwind from '@tailwindcss/vite';
+// @ts-ignore
+import tailwind from '@tailwindcss/vite'
 
 export default defineConfig({
   resolve: {
@@ -14,9 +15,9 @@ export default defineConfig({
     },
   },
   plugins: [
-    tailwind(),
     crx({ manifest }),
     zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` }),
+    tailwind(),
   ],
   server: {
     cors: {
