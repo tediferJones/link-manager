@@ -1,6 +1,6 @@
 import { X } from 'lucide';
-import { Icon } from '@/components/ui';
-import { closeModal } from '@/effects';
+import { Icon } from '@/app/components/ui';
+import { closeModal } from '@/app/effects';
 
 // FIX ME move to constants
 export const openClasses = [ 'pointer-events-auto', 'opacity-100' ];

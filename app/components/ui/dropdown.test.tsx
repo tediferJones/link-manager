@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { Dropdown } from '@/components/ui';
+import { Dropdown } from '@/app/components/ui';
 
 describe('Dropdown', () => {
   const key = 'testDropdown';

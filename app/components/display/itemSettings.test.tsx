@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { ItemSettings } from '@/components/display';
-import { mockItem } from '@/lib/test/mockItems';
+import { ItemSettings } from '@/app/components/display';
+import { mockItem } from '@/app/lib/test/mockItems';
 
 // FIX ME would probably be nice to make this test more explicit
 //  - make sure editItem, tagEditor and pathEditor exist on non encrypted items

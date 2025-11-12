@@ -1,4 +1,4 @@
-import { Content, SortedKeysTypes } from '@/types';
+import { Content, SortedKeysTypes } from '@/app/types';
 
 export function getSortedKeyType(item: Content): SortedKeysTypes {
   if (item.pinned) return 'pinned';

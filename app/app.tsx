@@ -1,12 +1,12 @@
 import { ChevronUp, CloudUpload, Link, Plus, User } from 'lucide';
-import { Modal } from '@/components/layout';
-import { Dropdown, Icon, Loading } from '@/components/ui';
-import { AddItem } from '@/components/forms';
-import { openModal } from '@/effects';
-import { newUserVault } from '@/lib/app/userVault';
-import { setPath } from '@/lib/newVault/sync';
-import { getViewPath } from '@/lib/newVault/utils';
-import { SizeTypes } from '@/types';
+import { Modal } from '@/app/components/layout';
+import { Dropdown, Icon, Loading } from '@/app/components/ui';
+import { AddItem } from '@/app/components/forms';
+import { openModal } from '@/app/effects';
+import { newUserVault } from '@/app/lib/app/userVault';
+import { setPath } from '@/app/lib/newVault/sync';
+import { getViewPath } from '@/app/lib/newVault/utils';
+import { SizeTypes } from '@/app/types';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
@@ -55,10 +55,10 @@ import { SizeTypes } from '@/types';
 //    - create /lib/utils/index.ts
 //    - do export * from './file.ts'
 //    - then instead of doing:
-//        import { file } from '@/lib/utils/file'
-//        import { file2 } from '@/lib/utils/file2'
+//        import { file } from '@/app/lib/utils/file'
+//        import { file2 } from '@/app/lib/utils/file2'
 //    - you can just do:
-//        import { file, file2 } from '@/lib/utils'
+//        import { file, file2 } from '@/app/lib/utils'
 // In theory, in vite.config.ts test.environment should be jsdom, but some APIs don't exist
 //  - Most test should be fine with jsdom, instead of specifying jsdom maybe specify node where needed
 // Make getNewSortedKeys function

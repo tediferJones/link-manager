@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { getItem } from '@/lib/newVault/core';
-import { enableEncryption, encryptFolder } from '@/lib/newVault/encryption';
-import { getNewVault } from '@/lib/newVault/utils';
-import { testNewResultFailure, testNewResultSuccess } from '@/lib/test/testResult';
-import { addMockItem } from '@/lib/test/addMockItem';
+import { getItem } from '@/app/lib/newVault/core';
+import { enableEncryption, encryptFolder } from '@/app/lib/newVault/encryption';
+import { getNewVault } from '@/app/lib/newVault/utils';
+import { testNewResultFailure, testNewResultSuccess } from '@/app/lib/test/testResult';
+import { addMockItem } from '@/app/lib/test/addMockItem';
 
 // FIX ME move to constants
 const password = 'password';

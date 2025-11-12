@@ -5,10 +5,11 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build"
+    "build": "tsc && vite build",
+    "typeCheck": "npx tsc --noEmit"
   },
   "dependencies": {
-    "app": "workspace:*"
+    "app": "*"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.3",

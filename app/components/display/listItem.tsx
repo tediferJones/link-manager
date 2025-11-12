@@ -12,16 +12,16 @@ import {
   Settings2,
 } from 'lucide';
 import { ReactNode } from 'jsx-dom';
-import { ItemSettings } from '@/components/display';
-import { Icon } from '@/components/ui';
-import { openModal } from '@/effects';
-import { newUserVault } from '@/lib/app/userVault';
-import { Content, ContentTypes } from '@/types';
-import { swapPriority, toggleWatched } from '@/lib/newVault/details';
-import { getItemPath } from '@/lib/newVault/utils';
-import { throwOnFail } from '@/lib/newVault/result';
-import { encryptFolder } from '@/lib/newVault/encryption';
-import { setPath } from '@/lib/newVault/sync';
+import { ItemSettings } from '@/app/components/display';
+import { Icon } from '@/app/components/ui';
+import { openModal } from '@/app/effects';
+import { newUserVault } from '@/app/lib/app/userVault';
+import { Content, ContentTypes } from '@/app/types';
+import { swapPriority, toggleWatched } from '@/app/lib/newVault/details';
+import { getItemPath } from '@/app/lib/newVault/utils';
+import { throwOnFail } from '@/app/lib/newVault/result';
+import { encryptFolder } from '@/app/lib/newVault/encryption';
+import { setPath } from '@/app/lib/newVault/sync';
 
 // FIX ME replace ReactElement types with ReactNode
 //  - ReactNode is superset of ReactElement
@@ -52,7 +52,7 @@ export const decreasePriorityTitle = 'Move down';
 export const toggleWatchedTitle = 'Toggle watched';
 export const lockFolderTitle = 'Re-encrypt folder';
 
-// FIX ME move to @/lib/utils and write some test for it
+// FIX ME move to @/app/lib/utils and write some test for it
 export function capitalize(str: string) {
   return str[0].toUpperCase() + str.slice(1);
 }

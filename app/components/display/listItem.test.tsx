@@ -1,20 +1,20 @@
 import { describe, expect, test } from 'vitest';
 import { HTMLElementTagNames, SVGElementTagNames } from 'jsx-dom';
-import { ListItem } from '@/components/display';
+import { ListItem } from '@/app/components/display';
 import {
   capitalize,
   decreasePriorityTitle,
   increasePriorityTitle,
   lockFolderTitle,
   toggleWatchedTitle,
-} from '@/components/display/listItem';
-import { mockItem, togglePinned } from '@/lib/test/mockItems';
-import { Content } from '@/types';
+} from '@/app/components/display/listItem';
+import { mockItem, togglePinned } from '@/app/lib/test/mockItems';
+import { Content } from '@/app/types';
 
 // FIX ME move to types file
 type TagNames = HTMLElementTagNames | SVGElementTagNames
 
-// FIX ME move to @/lib/test
+// FIX ME move to @/app/lib/test
 function checkTagType(element: Element, expected: TagNames) {
   expect(element.tagName.toLowerCase()).toBe(expected);
 }

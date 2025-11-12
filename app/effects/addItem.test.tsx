@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { AddItem } from '@/components/forms';
+import { AddItem } from '@/app/components/forms';
 import {
   hrefInputId,
   submitBtnId,
   titleInputId,
-} from '@/components/forms/addItem';
-import { disabledBtnClasses, handleAddItemInput } from '@/effects';
-import getElement from '@/lib/utils/getElement';
+} from '@/app/components/forms/addItem';
+import { disabledBtnClasses, handleAddItemInput } from '@/app/effects';
+import getElement from '@/app/lib/utils/getElement';
 
 describe('Handle add item input', () => {
   beforeEach(() => {

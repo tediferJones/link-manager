@@ -1,5 +1,5 @@
 import { ReactElement } from 'jsx-dom';
-import getElement from '@/lib/utils/getElement';
+import getElement from '@/app/lib/utils/getElement';
 
 // FIX ME add focus trap when opened
 

@@ -1,6 +1,6 @@
 import { Check } from 'lucide';
-import { Icon } from '@/components/ui';
-import getElement from '@/lib/utils/getElement';
+import { Icon } from '@/app/components/ui';
+import getElement from '@/app/lib/utils/getElement';
 
 export default function Checkbox(
   {

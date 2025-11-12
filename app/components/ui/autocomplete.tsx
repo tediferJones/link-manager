@@ -1,6 +1,6 @@
-import { Input } from '@/components/ui';
-import getElement from '@/lib/utils/getElement';
-import { EventHandler, JSXElement, OptPromise } from '@/types';
+import { Input } from '@/app/components/ui';
+import getElement from '@/app/lib/utils/getElement';
+import { EventHandler, JSXElement, OptPromise } from '@/app/types';
 
 // FIX ME move to constants folder (if we ended up choosing that route)
 export const classes = {
@@ -34,7 +34,7 @@ export default function Autocomplete(
 ) {
   const autocompleteId = `autocomplete-${id}`;
 
-  // FIX ME does this belong in @/effects?
+  // FIX ME does this belong in @/app/effects?
   // maybe not because it depends on forming a closure around the generator function
   // or make a function that will take generator function as an argument and return a getResults function
   async function getResults(e: Event & { currentTarget: HTMLInputElement }) {

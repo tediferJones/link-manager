@@ -1,5 +1,5 @@
 import { X } from 'lucide';
-import { Icon } from '@/components/ui';
+import { Icon } from '@/app/components/ui';
 
 export default function Tag(
   {

@@ -1,18 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "strict": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./*"]
+      "@/*": ["./*"]
     },
-    "jsx": "preserve",
-    "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment",
-    "jsxImportSource": "jsx-dom"
   },
-  "exclude": ["node_modules", "dist"]
 }

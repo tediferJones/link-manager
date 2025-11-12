@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { Autocomplete } from '@/components/ui';
-import { classes } from '@/components/ui/autocomplete';
-import getElement from '@/lib/utils/getElement';
+import { Autocomplete } from '@/app/components/ui';
+import { classes } from '@/app/components/ui/autocomplete';
+import getElement from '@/app/lib/utils/getElement';
 
 describe('Autocomplete', () => {
   const id = 'autocompleteId';

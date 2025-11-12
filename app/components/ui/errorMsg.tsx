@@ -1,5 +1,5 @@
 // FIX ME consider renaming to just Error
-// rename associated file in @/effects too
+// rename associated file in @/app/effects too
 //
 // FIX ME is this component really needed?
 //  - only gets used in forms (editItem and decryptPrompt)

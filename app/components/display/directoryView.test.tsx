@@ -1,25 +1,29 @@
 import { describe, expect, test, vi } from 'vitest';
-import { DirectoryView } from '@/components/display';
-import getElement from '@/lib/utils/getElement';
-import { getViewPath } from '@/lib/newVault/utils';
-import { mockItem, togglePinned } from '@/lib/test/mockItems';
-import { directoryViewId, noContentText, paddingClass } from './directoryView';
-import { Content } from '@/types';
+import { DirectoryView } from '@/app/components/display';
+import getElement from '@/app/lib/utils/getElement';
+import { getViewPath } from '@/app/lib/newVault/utils';
+import { mockItem, togglePinned } from '@/app/lib/test/mockItems';
+import {
+  directoryViewId,
+  noContentText,
+  paddingClass,
+} from '@/app/components/display/directoryView';
+import { Content } from '@/app/types';
 
 const mockDecryptPromptId = 'mockDecryptPrompt';
 const testListItemClass = 'testListItem';
 
-vi.mock('@/components/forms', () => ({
+vi.mock('@/app/components/forms', () => ({
   DecryptPrompt: vi.fn(() => <div id={mockDecryptPromptId}></div>),
 }));
 
-vi.mock('@/lib/newVault/utils', async () => {
-  const actual = await vi.importActual('@/lib/newVault/utils');
+vi.mock('@/app/lib/newVault/utils', async () => {
+  const actual = await vi.importActual('@/app/lib/newVault/utils');
   return { ...actual, getViewPath: vi.fn(() => []) };
 });
 
-// FIX ME can we mock just listItem but import from @/components/display
-vi.mock('@/components/display/listItem', () => ({
+// FIX ME can we mock just listItem but import from @/app/components/display
+vi.mock('@/app/components/display/listItem', () => ({
   default: ({ item }: { item: Content }) => (
     <div class={testListItemClass}>{item.title}</div>
   )

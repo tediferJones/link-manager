@@ -1,7 +1,7 @@
-import getElement from '@/lib/utils/getElement';
-import { HotKeyOpts } from '@/types';
-import { setPath } from '../newVault/sync';
-import { newUserVault } from './userVault';
+import { setPath } from '@/app/lib/newVault/sync';
+import { newUserVault } from '@/app/lib/app/userVault';
+import getElement from '@/app/lib/utils/getElement';
+import { HotKeyOpts } from '@/app/types';
 
 function isHotKey(key: string): key is HotKeyOpts {
   return key in hotKeys;

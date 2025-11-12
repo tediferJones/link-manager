@@ -1,8 +1,8 @@
 import { X } from 'lucide';
-import { Icon } from '@/components/ui';
-import { inline } from '@/lib/app/buttonToggleClasses';
-import getElement from '@/lib/utils/getElement';
-import { EventHandler, JSXElement, OptPromise } from '@/types';
+import { Icon } from '@/app/components/ui';
+import { inline } from '@/app/lib/app/buttonToggleClasses';
+import getElement from '@/app/lib/utils/getElement';
+import { EventHandler, JSXElement, OptPromise } from '@/app/types';
 
 // FIX ME write tests for this component
 // FIX ME is this component even really necessary?

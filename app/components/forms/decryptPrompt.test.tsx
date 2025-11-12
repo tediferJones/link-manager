@@ -1,14 +1,14 @@
 import { describe, expect, test, vi } from 'vitest';
-import { DecryptPrompt } from '@/components/forms';
-import { passwordId, errorId } from '@/components/forms/decryptPrompt';
-import { hideError, showError } from '@/effects';
-import { decryptFolder } from '@/lib/newVault/encryption';
-import { newUserVault } from '@/lib/app/userVault';
-import getElement from '@/lib/utils/getElement';
-import { Result } from '@/types';
+import { DecryptPrompt } from '@/app/components/forms';
+import { passwordId, errorId } from '@/app/components/forms/decryptPrompt';
+import { hideError, showError } from '@/app/effects';
+import { decryptFolder } from '@/app/lib/newVault/encryption';
+import { newUserVault } from '@/app/lib/app/userVault';
+import getElement from '@/app/lib/utils/getElement';
+import { Result } from '@/app/types';
 
-vi.mock('@/effects', () => ({ showError: vi.fn(), hideError: vi.fn() }));
-vi.mock('@/lib/newVault/encryption', () => ({ decryptFolder: vi.fn() }));
+vi.mock('@/app/effects', () => ({ showError: vi.fn(), hideError: vi.fn() }));
+vi.mock('@/app/lib/newVault/encryption', () => ({ decryptFolder: vi.fn() }));
 
 vi.useFakeTimers();
 

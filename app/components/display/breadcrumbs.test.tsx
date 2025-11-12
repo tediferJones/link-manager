@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from 'vitest';
-import { Breadcrumbs } from '@/components/display';
-import getElement from '@/lib/utils/getElement';
-import { setPath } from '@/lib/newVault/sync';
+import { Breadcrumbs } from '@/app/components/display';
+import getElement from '@/app/lib/utils/getElement';
+import { setPath } from '@/app/lib/newVault/sync';
 
-vi.mock('@/lib/newVault/sync', () => ({ setPath: vi.fn() }));
+vi.mock('@/app/lib/newVault/sync', () => ({ setPath: vi.fn() }));
 vi.useFakeTimers();
 
 describe('Breadcrumbs', () => {

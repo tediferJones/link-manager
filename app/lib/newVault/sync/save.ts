@@ -1,8 +1,11 @@
-import { packFolder } from '@/lib/newVault/core';
-import { unwrap } from '@/lib/newVault/result';
-import { newUserVault } from '@/lib/app/userVault';
-import { compress } from '@/lib/utils/compression';
-import { Vault } from '@/types';
+import { packFolder } from '@/app/lib/newVault/core';
+import { unwrap } from '@/app/lib/newVault/result';
+import { newUserVault } from '@/app/lib/app/userVault';
+import { compress } from '@/app/lib/utils/compression';
+import { Vault } from '@/app/types';
+
+// FIX ME move to constants
+const storageKey = 'newUserVault';
 
 export async function save() {
   // FIX ME, add package version to saved vault
@@ -16,9 +19,12 @@ export async function save() {
   const packedResult = await packFolder(newUserVault.root);
   const packed = unwrap(packedResult);
   // FIX ME do not compress whole vault, we still want easy access to date and version
-  const savedVault: Vault = { ...newUserVault, root: packed }
+  const savedVault: Vault = { ...newUserVault, root: packed };
   const compressed = await compress(JSON.stringify(savedVault));
-  // FIX ME move to constants
-  const storageKey = 'newUserVault';
-  await chrome.storage.sync.set({ [storageKey]: compressed });
+
+  if (chrome.runtime?.id) {
+    await chrome.storage.sync.set({ [storageKey]: compressed });
+  } else {
+    window.localStorage.setItem(storageKey, compressed);
+  }
 }

@@ -1,7 +1,7 @@
 import { ChevronRight, Home } from 'lucide';
-import { Icon } from '@/components/ui';
-import { setPath } from '@/lib/newVault/sync';
-import getElement from '@/lib/utils/getElement';
+import { Icon } from '@/app/components/ui';
+import { setPath } from '@/app/lib/newVault/sync';
+import getElement from '@/app/lib/utils/getElement';
 
 // FIX ME maybe rename to PathDisplay or just Path
 //  - it's in the display folder so the fact that it's a path is implied

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import asyncReduce from '@/lib/utils/asyncReduce';
+import asyncReduce from '@/app/lib/utils/asyncReduce';
 
 const arr = Array(5).fill(0).map((_, i) => i);
 const func = (total: number, num: number) => total + num;

@@ -3,15 +3,15 @@ import {
   TagEditor,
   PathEditor,
   EditItem,
-} from '@/components/forms';
-import { Checkbox } from '@/components/ui';
-import { openModal } from '@/effects/modal';
-import { newUserVault } from '@/lib/app/userVault';
-import { copyItem } from '@/lib/newVault/core';
-import { togglePinned } from '@/lib/newVault/details';
-import { throwOnFail } from '@/lib/newVault/result';
-import { getItemPath, getViewPath } from '@/lib/newVault/utils';
-import { Content } from '@/types';
+} from '@/app/components/forms';
+import { Checkbox } from '@/app/components/ui';
+import { openModal } from '@/app/effects/modal';
+import { newUserVault } from '@/app/lib/app/userVault';
+import { copyItem } from '@/app/lib/newVault/core';
+import { togglePinned } from '@/app/lib/newVault/details';
+import { throwOnFail } from '@/app/lib/newVault/result';
+import { getItemPath, getViewPath } from '@/app/lib/newVault/utils';
+import { Content } from '@/app/types';
 
 // FIX ME autofocus modal when opened
 // FIX ME make labels bigger and thus easier to click on

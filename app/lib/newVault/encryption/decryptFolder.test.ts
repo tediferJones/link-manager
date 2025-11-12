@@ -3,10 +3,10 @@ import {
   enableEncryption,
   encryptFolder,
   decryptFolder,
-} from '@/lib/newVault/encryption';
-import { getNewVault } from '@/lib/newVault/utils';
-import { addMockItem } from '@/lib/test/addMockItem';
-import { testNewResultFailure, testNewResultSuccess } from '@/lib/test/testResult';
+} from '@/app/lib/newVault/encryption';
+import { getNewVault } from '@/app/lib/newVault/utils';
+import { addMockItem } from '@/app/lib/test/addMockItem';
+import { testNewResultFailure, testNewResultSuccess } from '@/app/lib/test/testResult';
 
 // FIX ME move to constants
 const password = 'password';

@@ -1,8 +1,8 @@
-import { newUserVault } from '@/lib/app/userVault';
-import { render } from '@/lib/newVault/sync';
-import { decompress } from '@/lib/utils/compression';
-import replaceObject from '@/lib/utils/replaceObject';
-import { Vault } from '@/types';
+import { newUserVault } from '@/app/lib/app/userVault';
+import { render } from '@/app/lib/newVault/sync';
+import { decompress } from '@/app/lib/utils/compression';
+import replaceObject from '@/app/lib/utils/replaceObject';
+import { Vault } from '@/app/types';
 
 // FIX ME move to constants
 const storageKey = 'newUserVault';
@@ -14,13 +14,18 @@ export async function load() {
   //  - chrome.storage.local allows for communication between content script and extension
 
   console.log('LOADING')
-  const chromeStorage = await chrome.storage.sync.get();
-  // FIX ME theoretically only using ?. to escape testing errors
-  const userVault = chromeStorage?.[storageKey];
-  if (userVault) {
-    const vault: Vault = JSON.parse(await decompress(userVault));
-    console.log(vault)
+  let savedVault: string | null | undefined;
+  if (chrome.runtime?.id) {
+    const chromeStorage = await chrome.storage.sync.get();
+    savedVault = chromeStorage[storageKey];
+  } else {
+    savedVault = window.localStorage.getItem(storageKey);
+  }
+
+  if (savedVault) {
+    const vault: Vault = JSON.parse(await decompress(savedVault));
     replaceObject(newUserVault, vault);
   }
+
   render();
 }

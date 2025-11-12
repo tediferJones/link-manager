@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.tsx",
   "scripts": {
-    "test": "vitest"
+    "test": "vitest",
+    "typeCheck": "npx tsc --noEmit"
   },
   "author": "",
   "license": "ISC",

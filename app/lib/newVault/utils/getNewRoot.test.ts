@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { getNewRoot } from '@/lib/newVault/utils';
-import getTypedKeys from '@/lib/utils/getTypedKeys';
+import { getNewRoot } from '@/app/lib/newVault/utils';
+import getTypedKeys from '@/app/lib/utils/getTypedKeys';
 
 test('Root folder', () => {
   const rootFolder = getNewRoot();

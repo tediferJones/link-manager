@@ -1,7 +1,7 @@
-import { addItem, deleteItem } from '@/lib/newVault/core';
-import { getParentPath } from '@/lib/newVault/utils';
-import { returnOnFail } from '@/lib/newVault/result';
-import { Content, Result, Vault } from '@/types';
+import { addItem, deleteItem } from '@/app/lib/newVault/core';
+import { getParentPath } from '@/app/lib/newVault/utils';
+import { returnOnFail } from '@/app/lib/newVault/result';
+import { Content, Result, Vault } from '@/app/types';
 
 export async function renameItem(
   root: Vault['root'],
