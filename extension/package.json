@@ -8,9 +8,6 @@
     "build": "tsc && vite build",
     "typeCheck": "npx tsc --noEmit"
   },
-  "dependencies": {
-    "app": "*"
-  },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.3",
     "@types/chrome": "^0.1.1",

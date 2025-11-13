@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "workspaces": [
+    "api",
     "app",
     "extension",
     "pwa"
@@ -11,6 +12,7 @@
     "dev": "npm-run-all --parallel dev:*",
     "dev:extension": "npm --workspace extension run dev",
     "dev:pwa": "npm --workspace pwa run dev",
+    "dev:api": "npm --workspace api run dev",
     "test": "npm run test -ws --if-present",
     "typeCheck": "npm run typeCheck -ws --if-present"
   },
