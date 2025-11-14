@@ -1,13 +1,9 @@
 import express from 'express';
+import router from '@/api/src/routes.js';
 
-const app = express();
+export const app = express();
 
-app.get('/', (_, res) => {
-  res.send('This is the api')
-});
-
-app.get('/vault', (_, res) => {
-  res.send('Return vault')
-});
+app.use(express.json());
+app.use('/', router);
 
 app.listen(8000, () => console.log('Server running on port 8000'));
