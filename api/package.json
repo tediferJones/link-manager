@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "npx tsx watch src/index.ts",
     "typeCheck": "npx tsc --noEmit"
   },
   "author": "",
@@ -13,9 +13,12 @@
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
-    "vite-plugin-node": "^7.0.0"
+    "drizzle-kit": "^0.31.7"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
     "express": "^5.1.0"
   }
 }
