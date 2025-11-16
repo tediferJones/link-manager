@@ -11,12 +11,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
     "drizzle-kit": "^0.31.7"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "express": "^5.1.0"
