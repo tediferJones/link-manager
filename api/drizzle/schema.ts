@@ -1,5 +1,8 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
+// FIX ME verify "PRAGMA foreign_keys = ON;" in database
+// otherwise foreign key relationships will not enforced
+
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }).notNull(),
   email: text('email').unique().notNull(),
@@ -12,9 +15,9 @@ export type UsersInsert = typeof users.$inferInsert;
 export type UsersSelect = typeof users.$inferSelect;
 
 export const sessions = sqliteTable('sessions', {
-  id: integer('id').notNull(),
+  userId: integer('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
   date: integer('date').notNull(),
-  token: text('token').primaryKey().unique().notNull(),
+  sessionId: text('sessionId').primaryKey().unique().notNull(),
 });
 
 export type SessionsInsert = typeof sessions.$inferInsert;
