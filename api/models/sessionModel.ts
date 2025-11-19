@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { db, sessions, SessionsInsert } from '@/api/drizzle';
+import { db, sessions } from '@/api/drizzle';
+import { SessionsInsert } from '@/api/types';
 
 export async function createSession(sessionRec: SessionsInsert) {
   return await db.insert(sessions).values(sessionRec);

@@ -1,12 +1,13 @@
 import { eq } from 'drizzle-orm';
-import { db, vaults, VaultsInsert } from '@/api/drizzle';
+import { db, vaults } from '@/api/drizzle';
+import { VaultsInsert } from '@/api/types';
 
 export async function createVault(vaultRec: VaultsInsert) {
   return await db.insert(vaults).values(vaultRec);
 }
 
 export async function getVaultById(userId: number) {
-  return await db.select().from(vaults).where(eq(vaults.userId, userId));
+  return await db.select().from(vaults).where(eq(vaults.userId, userId)).get();
 }
 
 export async function upsertVault(vaultRec: VaultsInsert) {

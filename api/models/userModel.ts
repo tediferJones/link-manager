@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { db, users, UsersInsert } from '@/api/drizzle';
+import { db, users } from '@/api/drizzle';
+import { UsersInsert } from '@/api/types';
 
 export async function createUser(userRec: UsersInsert) {
   return db.insert(users).values(userRec);
