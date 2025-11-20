@@ -11,22 +11,23 @@ import {
   getSessionCookie,
   getUniqueSessionId,
   getUser,
+  normalize,
   sessionCookieName,
   sessionCookieOpts,
   tryDb,
+  validate,
 } from '@/api/lib';
 import { LoginCredentials, Req } from '@/api/types';
 
 export async function signup(req: Req<LoginCredentials>, res: Response) {
   return await tryDb(res, async () => {
     let { email, password } = req.body;
+    email = normalize(email);
 
     // FIX ME
-    // validate email is a valid email and password is valid (min length, has some special chars, etc..)
     // should also send confirmation/validation email to address, only actually add the account once confirmed
-    if (!email || !password) return res.sendStatus(400);
-
-    email = email.trim().toLowerCase();
+    const error = validate({ email, password });
+    if (error) return res.status(400).json(error);
 
     const emailAlreadyExists = await getUserByEmail(email);
     if (emailAlreadyExists) return res.sendStatus(409);
@@ -40,13 +41,13 @@ export async function signup(req: Req<LoginCredentials>, res: Response) {
 export async function login(req: Req<LoginCredentials>, res: Response) {
   return await tryDb(res, async () => {
     const loginFailMsg = 'Invalid email or password';
-    // FIX ME if email is normalized on signup it needs to be normalized on login too
     let { email, password } = req.body;
+    email = normalize(email);
 
-    if (!email || !password) return res.sendStatus(400);
+    const error = validate({ email, password });
+    if (error) return res.status(400).json(error);
 
     const userRecord = await getUserByEmail(email);
-
     if (!userRecord) return res.status(401).json(loginFailMsg);
 
     const passwordMatch = await bcrypt.compare(
@@ -86,6 +87,7 @@ export async function me(req: Request, res: Response) {
 }
 
 export async function jwt(req: Request, res: Response) {
+  // FIX ME rotate session token every time a new jwt is created
   return tryDb(res, async () => {
     const user = await getUser('session', req);
     if (!user) return res.sendStatus(401);

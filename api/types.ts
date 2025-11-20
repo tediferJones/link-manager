@@ -16,8 +16,8 @@ export type VaultsSelect = typeof vaults.$inferSelect
 export type Req<T> = Request<{}, {}, T>
 
 export type LoginCredentials = {
-  email?: string,
-  password?: string,
+  email: string,
+  password: string,
 }
 
 export type JwtPayload = { userId: number }
