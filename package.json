@@ -6,13 +6,16 @@
     "api",
     "app",
     "extension",
-    "pwa"
+    "pwa",
+    "shared",
+    "wss"
   ],
   "scripts": {
     "dev": "npm-run-all --parallel dev:*",
     "dev:extension": "npm --workspace extension run dev",
     "dev:pwa": "npm --workspace pwa run dev",
     "dev:api": "npm --workspace api run dev",
+    "dev:wss": "npm --workspace wss run dev",
     "test": "npm run test -ws --if-present",
     "typeCheck": "npm run typeCheck -ws --if-present"
   },
