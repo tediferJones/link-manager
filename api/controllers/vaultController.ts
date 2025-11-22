@@ -1,28 +1,33 @@
 import { Request, Response } from 'express';
-import { getVaultById, upsertVault } from '@/api/models';
-import { getUser, tryDb } from '@/api/lib';
+import { deleteVaultById, getVaultById, upsertVault } from '@/api/models';
+import { useDb, useJwt } from '@/api/lib';
 
 export async function getVault(req: Request, res: Response) {
-  return tryDb(res, async () => {
-    const user = await getUser('jwt', req);
-    if (!user) return res.sendStatus(401);
-    const vaultRecord = await getVaultById(user.id);
-    if (!vaultRecord) return res.sendStatus(404);
-    res.json(vaultRecord.vault);
+  return useDb(res, async () => {
+    return useJwt(req, res, async ({ userId }) => {
+      const vaultRecord = await getVaultById(userId);
+      if (!vaultRecord) return res.sendStatus(404);
+      return res.json(vaultRecord.vault);
+    });
   });
 }
 
+// FIX ME add type for body
 export async function updateVault(req: Request, res: Response) {
-  return tryDb(res, async () => {
-    const user = await getUser('jwt', req);
-    if (!user) return res.sendStatus(401);
-    const vault = req.body;
-    await upsertVault({ userId: user.id, vault });
-    res.json(vault);
+  return useDb(res, async () => {
+    return useJwt(req, res, async ({ userId }) => {
+      const vault = req.body;
+      await upsertVault({ userId, vault });
+      return res.json(vault);
+    });
   });
 }
 
-// FIX ME create usable route or delete
-export async function deleteVault(_: Request, res: Response) {
-  res.send('delete vault')
+export async function deleteVault(req: Request, res: Response) {
+  return useDb(res, async () => {
+    return useJwt(req, res, async ({ userId }) => {
+      await deleteVaultById(userId);
+      return res.sendStatus(204);
+    });
+  });
 }

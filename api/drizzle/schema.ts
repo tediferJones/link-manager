@@ -11,6 +11,7 @@ export const users = sqliteTable('users', {
   email: text('email').unique().notNull(),
   passwordHash: text('passwordHash').notNull(),
   date: integer('date').notNull(),
+  verified: integer({ mode: 'boolean' }).notNull(),
 });
 
 export const sessions = sqliteTable('sessions', {
@@ -23,3 +24,9 @@ export const vaults = sqliteTable('vaults', {
   userId: integer('userId').unique().notNull().references(...refUserId),
   vault: text('vault').notNull(),
 });
+
+export const verificationTokens = sqliteTable('verificationTokens', {
+  userId: integer('userId').unique().notNull().references(...refUserId),
+  date: integer('date').notNull(),
+  token: text('token').unique().notNull()
+})

@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 
-export async function tryDb(res: Response, func: Function) {
+export async function useDb(res: Response, func: Function) {
   try {
     return await func()
   } catch {
