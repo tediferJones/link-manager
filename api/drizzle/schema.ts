@@ -10,23 +10,18 @@ export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }).notNull(),
   email: text('email').unique().notNull(),
   passwordHash: text('passwordHash').notNull(),
-  date: integer('date').notNull(),
+  createdAt: integer('createdAt').notNull(),
   verified: integer({ mode: 'boolean' }).notNull(),
 });
 
-export const sessions = sqliteTable('sessions', {
+export const tokens = sqliteTable('tokens', {
   userId: integer('userId').notNull().references(...refUserId),
-  date: integer('date').notNull(),
-  sessionId: text('sessionId').primaryKey().unique().notNull(),
+  expiresAt: integer('expiresAt').notNull(),
+  token: text('token').primaryKey().unique().notNull(),
+  type: text('type', { enum: [ 'session', 'verify', 'reset' ] }).notNull(),
 });
 
 export const vaults = sqliteTable('vaults', {
   userId: integer('userId').unique().notNull().references(...refUserId),
   vault: text('vault').notNull(),
 });
-
-export const verificationTokens = sqliteTable('verificationTokens', {
-  userId: integer('userId').unique().notNull().references(...refUserId),
-  date: integer('date').notNull(),
-  token: text('token').unique().notNull()
-})

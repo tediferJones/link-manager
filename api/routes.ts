@@ -10,11 +10,13 @@ import {
   me,
   signup,
   updateVault,
+  verify,
 } from '@/api/controllers';
 
 const router = Router();
 
 router.post('/signup', signup);
+router.get('/verify', verify);
 router.post('/login', login);
 router.post('/logout', logout);
 router.get('/jwt', jwt);

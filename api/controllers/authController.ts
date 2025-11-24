@@ -1,19 +1,22 @@
 import { Request, Response } from 'express';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcrypt';
+import ms from 'ms';
 import {
-  createSession,
+  createToken,
   createUser,
-  deleteSession,
-  getSessionById,
+  deleteToken,
+  getTokenByValue,
   getUserByEmail,
   getUserById,
-  updateSession,
+  updateToken,
+  updateUserById,
 } from '@/api/models';
 import {
   getSessionCookie,
-  getUniqueSessionId,
+  getUniqueToken,
   normalize,
+  sendConfirmationEmail,
   sessionCookieName,
   sessionCookieOpts,
   useDb,
@@ -21,6 +24,8 @@ import {
   validate,
 } from '@/api/lib';
 import { LoginCredentials, Req } from '@/api/types';
+
+// FIX ME this file is getting too big, break it up into individual functions
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 
@@ -38,17 +43,38 @@ export async function signup(req: Req<LoginCredentials>, res: Response) {
     if (emailAlreadyExists) return res.sendStatus(409);
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await createUser({
+    const userRec = await createUser({
       email,
       passwordHash,
-      date: Date.now(),
+      createdAt: Date.now(),
       verified: false,
     });
-    return res.sendStatus(201);
+    await sendConfirmationEmail(userRec);
+    return res.status(201).json('Verify email address');
   });
 }
 
+export async function verify(req: Req<never, { token?: string }>, res: Response) {
+  const { token } = req.query;
+  if (!token) return res.status(400).json('token query parameter is required');
+  const tokenRec = await getTokenByValue(token);
+  if (!tokenRec || tokenRec.type !== 'verify') {
+    return res.status(400).json('token is invalid');
+  }
+  const userRec = await getUserById(tokenRec.userId);
+  if (!userRec) {
+    throw Error('token is valid but user does not exist');
+  }
+  userRec.verified = true;
+  await updateUserById(userRec);
+  // FIX ME should probably redirect to pwa/extension
+  return res.sendStatus(200).json('Your account has been activated, you can close this window');
+}
+
 export async function login(req: Req<LoginCredentials>, res: Response) {
+  // FIX ME
+  // what if verification token has expired?
+  // we need to figure out some way for users to re-send verification emails
   return await useDb(res, async () => {
     const loginFailMsg = 'Invalid email or password';
     let { email, password } = req.body;
@@ -59,6 +85,9 @@ export async function login(req: Req<LoginCredentials>, res: Response) {
 
     const userRecord = await getUserByEmail(email);
     if (!userRecord) return res.status(401).json(loginFailMsg);
+    if (!userRecord.verified) {
+      return res.status(403).json('Your account has not been verified');
+    }
 
     const passwordMatch = await bcrypt.compare(
       password,
@@ -67,13 +96,14 @@ export async function login(req: Req<LoginCredentials>, res: Response) {
 
     if (!passwordMatch) return res.status(401).json(loginFailMsg);
 
-    const sessionId = await getUniqueSessionId();
-    await createSession({
+    const token = await getUniqueToken();
+    await createToken({
       userId: userRecord.id,
-      sessionId,
-      date: Date.now(),
+      token,
+      expiresAt: Date.now() + ms('99y'),
+      type: 'session',
     });
-    res.cookie(sessionCookieName, sessionId, sessionCookieOpts);
+    res.cookie(sessionCookieName, token, sessionCookieOpts);
 
     return res.sendStatus(201);
   });
@@ -83,7 +113,7 @@ export async function logout(req: Request, res: Response) {
   return useDb(res, async () => {
     const sessionId = getSessionCookie(req);
     if (sessionId) {
-      await deleteSession(sessionId);
+      await deleteToken(sessionId);
       res.clearCookie(sessionCookieName, sessionCookieOpts);
     }
     return res.sendStatus(204);
@@ -104,14 +134,17 @@ export async function jwt(req: Request, res: Response) {
   return useDb(res, async () => {
     const sessionId = getSessionCookie(req);
     if (!sessionId) return res.status(401).json('No session cookie found');
-    const sessionRec = await getSessionById(sessionId);
+    const sessionRec = await getTokenByValue(sessionId);
     if (!sessionRec) return res.status(401).json('Session is no longer valid');
+    if (sessionRec.type !== 'session') {
+      return res.status(401).json('Token is not a session token');
+    }
 
     const userRec = await getUserById(sessionRec.userId);
     if (!userRec) return res.status(401).json('User does not exist');
     if (!userRec.verified) return res.status(401).json('Not verified');
 
-    await updateSession(sessionId, await getUniqueSessionId());
+    await updateToken(sessionId, await getUniqueToken());
 
     const jwt = await new SignJWT({ userId: sessionRec.userId })
       .setProtectedHeader({ alg: 'HS256' })
