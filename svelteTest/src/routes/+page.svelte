@@ -1,6 +1,791 @@
-<p>Basic Svelte -> Bindings -> Text inputs</p>
+<p>Advanved Svelte -> Advanced reactivity -> Reactive classes</p>
 
 <!--
+// Advanved Svelte -> Advanced reactivity -> Raw state
+<script>
+	import { scale } from './utils.js';
+	import { poll } from './data.js';
+
+	let data = $state.raw(poll());
+
+	let w = $state(1);
+	let h = $state(1);
+
+	const min = $derived(Math.min(...data) - 5);
+	const max = $derived(Math.max(...data) + 5);
+	const x = $derived(scale([0, data.length], [0, w]));
+	const y = $derived(scale([min, max], [h, 0]));
+
+	const ticks = $derived.by(() => {
+		const result = [];
+		let n = 10 * Math.ceil(min / 10);
+		while (n < max) {
+			result.push(n);
+			n += 10;
+		}
+		return result;
+	});
+
+	$effect(() => {
+		const interval = setInterval(() => {
+			data = poll();
+		}, 200);
+
+		return () => {
+			clearInterval(interval);
+		};
+	});
+</script>
+
+<div class="outer">
+	<svg width={w} height={h} bind:clientWidth={w} bind:clientHeight={h}>
+		<line y1={h} y2={h} x2={w} />
+
+		{#each ticks as tick}
+			<g class="tick" transform="translate(0,{y(tick)})">
+				<line x2={w} />
+				<text x={-5}>{tick}</text>
+			</g>
+		{/each}
+
+		<polyline points={data.map((d, i) => [x(i), y(d)]).join(' ')} />
+
+		<text x={10} y={10} font-size={36}>$SVLT</text>
+	</svg>
+</div>
+
+<style>
+	.outer {
+		width: 100%;
+		height: 100%;
+		padding: 2em;
+		box-sizing: border-box;
+	}
+
+	svg {
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+	}
+
+	polyline {
+		fill: none;
+		stroke: #ff3e00;
+		stroke-width: 2;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+
+	line {
+		stroke: #aaa;
+	}
+
+	.tick {
+		stroke-dasharray: 2 2;
+
+		text {
+			text-anchor: end;
+			dominant-baseline: middle;
+		}
+	}
+</style>
+
+// Basic Svelte -> Transitions -> Key blocks
+<script>
+	import { typewriter } from './transition.js';
+	import { messages } from './loading-messages.js';
+
+	let i = $state(-1);
+
+	$effect(() => {
+		const interval = setInterval(() => {
+			i += 1;
+			i %= messages.length;
+		}, 2500);
+
+		return () => {
+			clearInterval(interval);
+		};
+	});
+</script>
+
+<h1>loading...</h1>
+
+{#key i}
+<p in:typewriter={{ speed: 10 }}>
+	{messages[i] || ''}
+</p>
+{/key}
+
+// Basic Svelte -> Transitions -> Global transitions
+<script>
+	import { slide } from 'svelte/transition';
+
+	let items = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+
+	let showItems = $state(true);
+	let i = $state(5);
+</script>
+
+<label>
+	<input type="checkbox" bind:checked={showItems} />
+	show list
+</label>
+
+<label>
+	<input type="range" bind:value={i} max="10" />
+</label>
+
+{#if showItems}
+	{#each items.slice(0, i) as item}
+		<div transition:slide|global>
+			{item}
+		</div>
+	{/each}
+{/if}
+
+<style>
+	div {
+		padding: 0.5em 0;
+		border-top: 1px solid #eee;
+	}
+</style>
+
+// Basic Svelte -> Transitions -> Transition events
+<script>
+	import { fly } from 'svelte/transition';
+
+	let visible = $state(true);
+	let status = $state('waiting...');
+</script>
+
+<p>status: {status}</p>
+
+<label>
+	<input type="checkbox" bind:checked={visible} />
+	visible
+</label>
+
+{#if visible}
+	<p
+		transition:fly={{ y: 200, duration: 2000 }}
+    onintrostart={() => status = 'intro started'}
+    onoutrostart={() => status = 'outro started'}
+    onintroend={() => status = 'intro ended'}
+    onoutroend={() => status = 'outro ended'}
+	>
+		Flies in and out
+	</p>
+{/if}
+
+// Basic Svelte -> Transitions -> Custom JS transitions
+<script lang='ts'>
+	let visible = $state(false);
+
+	function typewriter(node: any, { speed = 1 }) {
+		const valid = node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE;
+
+		if (!valid) {
+			throw new Error(`This transition only works on elements with a single text node child`);
+		}
+
+    const text = node.textContent;
+    const duration = text.length / (speed * 0.01);
+
+		return {
+      duration,
+      tick: (t: any) => {
+        const i = Math.trunc(text.length * t);
+        node.textContent = text.slice(0, i);
+      }
+    };
+	}
+</script>
+
+<label>
+	<input type="checkbox" bind:checked={visible} />
+	visible
+</label>
+
+{#if visible}
+	<p transition:typewriter>
+		The quick brown fox jumps over the lazy dog
+	</p>
+{/if}
+
+// Basic Svelte -> Transitions -> Custom CSS transitions
+<script lang='ts'>
+	import { fade } from 'svelte/transition';
+  import { elasticOut } from 'svelte/easing';
+
+	let visible = $state(true);
+
+	function spin(node: any, { duration }: any) {
+		return {
+			duration,
+			css: (t: any, u: any) => {
+        const eased = elasticOut(t);
+
+        return `
+          transform: scale(${eased}) rotate(${eased * 1000}deg);
+          color: hsl(
+            ${Math.trunc(t * 360)},
+            ${Math.min(100, 1000 * u)}%,
+            ${Math.min(50, 500 * u)}%
+          );
+        `
+      }
+		};
+	}
+</script>
+
+<label>
+	<input type="checkbox" bind:checked={visible} />
+	visible
+</label>
+
+{#if visible}
+	<div
+		class="centered"
+		in:spin={{ duration: 8000 }}
+		out:fade
+	>
+		<span>transitions!</span>
+	</div>
+{/if}
+
+<style>
+	.centered {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	span {
+		position: absolute;
+		transform: translate(-50%, -50%);
+		font-size: 4em;
+	}
+</style>
+
+// Basic Svelte -> Transitions -> The transition directive/Adding parameters/In and out
+<script lang='ts'>
+  import { fade, fly } from 'svelte/transition' ;
+
+	let visible = $state(true);
+</script>
+
+<label>
+	<input type="checkbox" bind:checked={visible} />
+	visible
+</label>
+
+{#if visible}
+	<p in:fly={{ y: 200, duration: 2000 }} out:fade>
+		Flies in, fades out
+	</p>
+{/if}
+
+// Basic Svelte -> Actions -> Adding parameters
+<script lang='ts'>
+	import tippy from 'tippy.js';
+
+	let content = $state('Hello!');
+
+	function tooltip(node: any, fn: any) {
+		$effect(() => {
+			const tooltip = tippy(node, fn());
+
+			return (tooltip as any).destroy;
+		});
+	}
+</script>
+
+<input bind:value={content} />
+
+<button use:tooltip={() => ({ content })}>
+	Hover me
+</button>
+
+<style>
+	:global {
+		[data-tippy-root] {
+			--bg: #666;
+			background-color: var(--bg);
+			color: white;
+			border-radius: 0.2rem;
+			padding: 0.2rem 0.6rem;
+			filter: drop-shadow(1px 1px 3px rgb(0 0 0 / 0.1));
+
+			* {
+				transition: none;
+			}
+		}
+
+		[data-tippy-root]::before {
+			--size: 0.4rem;
+			content: '';
+			position: absolute;
+			left: calc(50% - var(--size));
+			top: calc(-2 * var(--size) + 1px);
+			border: var(--size) solid transparent;
+			border-bottom-color: var(--bg);
+		}
+	}
+</style>
+
+// Basic Svelte -> Actions -> The use directive
+<script>
+	import Canvas from './Canvas.svelte';
+  import { trapFocus } from './actions.svelte.ts';
+
+	const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'white', 'black'];
+
+	let selected = $state(colors[0]);
+	let size = $state(10);
+	let showMenu = $state(true);
+</script>
+
+<div class="container">
+	<Canvas color={selected} size={size} />
+
+	{#if showMenu}
+		<div
+			role="presentation"
+			class="modal-background"
+			onclick={(event) => {
+				if (event.target === event.currentTarget) {
+					showMenu = false;
+				}
+			}}
+			onkeydown={(e) => {
+				if (e.key === 'Escape') {
+					showMenu = false;
+				}
+			}}
+		>
+			<div class="menu" use:trapFocus>
+				<div class="colors">
+					{#each colors as color}
+						<button
+							class="color"
+							aria-label={color}
+							aria-current={selected === color}
+							style="--color: {color}"
+							onclick={() => {
+								selected = color;
+							}}
+						></button>
+					{/each}
+				</div>
+
+				<label>
+					small
+					<input type="range" bind:value={size} min="1" max="50" />
+					large
+				</label>
+			</div>
+		</div>
+	{/if}
+
+	<div class="controls">
+		<button class="show-menu" onclick={() => showMenu = !showMenu}>
+			{showMenu ? 'close' : 'menu'}
+		</button>
+	</div>
+</div>
+
+<style>
+	.container {
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.controls {
+		position: absolute;
+		left: 0;
+		top: 0;
+		padding: 1em;
+	}
+
+	.show-menu {
+		width: 5em;
+	}
+
+	.modal-background {
+		position: fixed;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		backdrop-filter: blur(20px);
+	}
+
+	.menu {
+		position: relative;
+		background: var(--bg-2);
+		width: calc(100% - 2em);
+		max-width: 28em;
+		padding: 1em 1em 0.5em 1em;
+		border-radius: 1em;
+		box-sizing: border-box;
+		user-select: none;
+	}
+
+	.colors {
+		display: grid;
+		align-items: center;
+		grid-template-columns: repeat(9, 1fr);
+		grid-gap: 0.5em;
+	}
+
+	.color {
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: var(--color, #fff);
+		transform: none;
+		filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2));
+		transition: all 0.1s;
+	}
+
+	.color[aria-current="true"] {
+		transform: translate(1px, 1px);
+		filter: none;
+		box-shadow: inset 3px 3px 4px rgba(0,0,0,0.2);
+	}
+
+	.menu label {
+		display: flex;
+		width: 100%;
+		margin: 1em 0 0 0;
+	}
+
+	.menu input {
+		flex: 1;
+	}
+</style>
+
+// Basic Svelte -> Classes and styles -> Component styles
+<script>
+  import Box from './Box.svelte';
+</script>
+
+<div class='boxes'>
+  <Box --color='red' />
+  <Box --color='green' />
+  <Box --color='blue' />
+</div>
+
+<style>
+  /*
+  .boxes :global(.box:nth-child(1)) {
+    background-color: red;
+  }
+
+  .boxes :global(.box:nth-child(2)) {
+    background-color: green;
+  }
+
+  .boxes :global(.box:nth-child(3)) {
+    background-color: blue;
+  }
+  */
+</style>
+
+// Basic Svelte -> Classes and styles -> The class attribute/The style directive
+<script>
+	let flipped = $state(false);
+</script>
+
+<div class="container">
+	Flip the card
+	<button
+		class="card"
+    style:transform={flipped ? 'rotateY(0)' : ''}
+    style:--bg-1='palegoldenrod'
+    style:--bg-2='black'
+    style:--bg-3='goldenrod'
+		onclick={() => flipped = !flipped}
+	>
+		<div class="front">
+			<span class="symbol">♠</span>
+		</div>
+		<div class="back">
+			<div class="pattern"></div>
+		</div>
+	</button>
+</div>
+
+<style>
+	.container {
+		display: flex;
+		flex-direction: column;
+		gap: 1em;
+		height: 100%;
+		align-items: center;
+		justify-content: center;
+		perspective: 100vh;
+	}
+
+	.card {
+		position: relative;
+		aspect-ratio: 2.5 / 3.5;
+		font-size: min(1vh, 0.25rem);
+		height: 80em;
+		background: var(--bg-1);
+		border-radius: 2em;
+		transform: rotateY(180deg);
+		transition: transform 0.4s;
+		transform-style: preserve-3d;
+		padding: 0;
+		user-select: none;
+		cursor: pointer;
+	}
+
+	.card.flipped {
+		transform: rotateY(0);
+	}
+
+	.front, .back {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		left: 0;
+		top: 0;
+		backface-visibility: hidden;
+		border-radius: 2em;
+		border: 1px solid var(--fg-2);
+		box-sizing: border-box;
+		padding: 2em;
+	}
+
+	.front {
+		background: url(./svelte-logo.svg) no-repeat 5em 5em, url(./svelte-logo.svg) no-repeat calc(100% - 5em) calc(100% - 5em);
+		background-size: 8em 8em, 8em 8em;
+	}
+
+	.back {
+		transform: rotateY(180deg);
+	}
+
+	.symbol {
+		font-size: 30em;
+		color: var(--fg-1);
+	}
+
+	.pattern {
+		width: 100%;
+		height: 100%;
+		background-color: var(--bg-2);
+		/* pattern from https://projects.verou.me/css3patterns/#marrakesh */
+		background-image:
+		radial-gradient(var(--bg-3) 0.9em, transparent 1em),
+		repeating-radial-gradient(var(--bg-3) 0, var(--bg-3) 0.4em, transparent 0.5em, transparent 2em, var(--bg-3) 2.1em, var(--bg-3) 2.5em, transparent 2.6em, transparent 5em);
+		background-size: 3em 3em, 9em 9em;
+		background-position: 0 0;
+		border-radius: 1em;
+	}
+</style>
+
+// Basic Svelte -> Bindings -> Textarea inputs
+<script lang='ts'>
+  // Cannot find marked because it's a third party package
+	import { marked } from 'marked';
+
+	let value = $state(`Some words are *italic*, some are **bold**\n\n- lists\n- are\n- cool`);
+</script>
+
+<div class="grid">
+	input
+	<textarea {value}></textarea>
+
+	output
+	<div>{@html marked(value)}</div>
+</div>
+
+<style>
+	.grid {
+		display: grid;
+		grid-template-columns: 5em 1fr;
+		grid-template-rows: 1fr 1fr;
+		grid-gap: 1em;
+		height: 100%;
+	}
+
+	textarea {
+		flex: 1;
+		resize: none;
+	}
+</style>
+
+// Basic Svelte -> Bindings -> Group inputs/Select multiple
+<script lang='ts'>
+	let scoops = $state(1);
+	let flavours: string[] = $state([]);
+
+	const formatter = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
+</script>
+
+<h2>Size</h2>
+
+{#each [1, 2, 3] as number (number)}
+	<label>
+		<input
+			type="radio"
+			name="scoops"
+			value={number}
+      bind:group={scoops}
+		/>
+
+		{number} {number === 1 ? 'scoop' : 'scoops'}
+	</label>
+{/each}
+
+<h2>Flavours</h2>
+
+<select multiple bind:value={flavours}>
+  {#each ['cookies and cream', 'mint choc chip', 'raspberry ripple'] as flavour (flavour)}
+    <option>{flavour}</option>
+  {/each}
+</select>
+
+{#if flavours.length === 0}
+	<p>Please select at least one flavour</p>
+{:else if flavours.length > scoops}
+	<p>Can't order more flavours than scoops!</p>
+{:else}
+	<p>
+		You ordered {scoops} {scoops === 1 ? 'scoop' : 'scoops'}
+		of {formatter.format(flavours)}
+	</p>
+{/if}
+
+// Basic Svelte -> Bindings -> Select bindings
+<script lang='ts'>
+	let questions = [
+		{
+			id: 1,
+			text: `Where did you go to school?`
+		},
+		{
+			id: 2,
+			text: `What is your mother's name?`
+		},
+		{
+			id: 3,
+			text: `What is another personal fact that an attacker could easily find with Google?`
+		}
+	];
+
+	let selected: typeof questions[number] | undefined = $state();
+
+	let answer = $state('');
+
+	function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+
+		alert(
+			`answered question ${selected?.id} (${selected?.text}) with "${answer}"`
+		);
+	}
+
+  console.log('on same tick', selected);
+  setTimeout(() => console.log('on next tick', selected))
+  setTimeout(() => console.log('2 seconds later', selected), 2000)
+</script>
+
+<h2>Insecurity questions</h2>
+
+<form onsubmit={handleSubmit}>
+	<select
+		bind:value={selected}
+		onchange={() => (answer = '')}
+	>
+		{#each questions as question (question)}
+			<option value={question}>
+				{question.text}
+			</option>
+		{/each}
+	</select>
+
+	<input bind:value={answer} />
+
+	<button disabled={!answer} type="submit">
+		Submit
+	</button>
+</form>
+
+<p>
+	selected question {selected
+		? selected.id
+		: '[waiting...]'}
+</p>
+
+// Basic Svelte -> Bindings -> Checkbox inputs
+<script>
+  let yes = $state(false);
+</script>
+
+<label>
+  <input type='checkbox' bind:checked={yes} />
+  Yes! Send me regualr email spam
+</label>
+
+{#if yes}
+  <p>
+		Thank you. We will bombard your inbox and sell
+		your personal details.
+  </p>
+{:else}
+  <p>
+		You must opt in to continue. If you're not
+		paying, you're the product.
+  </p>
+{/if}
+
+<button disabled={!yes}>Subscribe</button>
+
+// Basic Svelte -> Bindings -> Numeric inputs
+<script>
+  let a = $state(1);
+  let b = $state(2);
+</script>
+
+<label>
+  <input type='number' bind:value={a} min='0' max='10' />
+  <input type='range' bind:value={a} min='0' max='10' />
+</label>
+
+<label>
+  <input type='number' bind:value={b} min='0' max='10' />
+  <input type='range' bind:value={b} min='0' max='10' />
+</label>
+
+<p>{a} + {b} = {a + b}</p>
+
+// Basic Svelte -> Bindings -> Text inputs
+<script>
+  let name = $state('world');
+  setTimeout(() => {
+    name = 'TIMEOUTCHANGE'
+  }, 5000)
+</script>
+
+<input bind:value={name} />
+
+<h1>Hello {name}!</h1>
+
+
 // Basic Svelte -> Events -> Spreading events
 <script lang='ts'>
   import BigRedButton from './BigRedButton.svelte';
