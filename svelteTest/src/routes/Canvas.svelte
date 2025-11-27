@@ -5,6 +5,10 @@
 	let context = $state();
 	let coords = $state();
 
+  export function clear() {
+    context.clearRect(0, 0, canvas.width, canvas.height)
+  }
+
 	$effect(() => {
 		context = canvas.getContext('2d');
 		resize();

@@ -1,6 +1,820 @@
-<p>Advanved Svelte -> Advanced reactivity -> Reactive classes</p>
+<p>Advanved Svelte -> Special elements -> svelte:window tag thing</p>
 
 <!--
+// Advanved Svelte -> Context API -> setContext and getContext
+<script lang='ts'>
+	import Canvas from './CanvasV2.svelte';
+	import Square from './Square.svelte';
+
+	// we use a seeded random number generator to get consistent jitter
+	let seed = 1;
+
+	function random() {
+		seed *= 16807;
+		seed %= 2147483647;
+		return (seed - 1) / 2147483646;
+	}
+
+	function jitter(amount: number) {
+		return amount * (random() - 0.5);
+	}
+</script>
+
+<div class="container">
+	<Canvas width={800} height={1200}>
+		{#each Array(12) as _, c (c)}
+			{#each Array(22) as _, r (r)}
+				<Square
+					x={180 + c * 40}
+					y={180 + r * 40}
+					size={40}
+          rotate={jitter(r * 0.05)}
+				/>
+			{/each}
+		{/each}
+	</Canvas>
+</div>
+
+<style>
+	.container {
+		height: 100%;
+		aspect-ratio: 2 / 3;
+		margin: 0 auto;
+		background: rgb(224, 219, 213);
+		filter: drop-shadow(0.5em 0.5em 1em rgba(0, 0, 0, 0.1));
+	}
+</style>
+
+// Advanved Svelte -> Advanced transitions -> Deferred transitions/Animations
+<script lang='ts'>
+	import TodoList from './TodoList.svelte';
+
+	const todos = $state([
+		{ id: 1, done: false, description: 'write some docs' },
+		{ id: 2, done: false, description: 'start writing blog post' },
+		{ id: 3, done: true, description: 'buy some milk' },
+		{ id: 4, done: false, description: 'mow the lawn' },
+		{ id: 5, done: false, description: 'feed the turtle' },
+		{ id: 6, done: false, description: 'fix some bugs' }
+	]);
+
+	let uid = todos.length + 1;
+
+	function remove(todo: typeof todos[number]) {
+		const index = todos.indexOf(todo);
+		todos.splice(index, 1);
+	}
+</script>
+
+<div class="board">
+	<input
+		placeholder="what needs to be done?"
+		onkeydown={(e) => {
+			if (e.key !== 'Enter') return;
+
+			todos.push({
+				id: uid++,
+				done: false,
+				description: e.currentTarget.value
+			});
+
+			e.currentTarget.value = '';
+		}}
+	/>
+
+	<div class="todo">
+		<h2>todo</h2>
+		<TodoList todos={todos.filter((t) => !t.done)} {remove} />
+	</div>
+
+	<div class="done">
+		<h2>done</h2>
+		<TodoList todos={todos.filter((t) => t.done)} {remove} />
+	</div>
+</div>
+
+<style>
+	.board {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-column-gap: 1em;
+		max-width: 36em;
+		margin: 0 auto;
+	}
+
+	.board > input {
+		font-size: 1.4em;
+		grid-column: 1/3;
+		padding: 0.5em;
+		margin: 0 0 1rem 0;
+	}
+
+	h2 {
+		font-size: 2em;
+		font-weight: 200;
+	}
+</style>
+
+// Advanved Svelte -> Advanced bindings -> Binding to component instances
+<script>
+	import Canvas from './Canvas.svelte';
+	import { trapFocus } from './actions.svelte.js';
+
+	const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'white', 'black'];
+
+	let selected = $state(colors[0]);
+	let size = $state(10);
+	let showMenu = $state(true);
+
+  let canvas;
+</script>
+
+<div class="container">
+	<Canvas bind:this={canvas} color={selected} size={size} />
+
+	{#if showMenu}
+		<div
+			role="presentation"
+			class="modal-background"
+			onclick={(event) => {
+				if (event.target === event.currentTarget) {
+					showMenu = false;
+				}
+			}}
+			onkeydown={(e) => {
+				if (e.key === 'Escape') {
+					showMenu = false;
+				}
+			}}
+		>
+			<div class="menu" use:trapFocus>
+				<div class="colors">
+					{#each colors as color (color)}
+						<button
+							class="color"
+							aria-label={color}
+							aria-current={selected === color}
+							style="--color: {color}"
+							onclick={() => {
+								selected = color;
+							}}
+						></button>
+					{/each}
+				</div>
+
+				<label>
+					small
+					<input type="range" bind:value={size} min="1" max="50" />
+					large
+				</label>
+			</div>
+		</div>
+	{/if}
+
+	<div class="controls">
+		<button class="show-menu" onclick={() => showMenu = !showMenu}>
+			{showMenu ? 'close' : 'menu'}
+		</button>
+
+    <button onclick={() => canvas.clear()}>
+      clear
+    </button>
+	</div>
+</div>
+
+<style>
+	.container {
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.controls {
+		position: absolute;
+		left: 0;
+		top: 0;
+		padding: 1em;
+	}
+
+	.show-menu {
+		width: 5em;
+	}
+
+	.modal-background {
+		position: fixed;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		backdrop-filter: blur(20px);
+	}
+
+	.menu {
+		position: relative;
+		background: var(--bg-2);
+		width: calc(100% - 2em);
+		max-width: 28em;
+		padding: 1em 1em 0.5em 1em;
+		border-radius: 1em;
+		box-sizing: border-box;
+		user-select: none;
+	}
+
+	.colors {
+		display: grid;
+		align-items: center;
+		grid-template-columns: repeat(9, 1fr);
+		grid-gap: 0.5em;
+	}
+
+	.color {
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: var(--color, #fff);
+		transform: none;
+		filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2));
+		transition: all 0.1s;
+	}
+
+	.color[aria-current="true"] {
+		transform: translate(1px, 1px);
+		filter: none;
+		box-shadow: inset 3px 3px 4px rgba(0,0,0,0.2);
+	}
+
+	.menu label {
+		display: flex;
+		width: 100%;
+		margin: 1em 0 0 0;
+	}
+
+	.menu input {
+		flex: 1;
+	}
+</style>
+
+// Advanved Svelte -> Advanced bindings -> Component bindings
+<script>
+	import Keypad from './Keypad.svelte';
+
+	let pin = $state('');
+
+	let view = $derived(pin
+		? pin.replace(/\d(?!$)/g, '•')
+		: 'enter your pin');
+
+	function onsubmit() {
+		alert(`submitted ${pin}`);
+	}
+</script>
+
+<h1 style="opacity: {pin ? 1 : 0.4}">
+	{view}
+</h1>
+
+<Keypad bind:value={pin} {onsubmit} />
+
+// Advanved Svelte -> Advanced bindings -> This
+<script lang='ts'>
+	import { paint } from './gradient.js';
+
+  let canvas;
+
+	$effect(() => {
+		const context = canvas.getContext('2d');
+
+		let frame = requestAnimationFrame(function loop(t) {
+			frame = requestAnimationFrame(loop);
+			paint(context, t);
+		});
+
+		return () => {
+			cancelAnimationFrame(frame);
+		};
+	});
+</script>
+
+<canvas bind:this={canvas} width={32} height={32}></canvas>
+
+<style>
+	canvas {
+		position: fixed;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		background-color: #666;
+		mask: url(./svelte-logo-mask.svg) 50% 50% no-repeat;
+		mask-size: 60vmin;
+		-webkit-mask: url(./svelte-logo-mask.svg) 50% 50% no-repeat;
+		-webkit-mask-size: 60vmin;
+	}
+</style>
+
+// Advanved Svelte -> Advanced bindings -> Dimensions
+<script>
+	let w = $state();
+	let h = $state();
+	let size = $state(42);
+</script>
+
+<label>
+	<input type="range" bind:value={size} min="10" max="100" />
+	font size ({size}px)
+</label>
+
+<div bind:clientWidth={w} bind:clientHeight={h}>
+	<span style="font-size: {size}px" contenteditable>
+		edit this text
+	</span>
+
+	<span class="size">{w} x {h}px</span>
+</div>
+
+<style>
+	div {
+		position: relative;
+		display: inline-block;
+		padding: 0.5rem;
+		background: hsla(15, 100%, 50%, 0.1);
+		border: 1px solid hsl(15, 100%, 50%);
+	}
+
+	.size {
+		position: absolute;
+		right: -1px;
+		bottom: -1.4em;
+		line-height: 1;
+		background: hsl(15, 100%, 50%);
+		color: white;
+		padding: 0.2em 0.5em;
+		white-space: pre;
+	}
+</style>
+
+// Advanved Svelte -> Advanced bindings -> Media elements
+<script>
+	import AudioPlayer from './AudioPlayer.svelte';
+	import { tracks } from './tracks.js';
+</script>
+
+<div class="centered">
+	{#each tracks as track (track)}
+		<AudioPlayer {...track} />
+	{/each}
+</div>
+
+<style>
+	.centered {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		justify-content: center;
+		gap: 0.5em;
+		max-width: 40em;
+		margin: 0 auto;
+	}
+</style>
+
+// Advanved Svelte -> Advanced bindings -> Each block bindings
+<script>
+	let todos = $state([
+		{ done: false, text: 'finish Svelte tutorial' },
+		{ done: false, text: 'build an app' },
+		{ done: false, text: 'world domination' }
+	]);
+
+	function add() {
+		todos.push({
+			done: false,
+			text: ''
+		});
+	}
+
+	function clear() {
+		todos = todos.filter((t) => !t.done);
+	}
+
+	let remaining = $derived(todos.filter((t) => !t.done).length);
+</script>
+
+<div class="centered">
+	<h1>todos</h1>
+
+	<ul class="todos">
+		{#each todos as todo (todo)}
+			<li class={{ done: todo.done }}>
+				<input
+					type="checkbox"
+					bind:checked={todo.done}
+				/>
+
+				<input
+					type="text"
+					placeholder="What needs to be done?"
+					bind:value={todo.text}
+				/>
+			</li>
+		{/each}
+	</ul>
+
+	<p>{remaining} remaining</p>
+
+	<button onclick={add}>
+		Add new
+	</button>
+
+	<button onclick={clear}>
+		Clear completed
+	</button>
+</div>
+
+<style>
+	.centered {
+		max-width: 20em;
+		margin: 0 auto;
+	}
+
+	.done {
+		opacity: 0.4;
+	}
+
+	li {
+		display: flex;
+	}
+
+	input[type="text"] {
+		flex: 1;
+		padding: 0.5em;
+		margin: -0.2em 0;
+		border: none;
+	}
+</style>
+
+// Advanved Svelte -> Advanced bindings -> Contenteditable bindings
+<script>
+	let html = $state('<p>Write some text!</p>');
+</script>
+
+<div bind:innerHTML={html} contenteditable></div>
+
+<pre>{html}</pre>
+
+<style>
+	[contenteditable] {
+		padding: 0.5em;
+		border: 1px solid #eee;
+		border-radius: 4px;
+	}
+</style>
+
+// Advanved Svelte -> Motion -> Springs
+<script>
+  import { Spring } from "svelte/motion";
+	let coords = new Spring({ x: 50, y: 50 }, {
+    stiffness: 0.1,
+    damping: 0.25,
+  });
+	let size = new Spring(10);
+</script>
+
+<svg
+	onmousemove={(e) => {
+		coords.target = { x: e.clientX, y: e.clientY };
+	}}
+	onmousedown={() => (size.target = 30)}
+	onmouseup={() => (size.target = 10)}
+	role="presentation"
+>
+	<circle
+		cx={coords.current.x}
+		cy={coords.current.y}
+		r={size.current}
+	></circle>
+</svg>
+
+<div class="controls">
+	<label>
+		<h3>stiffness ({coords.stiffness})</h3>
+		<input
+			bind:value={coords.stiffness}
+			type="range"
+			min="0.01"
+			max="1"
+			step="0.01"
+		/>
+	</label>
+
+	<label>
+		<h3>damping ({coords.damping})</h3>
+		<input
+			bind:value={coords.damping}
+			type="range"
+			min="0.01"
+			max="1"
+			step="0.01"
+		/>
+	</label>
+</div>
+
+<style>
+	svg {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		left: 0;
+		top: 0;
+	}
+
+	circle {
+		fill: #ff3e00;
+	}
+
+	.controls {
+		position: absolute;
+		top: 1em;
+		right: 1em;
+		width: 200px;
+		user-select: none;
+	}
+
+	.controls input {
+		width: 100%;
+	}
+</style>
+
+// Advanved Svelte -> Motion -> Tweened values
+<script>
+  import { Tween } from 'svelte/motion';
+  import { cubicOut } from 'svelte/easing';
+
+	let progress = new Tween(0, {
+    duration: 400,
+    easing: cubicOut,
+  });
+</script>
+
+<progress value={progress.current}></progress>
+
+<button onclick={() => (progress.target = 0)}>
+	0%
+</button>
+
+<button onclick={() => (progress.target = 0.25)}>
+	25%
+</button>
+
+<button onclick={() => (progress.target = 0.5)}>
+	50%
+</button>
+
+<button onclick={() => (progress.target = 0.75)}>
+	75%
+</button>
+
+<button onclick={() => (progress.target = 1)}>
+	100%
+</button>
+
+<style>
+	progress {
+		display: block;
+		width: 100%;
+	}
+</style>
+
+// Advanved Svelte -> Reusing content -> Passing snippets to components/Implicit snippet props
+<script>
+	import FilteredList from './FilteredList.svelte';
+	import { colors } from './dataV2.js';
+</script>
+
+<FilteredList
+	data={colors}
+	field="name"
+>
+  <header>
+    <span class="color"></span>
+    <span class="name">name</span>
+    <span class="hex">hex</span>
+    <span class="rgb">rgb</span>
+    <span class="hsl">hsl</span>
+  </header>
+
+  {#snippet row(d)}
+    <div class="row">
+      <span class="color" style="background-color: {d.hex}"></span>
+      <span class="name">{d.name}</span>
+      <span class="hex">{d.hex}</span>
+      <span class="rgb">{d.rgb}</span>
+      <span class="hsl">{d.hsl}</span>
+    </div>
+  {/snippet}
+</FilteredList>
+
+<style>
+	header, .row {
+		display: grid;
+		align-items: center;
+		grid-template-columns: 2em 4fr 3fr;
+		gap: 1em;
+		padding: 0.1em;
+		background: var(--bg-1);
+		border-radius: 0.2em;
+	}
+
+	header {
+		font-weight: bold;
+	}
+
+	.row:hover {
+		background: var(--bg-2);
+	}
+
+	.color {
+		aspect-ratio: 1;
+		height: 100%;
+		border-radius: 0.1em;
+	}
+
+	.rgb, .hsl {
+		display: none;
+	}
+
+	@media (min-width: 40rem) {
+		header, .row {
+			grid-template-columns: 2em 4fr 3fr 3fr;
+		}
+
+		.rgb {
+			display: block;
+		}
+	}
+
+	@media (min-width: 60rem) {
+		header, .row {
+			grid-template-columns: 2em 4fr 3fr 3fr 3fr;
+		}
+
+		.hsl {
+			display: block;
+		}
+	}
+</style>
+
+// Advanved Svelte -> Reusing content -> Snippets and render tags
+<table>
+	<thead>
+		<tr>
+			<th>emoji</th>
+			<th>description</th>
+			<th>unicode escape sequence</th>
+			<th>html entity</th>
+		</tr>
+	</thead>
+
+  <tbody>
+    {#snippet monkey(emoji, description)}
+      <tr>
+        <td>{emoji}</td>
+        <td>{description}</td>
+        <td>\u{emoji.charCodeAt(0).toString(16)}\u{emoji.charCodeAt(1).toString(16)}</td>
+        <td>&amp#{emoji.codePointAt(0)}</td>
+      </tr>
+    {/snippet}
+    {@render monkey('🙈', 'see no evil')}
+		{@render monkey('🙉', 'hear no evil')}
+		{@render monkey('🙊', 'speak no evil')}
+	</tbody>
+</table>
+
+<style>
+	th, td {
+		padding: 0.5em;
+	}
+
+	td:nth-child(3),
+	td:nth-child(4) {
+		font-family: monospace;
+	}
+</style>
+
+// Advanved Svelte -> Advanced reactivity -> Stores
+<script>
+	import Counter from './Counter.svelte';
+</script>
+
+<Counter />
+<Counter />
+<Counter />
+
+// Advanved Svelte -> Advanced reactivity -> Reactive built-ins
+<script lang='ts'>
+	import { SvelteDate } from "svelte/reactivity";
+
+	let date = new SvelteDate();
+
+	const pad = (n: number) => n < 10 ? '0' + n : n;
+
+	$effect(() => {
+		const interval = setInterval(() => {
+			date.setTime(Date.now());
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
+</script>
+
+<p>The time is {date.getHours()}:{pad(date.getMinutes())}:{pad(date.getSeconds())}</p>
+
+// Advanved Svelte -> Advanced reactivity -> Reactive classes/Getters and setters
+<script lang='ts'>
+	const MAX_SIZE = 200;
+
+	class Box {
+    #width =  $state(0);
+    #height = $state(0);
+		area = $derived(this.#width * this.#height);
+
+		constructor(width: number, height: number) {
+			this.#width = width;
+			this.#height = height;
+		}
+
+		embiggen(amount: number) {
+			this.width += amount;
+			this.height += amount;
+		}
+
+    get width() {
+      return this.#width;
+    }
+
+    get height() {
+      return this.#height;
+    }
+
+    set width(value: number) {
+      this.#width = Math.max(0, Math.min(MAX_SIZE, value));
+    }
+
+    set height(value: number) {
+      this.#height = Math.max(0, Math.min(MAX_SIZE, value));
+    }
+	}
+
+	const box = new Box(100, 100);
+</script>
+
+<label>
+	<input type="range" bind:value={box.width} min={0} max={MAX_SIZE} />
+	{box.width}
+</label>
+
+<label>
+	<input type="range" bind:value={box.height} min={0} max={MAX_SIZE} />
+	{box.height}
+</label>
+
+<button onclick={() => box.embiggen(10)}>embiggen</button>
+
+<hr>
+
+<div
+	class="box"
+	style:width="{box.width}px"
+	style:height="{box.height}px"
+>
+	{box.area}
+</div>
+
+<style>
+	label {
+		display: flex;
+		align-items: center;
+	}
+
+	hr {
+		margin: 1em 0;
+		border: none;
+		border-bottom: 1px solid #888;
+	}
+
+	.box {
+		background: radial-gradient(at 25% 25%, hsl(15 100 60), hsl(15 100 50)) ;
+		border-radius: 2px;
+		filter: drop-shadow(0 0 10px hsl(15 100 50 / 0.3));
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+	}
+</style>
 // Advanved Svelte -> Advanced reactivity -> Raw state
 <script>
 	import { scale } from './utils.js';
