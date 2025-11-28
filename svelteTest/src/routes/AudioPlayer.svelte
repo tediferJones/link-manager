@@ -1,3 +1,11 @@
+<script module>
+  let current;
+
+  export function pauseAll() {
+    current?.pause();
+  }
+</script>
+
 <script lang='ts'>
 	let { src, title, artist } = $props();
 
@@ -23,6 +31,14 @@
     bind:paused
     onended={() => {
       time = 0;
+    }}
+    onplay={(e) => {
+      const audio = e.currentTarget;
+
+      if (audio !== current) {
+        current?.pause();
+        current = audio;
+      }
     }}
   ></audio>
 

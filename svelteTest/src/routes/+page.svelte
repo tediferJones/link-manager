@@ -1,7 +1,262 @@
-<p>Advanved Svelte -> Special elements -> svelte:window tag thing</p>
+<p>Basic SvelteKit -> Introduction -> What is SvelteKit SvelteKit?</p>
 
 <!--
-// Advanved Svelte -> Context API -> setContext and getContext
+// Advanced Svelte -> Next steps -> Congratulations
+<script>
+	let characters = ['🥳', '🎉', '✨'];
+
+	let confetti = $state(new Array(100)
+		.fill()
+		.map((_, i) => {
+			return {
+				character:
+					characters[i % characters.length],
+				x: Math.random() * 100,
+				y: -20 - Math.random() * 100,
+				r: 0.1 + Math.random() * 1
+			};
+		})
+		.sort((a, b) => a.r - b.r));
+
+	$effect(() => {
+		let frame = requestAnimationFrame(function loop() {
+			frame = requestAnimationFrame(loop);
+
+			for (const confetto of confetti) {
+				confetto.y += 0.3 * confetto.r;
+				if (confetto.y > 120) confetto.y = -20;
+			}
+		});
+
+		return () => {
+			cancelAnimationFrame(frame);
+		}
+	});
+</script>
+
+{#each confetti as c}
+	<span
+		style:left="{c.x}%"
+		style:top="{c.y}%"
+		style:scale={c.r}
+	>
+		{c.character}
+	</span>
+{/each}
+
+<style>
+	span {
+		position: absolute;
+		font-size: 5vw;
+		user-select: none;
+	}
+
+	:global(body) {
+		overflow: hidden;
+	}
+</style>
+
+// Advanced Svelte -> <script module> -> Sharing code/Exports
+<script>
+	import AudioPlayer, { pauseAll } from './AudioPlayer.svelte';
+	import { tracks } from './tracks.js';
+</script>
+
+<div class="centered">
+	{#each tracks as track (track)}
+		<AudioPlayer {...track} />
+	{/each}
+  <button onclick={pauseAll}>
+    pause all
+  </button>
+</div>
+
+<style>
+	.centered {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		justify-content: center;
+		gap: 0.5em;
+		max-width: 40em;
+		margin: 0 auto;
+	}
+</style>
+
+// Advanced Svelte -> Special elements -> <svelte:boundary>
+<script>
+	import FlakyComponent from './FlakyComponent.svelte';
+</script>
+
+<svelte:boundary>
+  <FlakyComponent />
+
+  {#snippet failed(error, reset)}
+    <p>Opps! {error.message}</p>
+    <button onclick={reset}>Reset</button>
+  {/snippet}
+</svelte:boundary>
+
+// Advanced Svelte -> Special elements -> <svelte:element>
+<script>
+	const options = ['h1', 'h2', 'h3', 'p', 'marquee'];
+	let selected = $state(options[0]);
+</script>
+
+<select bind:value={selected}>
+	{#each options as option (option)}
+		<option value={option}>{option}</option>
+	{/each}
+</select>
+
+{#if selected === 'h1'}
+	<h1>I'm a <code>&lt;h1&gt;</code> element</h1>
+{:else}
+  <svelte:element this={selected}>
+    I'm a <code>{selected}</code> element
+  </svelte:element>
+{/if}
+
+// Advanced Svelte -> Special elements -> <svelte:head>
+<script>
+	const themes = ['margaritaville', 'retrowave', 'spaaaaace', 'halloween'];
+	let selected = $state(themes[0]);
+</script>
+
+<h1>Welcome to my site!</h1>
+
+<svelte:head>
+  <link rel='stylesheet' href='./tutorial/stylesheets/{selected}.css' />
+</svelte:head>
+
+<select bind:value={selected}>
+	<option disabled>choose a theme</option>
+
+	{#each themes as theme (theme)}
+		<option>{theme}</option>
+	{/each}
+</select>
+
+// Advanced Svelte -> Special elements -> <svelte:body>
+<script>
+	import kitten from './kitten.png';
+
+	let hereKitty = $state(false);
+</script>
+
+<svelte:body
+  onmouseenter={() => hereKitty = true}
+  onmouseleave={() => hereKitty = false}
+/>
+
+<img
+	class={{ curious: hereKitty }}
+	alt="Kitten wants to know what's going on"
+	src={kitten}
+/>
+
+<style>
+	img {
+		position: absolute;
+		left: 0;
+		bottom: -60px;
+		transform: translate(-80%, 0) rotate(-15deg);
+		transform-origin: 100% 100%;
+		transition: transform 0.4s;
+	}
+
+	.curious {
+		transform: translate(-15%, 0) rotate(0deg);
+	}
+
+	:global(body) {
+		overflow: hidden;
+	}
+</style>
+
+// Advanced Svelte -> Special elements -> <svelte:document>
+<script lang='ts'>
+	let selection = $state('');
+
+	function onselectionchange() {
+		selection = document.getSelection()?.toString() || '';
+	};
+</script>
+
+<svelte:document {onselectionchange} />
+
+<h1>Select this text to fire events</h1>
+<p>Selection: {selection}</p>
+
+// Advanced Svelte -> Special elements -> <svelte:window> bindings
+<script>
+	let y = $state(0);
+</script>
+
+<svelte:window bind:scrollY={y} />
+
+<span>depth: {y}px</span>
+
+<style>
+	:global(body) {
+		height: 400vw;
+		background: url(./deepsea.webp);
+		background-size: cover;
+	}
+
+	span {
+		position: fixed;
+		font-size: 2em;
+		color: white;
+		font-variant: tabular-nums;
+	}
+</style>
+
+// Advanced Svelte -> Special elements -> <svelte:window>
+<script lang='ts'>
+	let key = $state();
+	let keyCode = $state();
+
+	function onkeydown(event: KeyboardEvent) {
+		key = event.key;
+		keyCode = event.keyCode;
+	}
+</script>
+
+<svelte:window {onkeydown} />
+
+<div style="text-align: center">
+	{#if key}
+		<kbd>{key === ' ' ? 'Space' : key}</kbd>
+		<p>{keyCode}</p>
+	{:else}
+		<p>Focus this window and press any key</p>
+	{/if}
+</div>
+
+<style>
+	div {
+		display: flex;
+		height: 100%;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+	}
+
+	kbd {
+		border-radius: 4px;
+		font-size: 6em;
+		padding: 0.2em 0.5em;
+		background-color: #eeeeee;
+		border-top: 5px solid #f9f9f9;
+		border-left: 5px solid #f9f9f9;
+		border-right: 5px solid #aaaaaa;
+		border-bottom: 5px solid #aaaaaa;
+		color: #555;
+	}
+</style>
+
+// Advanced Svelte -> Context API -> setContext and getContext
 <script lang='ts'>
 	import Canvas from './CanvasV2.svelte';
 	import Square from './Square.svelte';
@@ -45,7 +300,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced transitions -> Deferred transitions/Animations
+// Advanced Svelte -> Advanced transitions -> Deferred transitions/Animations
 <script lang='ts'>
 	import TodoList from './TodoList.svelte';
 
@@ -115,7 +370,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced bindings -> Binding to component instances
+// Advanced Svelte -> Advanced bindings -> Binding to component instances
 <script>
 	import Canvas from './Canvas.svelte';
 	import { trapFocus } from './actions.svelte.js';
@@ -258,7 +513,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced bindings -> Component bindings
+// Advanced Svelte -> Advanced bindings -> Component bindings
 <script>
 	import Keypad from './Keypad.svelte';
 
@@ -279,7 +534,7 @@
 
 <Keypad bind:value={pin} {onsubmit} />
 
-// Advanved Svelte -> Advanced bindings -> This
+// Advanced Svelte -> Advanced bindings -> This
 <script lang='ts'>
 	import { paint } from './gradient.js';
 
@@ -316,7 +571,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced bindings -> Dimensions
+// Advanced Svelte -> Advanced bindings -> Dimensions
 <script>
 	let w = $state();
 	let h = $state();
@@ -357,7 +612,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced bindings -> Media elements
+// Advanced Svelte -> Advanced bindings -> Media elements
 <script>
 	import AudioPlayer from './AudioPlayer.svelte';
 	import { tracks } from './tracks.js';
@@ -381,7 +636,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced bindings -> Each block bindings
+// Advanced Svelte -> Advanced bindings -> Each block bindings
 <script>
 	let todos = $state([
 		{ done: false, text: 'finish Svelte tutorial' },
@@ -456,7 +711,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced bindings -> Contenteditable bindings
+// Advanced Svelte -> Advanced bindings -> Contenteditable bindings
 <script>
 	let html = $state('<p>Write some text!</p>');
 </script>
@@ -473,7 +728,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Motion -> Springs
+// Advanced Svelte -> Motion -> Springs
 <script>
   import { Spring } from "svelte/motion";
 	let coords = new Spring({ x: 50, y: 50 }, {
@@ -548,7 +803,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Motion -> Tweened values
+// Advanced Svelte -> Motion -> Tweened values
 <script>
   import { Tween } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
@@ -588,7 +843,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Reusing content -> Passing snippets to components/Implicit snippet props
+// Advanced Svelte -> Reusing content -> Passing snippets to components/Implicit snippet props
 <script>
 	import FilteredList from './FilteredList.svelte';
 	import { colors } from './dataV2.js';
@@ -667,7 +922,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Reusing content -> Snippets and render tags
+// Advanced Svelte -> Reusing content -> Snippets and render tags
 <table>
 	<thead>
 		<tr>
@@ -704,7 +959,7 @@
 	}
 </style>
 
-// Advanved Svelte -> Advanced reactivity -> Stores
+// Advanced Svelte -> Advanced reactivity -> Stores
 <script>
 	import Counter from './Counter.svelte';
 </script>
@@ -713,7 +968,7 @@
 <Counter />
 <Counter />
 
-// Advanved Svelte -> Advanced reactivity -> Reactive built-ins
+// Advanced Svelte -> Advanced reactivity -> Reactive built-ins
 <script lang='ts'>
 	import { SvelteDate } from "svelte/reactivity";
 
@@ -732,7 +987,7 @@
 
 <p>The time is {date.getHours()}:{pad(date.getMinutes())}:{pad(date.getSeconds())}</p>
 
-// Advanved Svelte -> Advanced reactivity -> Reactive classes/Getters and setters
+// Advanced Svelte -> Advanced reactivity -> Reactive classes/Getters and setters
 <script lang='ts'>
 	const MAX_SIZE = 200;
 
@@ -815,7 +1070,7 @@
 		overflow: hidden;
 	}
 </style>
-// Advanved Svelte -> Advanced reactivity -> Raw state
+// Advanced Svelte -> Advanced reactivity -> Raw state
 <script>
 	import { scale } from './utils.js';
 	import { poll } from './data.js';
