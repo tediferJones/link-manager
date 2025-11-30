@@ -2,6 +2,7 @@
   import { message } from '$lib/message.js';
   import { fly, slide } from 'svelte/transition';
   import { enhance } from '$app/forms';
+  import { browser } from '$app/environment';
 
   let { data, form } = $props();
 
@@ -14,10 +15,16 @@
     const response = await fetch('/roll');
     number = await response.json();
   }
+
+  let count = $state(0);
+
+  function increment() {
+    count += 1;
+  }
 </script>
 
 <p class='border-red-500 border-2 rounded-lg p-2'>
-  Advanced SvelteKit -> Page options -> Basics
+  Advanced SvelteKit -> Advanced loading -> Universal load functions
 </p>
 
 <h1>home</h1>
@@ -164,3 +171,9 @@
 		{/each}
 	</ul>
 </div>
+
+<h1>Rendered {browser ? 'in the browser' : 'on the server'}</h1>
+
+<button onclick={increment}>
+  Clicks: {count}
+</button>

@@ -38,3 +38,12 @@ export const actions = {
     db.deleteTodo(cookies.get('userid'), data.get('id'));
   }
 }
+
+// use server side rendering
+// export const srr = false;
+
+// use client side rendering
+// export const csr = false;
+
+// use static site generation
+// export const prerender = true;
