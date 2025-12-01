@@ -24,7 +24,7 @@
 </script>
 
 <p class='border-red-500 border-2 rounded-lg p-2'>
-  Advanced SvelteKit -> Advanced loading -> Universal load functions
+  Advanced SvelteKit -> Conclusion -> Next steps
 </p>
 
 <h1>home</h1>

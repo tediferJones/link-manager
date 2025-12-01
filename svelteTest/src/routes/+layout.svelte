@@ -71,6 +71,16 @@
 	<a href={resolve('/slow-b')}>slow-b</a>
 </nav>
 
+<nav
+	class={[page.data.color && 'has-color']}
+	style:background={page.data.color ?? 'var(--bg-2)'}
+>
+	<a href={resolve('/')}>home</a>
+	<a href={resolve('/red')}>red</a>
+	<a href={resolve('/green')}>green</a>
+	<a href={resolve('/blue')}>blue</a>
+</nav>
+
 {@render children()}
 
 {#if updated.current}
@@ -90,3 +100,10 @@
 {/if}
 
 <p>the page has been open for {seconds} seconds</p>
+
+<style>
+	nav.has-color,
+	nav.has-color a {
+		color: white;
+	}
+</style>
