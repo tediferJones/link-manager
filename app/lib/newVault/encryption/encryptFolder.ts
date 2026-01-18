@@ -1,10 +1,10 @@
-import { getItem } from '@/app/lib/newVault/core';
-import { render } from '@/app/lib/newVault/sync';
-import { returnOnFail, unwrap } from '@/app/lib/newVault/result';
-import asyncReduce from '@/app/lib/utils/asyncReduce';
-import replaceObject from '@/app/lib/utils/replaceObject';
-import { encrypt } from '@/app/lib/utils/encryption';
-import { Content, Encrypted, Result, Vault } from '@/app/types';
+import { getItem } from '@/lib/newVault/core';
+import { render } from '@/lib/newVault/sync';
+import { returnOnFail, unwrap } from '@/lib/newVault/result';
+import asyncReduce from '@/lib/utils/asyncReduce';
+import replaceObject from '@/lib/utils/replaceObject';
+import { encrypt } from '@/lib/utils/encryption';
+import { Content, Encrypted, Result, Vault } from '@/types';
 
 export async function encryptFolder(
   root: Vault['root'],

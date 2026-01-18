@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import Tag from '@/app/components/ui/tag';
+import Tag from '@/components/ui/tag';
 
 describe('Tag', () => {
   const testVal = 'testValue';

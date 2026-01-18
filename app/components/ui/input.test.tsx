@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { Input } from '@/app/components/ui';
-import { classes } from '@/app/components/ui/input';
-import getElement from '@/app/lib/utils/getElement';
+import { Input } from '@/components/ui';
+import { classes } from '@/components/ui/input';
+import getElement from '@/lib/utils/getElement';
 
 describe('Input', () => {
   const id = 'testId';

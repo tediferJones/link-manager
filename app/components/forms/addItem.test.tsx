@@ -1,16 +1,16 @@
 import { describe, test, beforeEach, expect, vi } from 'vitest';
-import { AddItem } from '@/app/components/forms';
-import { hrefInputId, titleInputId } from '@/app/components/forms/addItem';
-import { closeModal } from '@/app/effects/modal';
-import getElement from '@/app/lib/utils/getElement';
-import { Content } from '@/app/types';
-import { addItem } from '@/app/lib/newVault/core';
-import { getNewSortedKeys } from '@/app/lib/newVault/utils';
-import { newUserVault } from '@/app/lib/app/userVault';
+import { AddItem } from '@/components/forms';
+import { hrefInputId, titleInputId } from '@/components/forms/addItem';
+import { closeModal } from '@/effects/modal';
+import getElement from '@/lib/utils/getElement';
+import { Content } from '@/types';
+import { addItem } from '@/lib/newVault/core';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
+import { newUserVault } from '@/lib/app/userVault';
 
-// FIX ME do not import form @/app/effects, unless you want to mock everything that gets exported
-vi.mock('@/app/effects/modal', () => ({ closeModal: vi.fn() }));
-vi.mock('@/app/lib/newVault/core', () => ({ addItem: vi.fn() }))
+// FIX ME do not import form @/effects, unless you want to mock everything that gets exported
+vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
+vi.mock('@/lib/newVault/core', () => ({ addItem: vi.fn() }))
 
 describe('Add item', () => {
   beforeEach(() => {

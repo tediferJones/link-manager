@@ -1,9 +1,9 @@
-import { getItem } from '@/app/lib/newVault/core';
-import { returnOnFail } from '@/app/lib/newVault/result';
-import { saveAndRender } from '@/app/lib/newVault/sync';
-import { getParentPath, modifySortedKeys } from '@/app/lib/newVault/utils';
-import replaceObject from '@/app/lib/utils/replaceObject';
-import { Content, Vault } from '@/app/types';
+import { getItem } from '@/lib/newVault/core';
+import { returnOnFail } from '@/lib/newVault/result';
+import { saveAndRender } from '@/lib/newVault/sync';
+import { getParentPath, modifySortedKeys } from '@/lib/newVault/utils';
+import replaceObject from '@/lib/utils/replaceObject';
+import { Content, Vault } from '@/types';
 
 export async function toggleWatched(
   root: Vault['root'],

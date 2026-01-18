@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { getItem } from '@/app/lib/newVault/core';
-import { togglePinned } from '@/app/lib/newVault/details';
-import { getNewVault, getParentPath } from '@/app/lib/newVault/utils';
-import { testNewResultSuccess } from '@/app/lib/test/testResult';
-import { addMockItem } from '@/app/lib/test/addMockItem';
+import { getItem } from '@/lib/newVault/core';
+import { togglePinned } from '@/lib/newVault/details';
+import { getNewVault, getParentPath } from '@/lib/newVault/utils';
+import { testNewResultSuccess } from '@/lib/test/testResult';
+import { addMockItem } from '@/lib/test/addMockItem';
 
 describe('Toggle pinned', () => {
   const linkTitle = 'link1'

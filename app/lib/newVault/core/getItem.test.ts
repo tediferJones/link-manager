@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { getItem } from '@/app/lib/newVault/core';
-import { getNewVault } from '@/app/lib/newVault/utils';
-import { addMockItem } from '@/app/lib/test/addMockItem';
+import { getItem } from '@/lib/newVault/core';
+import { getNewVault } from '@/lib/newVault/utils';
+import { addMockItem } from '@/lib/test/addMockItem';
 import {
   testNewResultFailure,
   testNewResultSuccess,
-} from '@/app/lib/test/testResult';
+} from '@/lib/test/testResult';
 
 describe('Get item', async () => {
   test('Get any item', async () => {

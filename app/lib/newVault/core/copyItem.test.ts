@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { copyItem } from '@/app/lib/newVault/core';
-import { getNewVault } from '@/app/lib/newVault/utils';
-import { addMockItem } from '@/app/lib/test/addMockItem';
-import { testNewResultSuccess } from '@/app/lib/test/testResult';
+import { copyItem } from '@/lib/newVault/core';
+import { getNewVault } from '@/lib/newVault/utils';
+import { addMockItem } from '@/lib/test/addMockItem';
+import { testNewResultSuccess } from '@/lib/test/testResult';
 
 describe('Copy item', async () => {
   test('Copy without title collision', async () => {

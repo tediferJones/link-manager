@@ -1,8 +1,8 @@
-import { packFolder } from '@/app/lib/newVault/core';
-import { unwrap } from '@/app/lib/newVault/result';
-import { newUserVault } from '@/app/lib/app/userVault';
-import { compress } from '@/app/lib/utils/compression';
-import { Vault } from '@/app/types';
+import { packFolder } from '@/lib/newVault/core';
+import { unwrap } from '@/lib/newVault/result';
+import { newUserVault } from '@/lib/app/userVault';
+import { compress } from '@/lib/utils/compression';
+import { Vault } from '@/types';
 
 // FIX ME move to constants
 const storageKey = 'newUserVault';

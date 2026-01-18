@@ -1,15 +1,15 @@
 import { Folder, Link2 } from 'lucide';
-import { Icon } from '@/app/components/ui';
+import { Icon } from '@/components/ui';
 import {
   hrefInputId,
   submitBtnId,
   titleInputId,
-} from '@/app/components/forms/addItem';
-import getElement from '@/app/lib/utils/getElement';
+} from '@/components/forms/addItem';
+import getElement from '@/lib/utils/getElement';
 
 // FIX ME consider moving to its own file
 // we have other components so could apply to other files
-// maybe @/app/lib/constants/classes.ts
+// maybe @/lib/constants/classes.ts
 export const disabledBtnClasses = [ '!cursor-not-allowed', 'opacity-50' ];
 
 export function handleAddItemInput() {

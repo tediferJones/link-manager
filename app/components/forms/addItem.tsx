@@ -1,13 +1,13 @@
-import { handleAddItemInput, closeModal } from '@/app/effects';
-import { newUserVault } from '@/app/lib/app/userVault';
-import { addItem } from '@/app/lib/newVault/core';
-import { getNewSortedKeys } from '@/app/lib/newVault/utils';
-import getElement from '@/app/lib/utils/getElement';
-// import getNewSortedKeys from '@/app/lib/vault/getNewSortedKeys';
+import { handleAddItemInput, closeModal } from '@/effects';
+import { newUserVault } from '@/lib/app/userVault';
+import { addItem } from '@/lib/newVault/core';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
+import getElement from '@/lib/utils/getElement';
+// import getNewSortedKeys from '@/lib/vault/getNewSortedKeys';
 
 // FIX ME consider moving these (and other exported ids) into their own file or something
 // gets a little bit messy here when it comes to using the index.ts file
-// maybe @/app/lib/constants/ids.ts
+// maybe @/lib/constants/ids.ts
 export const titleInputId = 'titleInput';
 export const hrefInputId = 'hrefInput';
 export const submitBtnId = 'addItemSubmitBtn';
@@ -24,7 +24,7 @@ export default function AddItem() {
         const href =  hrefInput.value;
         if (!title) return;
         // FIX ME should show an error message if add fails
-        // FIX ME could use createFolder and createLink from @/app/lib/test/mockItems
+        // FIX ME could use createFolder and createLink from @/lib/test/mockItems
         // if we do use that, move that fill to some other lib folder
         const { root, path } = newUserVault;
         if (href) {

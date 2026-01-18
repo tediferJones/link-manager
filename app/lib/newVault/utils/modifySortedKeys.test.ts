@@ -3,9 +3,9 @@ import {
   getNewSortedKeys,
   getSortedKeyType,
   modifySortedKeys,
-} from '@/app/lib/newVault/utils';
-import { mockItem, togglePinned } from '@/app/lib/test/mockItems';
-import { SortedKeys } from '@/app/types';
+} from '@/lib/newVault/utils';
+import { mockItem, togglePinned } from '@/lib/test/mockItems';
+import { SortedKeys } from '@/types';
 
 const link = mockItem('link', 'link1');
 const watched = mockItem('watched', 'watched1');

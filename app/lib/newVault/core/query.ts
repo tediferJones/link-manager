@@ -1,7 +1,7 @@
-import { getItem } from '@/app/lib/newVault/core';
-import { returnOnFail } from '@/app/lib/newVault/result';
-import asyncReduce from '@/app/lib/utils/asyncReduce';
-import { Content, OptPromise, Vault } from '@/app/types';
+import { getItem } from '@/lib/newVault/core';
+import { returnOnFail } from '@/lib/newVault/result';
+import asyncReduce from '@/lib/utils/asyncReduce';
+import { Content, OptPromise, Vault } from '@/types';
 
 export async function query<T>(
   root: Vault['root'],

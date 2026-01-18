@@ -1,8 +1,8 @@
-import { ErrorMsg } from '@/app/components/ui';
-import { hideError, showError } from '@/app/effects';
-import { newUserVault } from '@/app/lib/app/userVault';
-import { decryptFolder } from '@/app/lib/newVault/encryption';
-import getElement from '@/app/lib/utils/getElement';
+import { ErrorMsg } from '@/components/ui';
+import { hideError, showError } from '@/effects';
+import { newUserVault } from '@/lib/app/userVault';
+import { decryptFolder } from '@/lib/newVault/encryption';
+import getElement from '@/lib/utils/getElement';
 
 // FIX ME disable hotkeys when input is focused
 

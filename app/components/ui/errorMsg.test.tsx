@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import ErrorMsg from '@/app/components/ui/errorMsg';
+import ErrorMsg from '@/components/ui/errorMsg';
 
 describe('ErrorMsg', () => {
   const id = 'testId';

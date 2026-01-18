@@ -1,4 +1,4 @@
-import getTypedKeys from '@/app/lib/utils/getTypedKeys';
+import getTypedKeys from '@/lib/utils/getTypedKeys';
 
 export default function replaceObject<
   T extends object,

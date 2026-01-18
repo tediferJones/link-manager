@@ -1,5 +1,5 @@
-import { getSortedKeyType } from '@/app/lib/newVault/utils';
-import { Content, SortedKeys } from '@/app/types';
+import { getSortedKeyType } from '@/lib/newVault/utils';
+import { Content, SortedKeys } from '@/types';
 
 // FIX ME add strict type for object
 // type SortedKeyActions = Actions | 'move';

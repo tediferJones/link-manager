@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { Result as NewResult } from '@/app/types';
+import { Result as NewResult } from '@/types';
 
 // FIX ME rename to testResultSuccess/Failure and fix all references
 

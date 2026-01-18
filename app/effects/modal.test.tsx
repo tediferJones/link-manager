@@ -1,21 +1,21 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { Modal } from '@/app/components/layout';
+import { Modal } from '@/components/layout';
 import {
   closedClasses,
   modalContainerId,
   modalContentId,
   modalTitleId,
   openClasses
-} from '@/app/components/layout/modal';
-import { closeModal, openModal } from '@/app/effects/modal';
-import getElement from '@/app/lib/utils/getElement';
-import { disableHotKeys, enableHotKeys } from '@/app/lib/app/hotkeys';
+} from '@/components/layout/modal';
+import { closeModal, openModal } from '@/effects/modal';
+import getElement from '@/lib/utils/getElement';
+import { disableHotKeys, enableHotKeys } from '@/lib/app/hotkeys';
 
 // FIX ME write more tests
 const title = 'testTitle';
 const content = <div>test element</div>;
 
-vi.mock('@/app/lib/app/hotkeys', () => ({
+vi.mock('@/lib/app/hotkeys', () => ({
   enableHotKeys: vi.fn(),
   disableHotKeys: vi.fn(),
 }));

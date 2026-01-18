@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import getElement from '@/app/lib/utils/getElement';
+import getElement from '@/lib/utils/getElement';
 
 describe('Get element', () => {
   beforeEach(() => document.body.innerHTML = '');

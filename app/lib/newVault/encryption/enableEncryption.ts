@@ -1,8 +1,8 @@
-import { getItem } from '@/app/lib/newVault/core';
-import { getKey, getRandomBase64 } from '@/app/lib/utils/encryption';
-import { returnOnFail } from '@/app/lib/newVault/result';
-import { saveAndRender } from '@/app/lib/newVault/sync';
-import { Content, Result, Vault } from '@/app/types';
+import { getItem } from '@/lib/newVault/core';
+import { getKey, getRandomBase64 } from '@/lib/utils/encryption';
+import { returnOnFail } from '@/lib/newVault/result';
+import { saveAndRender } from '@/lib/newVault/sync';
+import { Content, Result, Vault } from '@/types';
 
 export async function enableEncryption(
   root: Vault['root'],

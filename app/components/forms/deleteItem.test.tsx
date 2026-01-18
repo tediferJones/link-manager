@@ -1,14 +1,14 @@
 import { describe, expect, test, vi } from 'vitest';
-import { DeleteItem } from '@/app/components/forms';
-import { titleInputId } from '@/app/components/forms/deleteItem';
-import { deleteItem } from '@/app/lib/newVault/core';
-import { newUserVault } from '@/app/lib/app/userVault';
-import getElement from '@/app/lib/utils/getElement';
-import { mockItem } from '@/app/lib/test/mockItems';
-import { Result } from '@/app/types';
+import { DeleteItem } from '@/components/forms';
+import { titleInputId } from '@/components/forms/deleteItem';
+import { deleteItem } from '@/lib/newVault/core';
+import { newUserVault } from '@/lib/app/userVault';
+import getElement from '@/lib/utils/getElement';
+import { mockItem } from '@/lib/test/mockItems';
+import { Result } from '@/types';
 
-vi.mock('@/app/effects', () => ({ closeModal: vi.fn() }));
-vi.mock('@/app/lib/newVault/core', () => ({ deleteItem: vi.fn() }));
+vi.mock('@/effects', () => ({ closeModal: vi.fn() }));
+vi.mock('@/lib/newVault/core', () => ({ deleteItem: vi.fn() }));
 
 describe('Delete item', () => {
   const itemTitle = 'title1';

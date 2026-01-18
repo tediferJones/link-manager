@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { Loading } from '@/app/components/ui';
+import { Loading } from '@/components/ui';
 
 describe('Loading', () => {
   test('Icon spins', () => {

@@ -1,9 +1,9 @@
-import { Breadcrumbs, ListItem } from '@/app/components/display';
-import { DecryptPrompt } from '@/app/components/forms';
-import { newUserVault } from '@/app/lib/app/userVault';
-import { getViewPath } from '@/app/lib/newVault/utils';
-import getElement from '@/app/lib/utils/getElement';
-import { Content } from '@/app/types';
+import { Breadcrumbs, ListItem } from '@/components/display';
+import { DecryptPrompt } from '@/components/forms';
+import { newUserVault } from '@/lib/app/userVault';
+import { getViewPath } from '@/lib/newVault/utils';
+import getElement from '@/lib/utils/getElement';
+import { Content } from '@/types';
 
 // FIX ME move to constants
 export const directoryViewId = 'directoryViewItems';

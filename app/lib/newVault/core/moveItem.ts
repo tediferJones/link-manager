@@ -1,6 +1,6 @@
-import { addItem, deleteItem } from '@/app/lib/newVault/core';
-import { returnOnFail } from '@/app/lib/newVault/result';
-import { Content, Result, Vault } from '@/app/types';
+import { addItem, deleteItem } from '@/lib/newVault/core';
+import { returnOnFail } from '@/lib/newVault/result';
+import { Content, Result, Vault } from '@/types';
 
 export async function moveItem(
   root: Vault['root'],

@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { enableEncryption } from '@/app/lib/newVault/encryption';
-import { getNewVault } from '@/app/lib/newVault/utils';
-import { addMockItem } from '@/app/lib/test/addMockItem';
+import { enableEncryption } from '@/lib/newVault/encryption';
+import { getNewVault } from '@/lib/newVault/utils';
+import { addMockItem } from '@/lib/test/addMockItem';
 import {
   testNewResultFailure,
   testNewResultSuccess,
-} from '@/app/lib/test/testResult';
+} from '@/lib/test/testResult';
 
 // FIX ME move to constants
 const password = 'password';

@@ -1,5 +1,5 @@
 import { LoaderCircle } from 'lucide';
-import { Icon } from '@/app/components/ui';
+import { Icon } from '@/components/ui';
 
 export default function Loading({ loadingText }: { loadingText?: string }) {
   return (

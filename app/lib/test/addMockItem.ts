@@ -1,6 +1,6 @@
-import { addItem } from '@/app/lib/newVault/core';
-import { mockItem, togglePinned } from '@/app/lib/test/mockItems';
-import { ContentTypes, Vault } from '@/app/types';
+import { addItem } from '@/lib/newVault/core';
+import { mockItem, togglePinned } from '@/lib/test/mockItems';
+import { ContentTypes, Vault } from '@/types';
 
 export async function addMockItem(
   root: Vault['root'],

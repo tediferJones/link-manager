@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { TagEditor } from '@/app/components/forms';
-import { tagContainerId } from '@/app/components/forms/tagEditor';
-import getElement from '@/app/lib/utils/getElement';
-import { Content } from '@/app/types';
+import { TagEditor } from '@/components/forms';
+import { tagContainerId } from '@/components/forms/tagEditor';
+import getElement from '@/lib/utils/getElement';
+import { Content } from '@/types';
 
 // FIX ME write more tests
 

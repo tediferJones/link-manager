@@ -4,9 +4,9 @@ import {
   modalContentId,
   modalTitleId,
   modalContainerId,
-} from '@/app/components/layout/modal';
-import { disableHotKeys, enableHotKeys } from '@/app/lib/app/hotkeys';
-import getElement from '@/app/lib/utils/getElement';
+} from '@/components/layout/modal';
+import { disableHotKeys, enableHotKeys } from '@/lib/app/hotkeys';
+import getElement from '@/lib/utils/getElement';
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Escape') {

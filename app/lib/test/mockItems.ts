@@ -1,5 +1,5 @@
-import { getNewSortedKeys } from '@/app/lib/newVault/utils';
-import { Content, ContentTypes, MockItemMap } from '@/app/types';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
+import { Content, ContentTypes, MockItemMap } from '@/types';
 
 const items: MockItemMap = {
   link: (title) => ({

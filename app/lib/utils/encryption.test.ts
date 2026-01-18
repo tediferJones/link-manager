@@ -4,7 +4,7 @@ import {
   encrypt,
   getKey,
   getRandomBase64
-} from '@/app/lib/utils/encryption';
+} from '@/lib/utils/encryption';
 
 describe('Encryption', () => {
   const password = 'password';

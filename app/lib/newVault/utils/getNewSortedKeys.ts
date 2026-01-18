@@ -1,4 +1,4 @@
-import { SortedKeys } from '@/app/types';
+import { SortedKeys } from '@/types';
 
 export function getNewSortedKeys(): SortedKeys {
   return {

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { Modal } from '@/app/components/layout';
+import { Modal } from '@/components/layout';
 import {
   closedClasses,
   modalCardId,
@@ -7,11 +7,11 @@ import {
   modalContainerId,
   modalContentId,
   modalTitleId,
-} from '@/app/components/layout/modal';
-import { closeModal } from '@/app/effects';
-import getElement from '@/app/lib/utils/getElement';
+} from '@/components/layout/modal';
+import { closeModal } from '@/effects';
+import getElement from '@/lib/utils/getElement';
 
-vi.mock('@/app/effects/modal', () => ({ closeModal: vi.fn() }));
+vi.mock('@/effects/modal', () => ({ closeModal: vi.fn() }));
 
 describe('Modal', () => {
   test('Basic structure and hidden on initial render', () => {

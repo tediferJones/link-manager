@@ -1,4 +1,4 @@
-import { Content, ContentTypes, Result, Vault } from '@/app/types';
+import { Content, ContentTypes, Result, Vault } from '@/types';
 
 export function getItem<T extends ContentTypes>(
   root: Vault['root'],

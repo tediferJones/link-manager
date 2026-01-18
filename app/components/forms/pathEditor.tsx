@@ -1,12 +1,12 @@
-import { Autocomplete } from '@/app/components/ui';
-import { Breadcrumbs } from '@/app/components/display';
-import { closeModal } from '@/app/effects';
-import { getItem, moveItem } from '@/app/lib/newVault/core';
-import { getItemPath } from '@/app/lib/newVault/utils';
-import { unwrap } from '@/app/lib/newVault/result';
-import { newUserVault } from '@/app/lib/app/userVault';
-import getElement from '@/app/lib/utils/getElement';
-import { Content } from '@/app/types';
+import { Autocomplete } from '@/components/ui';
+import { Breadcrumbs } from '@/components/display';
+import { closeModal } from '@/effects';
+import { getItem, moveItem } from '@/lib/newVault/core';
+import { getItemPath } from '@/lib/newVault/utils';
+import { unwrap } from '@/lib/newVault/result';
+import { newUserVault } from '@/lib/app/userVault';
+import getElement from '@/lib/utils/getElement';
+import { Content } from '@/types';
 
 function pathMatch(path1: string[], path2: string[]) {
   return path1.join('/') === path2.join('/');

@@ -1,4 +1,4 @@
-import { Encodings } from '@/app/types';
+import { Encodings } from '@/types';
 
 function getBuffer(data: string, encoding: Encodings) {
   if (encoding === 'utf8') {

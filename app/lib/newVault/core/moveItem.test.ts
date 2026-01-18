@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { moveItem, getItem } from '@/app/lib/newVault/core';
-import { getNewVault, getParentPath } from '@/app/lib/newVault/utils';
-import { addMockItem } from '@/app/lib/test/addMockItem';
+import { moveItem, getItem } from '@/lib/newVault/core';
+import { getNewVault, getParentPath } from '@/lib/newVault/utils';
+import { addMockItem } from '@/lib/test/addMockItem';
 import {
   testNewResultFailure,
   testNewResultSuccess,
-} from '@/app/lib/test/testResult';
+} from '@/lib/test/testResult';
 
 // FIX ME move to constants
 const dnePath: string[] = [ 'thisItemDoesNotExist' ];

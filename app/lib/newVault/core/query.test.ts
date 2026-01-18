@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { query } from '@/app/lib/newVault/core';
-import { getNewVault } from '@/app/lib/newVault/utils';
-import { testNewResultSuccess } from '@/app/lib/test/testResult';
-import { addMockItem } from '@/app/lib/test/addMockItem';
-import { Content } from '@/app/types';
+import { query } from '@/lib/newVault/core';
+import { getNewVault } from '@/lib/newVault/utils';
+import { testNewResultSuccess } from '@/lib/test/testResult';
+import { addMockItem } from '@/lib/test/addMockItem';
+import { Content } from '@/types';
 
 describe('Query vault', () => {
   test('Basic query', async () => {

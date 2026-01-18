@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { getNewSortedKeys } from '@/app/lib/newVault/utils';
-import { SortedKeysTypes } from '@/app/types';
+import { getNewSortedKeys } from '@/lib/newVault/utils';
+import { SortedKeysTypes } from '@/types';
 
 test('Sorted keys', () => {
   const newSortedKeys = getNewSortedKeys();

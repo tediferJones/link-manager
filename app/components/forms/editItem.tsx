@@ -1,13 +1,13 @@
-import { ErrorMsg } from '@/app/components/ui';
-import { hideError, showError, closeModal } from '@/app/effects';
-import { renameItem } from '@/app/lib/newVault/core';
-import { enableEncryption } from '@/app/lib/newVault/encryption';
-import { throwOnFail } from '@/app/lib/newVault/result';
-import { getItemPath } from '@/app/lib/newVault/utils';
-import { newUserVault } from '@/app/lib/app/userVault';
-import { btnClassNames, inline } from '@/app/lib/app/buttonToggleClasses';
-import getElement from '@/app/lib/utils/getElement';
-import { Content } from '@/app/types';
+import { ErrorMsg } from '@/components/ui';
+import { hideError, showError, closeModal } from '@/effects';
+import { renameItem } from '@/lib/newVault/core';
+import { enableEncryption } from '@/lib/newVault/encryption';
+import { throwOnFail } from '@/lib/newVault/result';
+import { getItemPath } from '@/lib/newVault/utils';
+import { newUserVault } from '@/lib/app/userVault';
+import { btnClassNames, inline } from '@/lib/app/buttonToggleClasses';
+import getElement from '@/lib/utils/getElement';
+import { Content } from '@/types';
 
 // FIX ME move to constants file
 export const renameErrorId = 'itemSettingsRenameError';

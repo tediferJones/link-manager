@@ -1,4 +1,4 @@
-import { OptPromise, Result } from '@/app/types';
+import { OptPromise, Result } from '@/types';
 
 export async function returnOnFail<T, K>(
   result: Result<T>,

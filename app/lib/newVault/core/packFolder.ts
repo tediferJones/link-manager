@@ -1,8 +1,8 @@
-import { getItem } from '@/app/lib/newVault/core';
-import { encryptFolder } from '@/app/lib/newVault/encryption'
-import { returnOnFail, unwrap } from '@/app/lib/newVault/result';
-import asyncReduce from '@/app/lib/utils/asyncReduce';
-import { Content, Result, Vault } from '@/app/types';
+import { getItem } from '@/lib/newVault/core';
+import { encryptFolder } from '@/lib/newVault/encryption'
+import { returnOnFail, unwrap } from '@/lib/newVault/result';
+import asyncReduce from '@/lib/utils/asyncReduce';
+import { Content, Result, Vault } from '@/types';
 
 // FIX ME write tests
 

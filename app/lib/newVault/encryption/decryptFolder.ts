@@ -1,9 +1,9 @@
-import { Content, Encrypted, Result, Vault } from '@/app/types';
-import { getItem } from '@/app/lib/newVault/core';
-import { returnOnFail } from '@/app/lib/newVault/result';
-import { render } from '@/app/lib/newVault/sync';
-import { decrypt, getKey, getRandomBase64 } from '@/app/lib/utils/encryption';
-import replaceObject from '@/app/lib/utils/replaceObject';
+import { Content, Encrypted, Result, Vault } from '@/types';
+import { getItem } from '@/lib/newVault/core';
+import { returnOnFail } from '@/lib/newVault/result';
+import { render } from '@/lib/newVault/sync';
+import { decrypt, getKey, getRandomBase64 } from '@/lib/utils/encryption';
+import replaceObject from '@/lib/utils/replaceObject';
 
 export async function decryptFolder(
   root: Vault['root'],

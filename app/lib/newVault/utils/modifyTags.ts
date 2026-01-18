@@ -1,4 +1,4 @@
-import { TagHandler } from '@/app/types';
+import { TagHandler } from '@/types';
 
 // FIX ME decide if this should mutate tags array or not
 // either way make sure modifySortedKeys acts the same way
