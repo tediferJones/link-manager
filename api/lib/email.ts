@@ -30,19 +30,27 @@ export async function sendConfirmationEmail({ id, email }: UsersSelect) {
       text: `Click the link below to verify your account: ${apiUrl}/verify?token=${token}`,
     });
   } catch {
-    console.log('Failed to send email')
+    console.log('Failed to send confirmation email');
   }
 }
 
-export async function passwordReset(email: string) {
+export async function sendPasswordResetEmail({ id, email }: UsersSelect) {
+  const token = await getUniqueToken();
+  await createToken({
+    userId: id,
+    token,
+    type: 'reset',
+    expiresAt: Date.now() + ms('15m'),
+  });
+
   try {
     await mg.messages.create('mail.theodrz.me', {
       from: 'LinkMan <linkman@mail.theodrz.me>',
       to: email,
       subject: 'Reset your LinkMan Password',
-      text: 'Add password reset link here',
+      text: `Click the link below to reset your password: ${apiUrl}/reset?token=${token}`,
     });
   } catch {
-    console.log('Failed to send email')
+    console.log('Failed to send password reset email');
   }
 }

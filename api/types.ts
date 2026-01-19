@@ -15,12 +15,6 @@ export type VaultsSelect = typeof vaults.$inferSelect
 
 export type Req<T = any, K = any> = Request<{}, {}, T, K>
 
-// FIX ME these should be optional, there is no guarantee that the req.body will actually contain these values
-export type LoginCredentials = {
-  email: string,
-  password: string,
-}
-
 export type JwtPayload = { userId: number }
 
 export type AuthTypes = 'session' | 'jwt'
@@ -28,3 +22,21 @@ export type AuthTypes = 'session' | 'jwt'
 export type AuthMethods = {
   [K in AuthTypes]: (req: Request) => Promise<UsersSelect | undefined>
 }
+
+export type Body<T> = {
+  [K in keyof T]?: T[K] extends object ? Body<T[K]> : T[K]
+}
+
+export type LoginCredentials = Body<{
+  email: string,
+  password: string,
+}>
+
+export type PasswordResetReq = Body<{
+  email: string
+}>
+
+export type PasswordReset = Body<{
+  token: string,
+  password: string,
+}>

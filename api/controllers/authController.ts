@@ -13,17 +13,19 @@ import {
   updateUserById,
 } from '@/api/models';
 import {
+    getPasswordHash,
   getSessionCookie,
   getUniqueToken,
   normalize,
   sendConfirmationEmail,
+  sendPasswordResetEmail,
   sessionCookieName,
   sessionCookieOpts,
   useDb,
   useJwt,
   validate,
 } from '@/api/lib';
-import { LoginCredentials, Req } from '@/api/types';
+import { LoginCredentials, PasswordReset, PasswordResetReq, Req } from '@/api/types';
 
 // FIX ME this file is getting too big, break it up into individual functions
 
@@ -32,6 +34,8 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 export async function signup(req: Req<LoginCredentials>, res: Response) {
   return await useDb(res, async () => {
     let { email, password } = req.body;
+    if (!email) return res.status(400).json('Email is required');
+    if (!password) return res.status(400).json('Password is required');
     email = normalize(email);
 
     // FIX ME
@@ -42,10 +46,9 @@ export async function signup(req: Req<LoginCredentials>, res: Response) {
     const emailAlreadyExists = await getUserByEmail(email);
     if (emailAlreadyExists) return res.sendStatus(409);
 
-    const passwordHash = await bcrypt.hash(password, 12);
     const userRec = await createUser({
       email,
-      passwordHash,
+      passwordHash: await getPasswordHash(password),
       createdAt: Date.now(),
       verified: false,
     });
@@ -55,20 +58,22 @@ export async function signup(req: Req<LoginCredentials>, res: Response) {
 }
 
 export async function verify(req: Req<never, { token?: string }>, res: Response) {
-  const { token } = req.query;
-  if (!token) return res.status(400).json('token query parameter is required');
-  const tokenRec = await getTokenByValue(token);
-  if (!tokenRec || tokenRec.type !== 'verify') {
-    return res.status(400).json('token is invalid');
-  }
-  const userRec = await getUserById(tokenRec.userId);
-  if (!userRec) {
-    throw Error('token is valid but user does not exist');
-  }
-  userRec.verified = true;
-  await updateUserById(userRec);
-  // FIX ME should probably redirect to pwa/extension
-  return res.sendStatus(200).json('Your account has been activated, you can close this window');
+  return await useDb(res, async () => {
+    const { token } = req.query;
+    if (!token) return res.status(400).json('Token query parameter is required');
+    const tokenRec = await getTokenByValue(token);
+    if (!tokenRec || tokenRec.type !== 'verify') {
+      return res.status(400).json('Token is invalid');
+    }
+    const userRec = await getUserById(tokenRec.userId);
+    if (!userRec) {
+      throw Error('token is valid but user does not exist');
+    }
+    userRec.verified = true;
+    await updateUserById(userRec);
+    // FIX ME should probably redirect to pwa/extension
+    return res.sendStatus(200).json('Your account has been activated, you can close this window');
+  });
 }
 
 export async function login(req: Req<LoginCredentials>, res: Response) {
@@ -78,6 +83,8 @@ export async function login(req: Req<LoginCredentials>, res: Response) {
   return await useDb(res, async () => {
     const loginFailMsg = 'Invalid email or password';
     let { email, password } = req.body;
+    if (!email) return res.status(400).json('Email is required');
+    if (!password) return res.status(400).json('Password is required');
     email = normalize(email);
 
     const error = validate({ email, password });
@@ -153,5 +160,37 @@ export async function jwt(req: Request, res: Response) {
       .sign(secret);
 
     return res.json({ jwt });
+  });
+}
+
+export async function requestPasswordReset(req: Req<PasswordResetReq>, res: Response) {
+  return useDb(res, async () => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json('Email is required');
+    const user = await getUserByEmail(email);
+    if (!user) return res.status(404).json('Email not found');
+    await sendPasswordResetEmail(user);
+    return res.status(200).json(
+      'A link to reset your password has been sent to your email address'
+    );
+  });
+}
+
+export async function resetPassword(req: Req<PasswordReset>, res: Response) {
+  return useDb(res, async () => {
+    const { token, password } = req.body;
+    if (!token) return res.status(400).json('Token is required');
+    if (!password) return res.status(400).json('Password is required')
+    const tokenRec = await getTokenByValue(token);
+    if (!tokenRec || tokenRec.type !== 'reset') {
+      return res.status(400).json('Token is invalid');
+    }
+    const userRec = await getUserById(tokenRec.userId);
+    if (!userRec) {
+      throw Error('token is valid but user does not exist');
+    }
+    userRec.passwordHash = await getPasswordHash(password);
+    await updateUserById(userRec);
+    return res.sendStatus(200).json('Your password has been changed');
   });
 }
