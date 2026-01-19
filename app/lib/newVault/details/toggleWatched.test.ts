@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { toggleWatched } from '@/lib/newVault/details';
-import { getNewVault } from '@/lib/newVault/utils';
-import { addMockItem } from '@/lib/test/addMockItem';
-import { testNewResultSuccess } from '@/lib/test/testResult';
+import { toggleWatched } from '@/app/lib/newVault/details';
+import { getNewVault } from '@/app/lib/newVault/utils';
+import { addMockItem } from '@/app/lib/test/addMockItem';
+import { testNewResultSuccess } from '@/app/lib/test/testResult';
 
 describe('Set watched', () => {
   test('Toggle link to watched', async () => {

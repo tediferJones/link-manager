@@ -1,7 +1,7 @@
-import { getItem } from '@/lib/newVault/core';
-import { returnOnFail } from '@/lib/newVault/result';
-import { saveAndRender } from '@/lib/newVault/sync';
-import { Content, Result, Vault } from '@/types';
+import { getItem } from '@/app/lib/newVault/core';
+import { returnOnFail } from '@/app/lib/newVault/result';
+import { saveAndRender } from '@/app/lib/newVault/sync';
+import { Content, Result, Vault } from '@/app/types';
 
 export async function disableEncryption(
   root: Vault['root'],

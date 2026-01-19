@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { ErrorMsg } from '@/components/ui';
-import { hideError, showError } from '@/effects';
+import { ErrorMsg } from '@/app/components/ui';
+import { hideError, showError } from '@/app/effects';
 
 const id = 'testId';
 const errorMsg = 'This is an error message';

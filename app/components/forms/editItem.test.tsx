@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { EditItem } from '@/components/forms';
+import { EditItem } from '@/app/components/forms';
 import {
   passwordId,
   renameErrorId,
   submitBtnId,
   titleId
-} from '@/components/forms/editItem';
-import getElement from '@/lib/utils/getElement';
-import { mockItem } from '@/lib/test/mockItems';
+} from '@/app/components/forms/editItem';
+import getElement from '@/app/lib/utils/getElement';
+import { mockItem } from '@/app/lib/test/mockItems';
 
-vi.mock('@/effects', async () => {
-  const actual = await vi.importActual('@/effects');
+vi.mock('@/app/effects', async () => {
+  const actual = await vi.importActual('@/app/effects');
   return { ...actual, closeModal: vi.fn() };
 });
 

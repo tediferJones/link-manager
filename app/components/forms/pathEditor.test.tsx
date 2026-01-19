@@ -1,20 +1,20 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { PathEditor } from '@/components/forms';
+import { PathEditor } from '@/app/components/forms';
 import {
   autocompleteId,
   blurredPlaceholder,
   breadcrumbsId,
   focusedPlaceholder,
-} from '@/components/forms/pathEditor';
-import getElement from '@/lib/utils/getElement';
-import { mockItem } from '@/lib/test/mockItems';
+} from '@/app/components/forms/pathEditor';
+import getElement from '@/app/lib/utils/getElement';
+import { mockItem } from '@/app/lib/test/mockItems';
 
-vi.mock('@/lib/newVault/utils', async () => {
-  const actual = await vi.importActual('@/lib/newVault/utils');
+vi.mock('@/app/lib/newVault/utils', async () => {
+  const actual = await vi.importActual('@/app/lib/newVault/utils');
   return { ...actual, getItemPath: vi.fn(() => []) };
 });
-vi.mock('@/lib/newVault/core', async () => {
-  const actual = await vi.importActual('@/lib/newVault/core');
+vi.mock('@/app/lib/newVault/core', async () => {
+  const actual = await vi.importActual('@/app/lib/newVault/core');
   return {
     ...actual,
     moveItem: vi.fn(),

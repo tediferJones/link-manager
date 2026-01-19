@@ -1,3 +1,3 @@
-import { getNewVault } from '@/lib/newVault/utils';
+import { getNewVault } from '@/app/lib/newVault/utils';
 
 export let newUserVault = getNewVault();

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { X } from 'lucide';
-import { Icon } from '@/components/ui';
+import { Icon } from '@/app/components/ui';
 
 describe('Icon', () => {
   test('Renders an svg', () => {

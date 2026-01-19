@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { modifyTags } from '@/lib/newVault/utils';
+import { modifyTags } from '@/app/lib/newVault/utils';
 
 describe('Modify tags', () => {
   const testTag = 'newTag';

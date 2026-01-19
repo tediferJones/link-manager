@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { getSortedKeyType } from '@/lib/newVault/utils';
-import { mockItem, togglePinned } from '@/lib/test/mockItems';
-import { contentTypes } from '@/types';
+import { getSortedKeyType } from '@/app/lib/newVault/utils';
+import { mockItem, togglePinned } from '@/app/lib/test/mockItems';
+import { contentTypes } from '@/app/types';
 
 describe('getSortedKeyType', () => {
   test('Pinned item', () => {

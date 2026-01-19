@@ -1,6 +1,6 @@
-import { getItem } from '@/lib/newVault/core';
-import { unwrap } from '@/lib/newVault/result';
-import { Vault } from '@/types';
+import { getItem } from '@/app/lib/newVault/core';
+import { unwrap } from '@/app/lib/newVault/result';
+import { Vault } from '@/app/types';
 
 export function getViewPath(root: Vault['root'], path: string[]): string[] {
   return path.reduce((newPath, segment) => {

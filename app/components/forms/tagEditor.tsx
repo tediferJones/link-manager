@@ -1,11 +1,11 @@
-import { Autocomplete, Tag } from '@/components/ui';
-import getElement from '@/lib/utils/getElement';
-import { newUserVault } from '@/lib/app/userVault';
-import { Content } from '@/types';
-import { editItemTags } from '@/lib/newVault/details';
-import { getItemPath } from '@/lib/newVault/utils';
-import { throwOnFail } from '@/lib/newVault/result';
-import { query } from '@/lib/newVault/core';
+import { Autocomplete, Tag } from '@/app/components/ui';
+import getElement from '@/app/lib/utils/getElement';
+import { newUserVault } from '@/app/lib/app/userVault';
+import { Content } from '@/app/types';
+import { editItemTags } from '@/app/lib/newVault/details';
+import { getItemPath } from '@/app/lib/newVault/utils';
+import { throwOnFail } from '@/app/lib/newVault/result';
+import { query } from '@/app/lib/newVault/core';
 
 // FIX ME compare to pathManager, try to make this as similar as possible
 // FIX ME do we want to add a submit button?

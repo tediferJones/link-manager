@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { editItemTags } from '@/lib/newVault/details';
-import { getNewVault } from '@/lib/newVault/utils';
-import { addMockItem } from '@/lib/test/addMockItem';
+import { editItemTags } from '@/app/lib/newVault/details';
+import { getNewVault } from '@/app/lib/newVault/utils';
+import { addMockItem } from '@/app/lib/test/addMockItem';
 import {
   testNewResultFailure,
   testNewResultSuccess,
-} from '@/lib/test/testResult';
+} from '@/app/lib/test/testResult';
 
 describe('Edit tags', () => {
   const newTag = 'testTag';

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import getTypedKeys from '@/lib/utils/getTypedKeys';
+import getTypedKeys from '@/app/lib/utils/getTypedKeys';
 
 describe('Get typed keys', () => {
   test('Keys match', () => {

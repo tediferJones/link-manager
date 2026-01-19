@@ -1,6 +1,6 @@
-import { submitBtnId, titleInputId } from '@/components/forms/deleteItem';
-import { btnClassNames } from '@/lib/app/buttonToggleClasses';
-import getElement from '@/lib/utils/getElement';
+import { submitBtnId, titleInputId } from '@/app/components/forms/deleteItem';
+import { btnClassNames } from '@/app/lib/app/buttonToggleClasses';
+import getElement from '@/app/lib/utils/getElement';
 
 const { enabled, disabled } = btnClassNames;
 

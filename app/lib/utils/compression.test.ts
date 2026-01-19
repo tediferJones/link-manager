@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { compress, decompress } from '@/lib/utils/compression';
+import { compress, decompress } from '@/app/lib/utils/compression';
 
 describe('Compression', () => {
   const testData = 'Hello World';

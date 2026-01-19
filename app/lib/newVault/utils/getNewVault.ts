@@ -1,6 +1,6 @@
 import pkg from '@/package.json';
-import { getNewRoot } from '@/lib/newVault/utils';
-import { Vault } from '@/types';
+import { getNewRoot } from '@/app/lib/newVault/utils';
+import { Vault } from '@/app/types';
 
 // FIX ME write tests
 

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { Checkbox } from '@/components/ui';
-import getElement from '@/lib/utils/getElement';
+import { Checkbox } from '@/app/components/ui';
+import getElement from '@/app/lib/utils/getElement';
 
 describe('Checkbox', () => {
   const inputId = 'testId';

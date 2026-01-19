@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { getNewVault, getViewPath } from '@/lib/newVault/utils';
-import { addMockItem } from '@/lib/test/addMockItem';
+import { getNewVault, getViewPath } from '@/app/lib/newVault/utils';
+import { addMockItem } from '@/app/lib/test/addMockItem';
 
 describe('Get view path', () => {
   test('Stop at encrypted folder', async () => {

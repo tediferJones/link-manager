@@ -1,4 +1,4 @@
-import { Result } from '@/types';
+import { Result } from '@/app/types';
 
 // FIX ME delete if not used
 
