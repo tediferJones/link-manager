@@ -1,18 +1,7 @@
 import { Request, Response } from 'express';
-import { JWTPayload, jwtVerify } from 'jose';
-import { authHeaderPrefix } from '@/api/lib';
-import { JwtPayload } from '@/api/types';
-
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-
-async function extractPayload(jwt: string) {
-  try {
-    const { payload } = await jwtVerify<JwtPayload>(jwt, secret);
-    return payload;
-  } catch {
-    return;
-  }
-}
+import { JWTPayload } from 'jose';
+import { JwtPayload } from 'shared/types';
+import { extractJwt } from 'shared/utils';
 
 export async function useJwt(
   req: Request,
@@ -20,13 +9,7 @@ export async function useJwt(
   // FIX ME use optPromise type from app
   callback: (payload: JwtPayload & JWTPayload) => Response | Promise<Response>,
 ) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith(authHeaderPrefix)) return res.sendStatus(401);
-
-  const jwt = authHeader.slice(authHeaderPrefix.length);
-  if (!jwt) return res.sendStatus(401);
-  
-  const payload = await extractPayload(jwt);
+  const payload = await extractJwt(req.headers.authorization);
   if (!payload) return res.sendStatus(401);
   return await callback(payload);
 }

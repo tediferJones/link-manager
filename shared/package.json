@@ -7,5 +7,11 @@
     "typeCheck": "npx tsc --noEmit"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "jose": "^6.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1"
+  }
 }

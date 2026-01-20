@@ -8,5 +8,3 @@ export const sessionCookieOpts: CookieOptions = {
   sameSite: 'strict',
   path: '/jwt',
 }
-
-export const authHeaderPrefix = 'Bearer ';
