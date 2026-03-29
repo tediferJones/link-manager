@@ -16,9 +16,8 @@ export async function load() {
   console.log('LOADING')
   let savedVault: string | null | undefined;
   if (chrome.runtime?.id) {
-    // const chromeStorage = await chrome.storage.sync.get();
-    // savedVault = chromeStorage[storageKey];
-    throw Error('FIX ME chrome storage sync types have changed, see load.ts in app workspace');
+    const chromeStorage = await chrome.storage.sync.get();
+    savedVault = chromeStorage[storageKey];
   } else {
     savedVault = window.localStorage.getItem(storageKey);
   }

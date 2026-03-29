@@ -7,7 +7,7 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["vite/client", "chrome"],
+    "types": ["vite/client", "chrome-types"],
     "allowImportingTsExtensions": true,
     "strict": true,
     "noFallthroughCasesInSwitch": true,
