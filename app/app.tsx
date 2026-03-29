@@ -1,7 +1,7 @@
 import { ChevronUp, CloudUpload, Link, Plus, User } from 'lucide';
 import { Modal } from '@/app/components/layout';
 import { Dropdown, Icon, Loading } from '@/app/components/ui';
-import { AddItem } from '@/app/components/forms';
+import { AddItem, UserAuth } from '@/app/components/forms';
 import { openModal } from '@/app/effects';
 import { newUserVault } from '@/app/lib/app/userVault';
 import { setPath } from '@/app/lib/newVault/sync';
@@ -76,6 +76,7 @@ import { SizeTypes } from '@/app/types';
 // Add tracking/following to links?
 //  - update link url as user navigates from page to page
 
+// FIX ME rename to layout.tsx, move start.ts to index.ts at root of repo, this should be entry point of the app
 export default function App({ type }: { type: SizeTypes }) {
   // FIX ME, for debug purposes only
   (window as any).newVault = newUserVault;
@@ -137,7 +138,7 @@ export default function App({ type }: { type: SizeTypes }) {
             </button>
             <div className='flex flex-col gap-2 transition-all duration-300'
             >
-              <button>Login</button>
+              <button onClick={() => openModal("Login", <UserAuth />)}>Login</button>
               <hr />
               <button onClick={() => {
                 const savedTheme = localStorage.getItem('theme');

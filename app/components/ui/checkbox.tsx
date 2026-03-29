@@ -2,6 +2,8 @@ import { Check } from 'lucide';
 import { Icon } from '@/app/components/ui';
 import getElement from '@/app/lib/utils/getElement';
 
+// FIX ME when hitting tab the checkbox is not focusable
+
 export default function Checkbox(
   {
     id,
