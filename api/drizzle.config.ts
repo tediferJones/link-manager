@@ -4,7 +4,7 @@ import { config } from 'dotenv';
 config({ path: '.env' });
 
 export default defineConfig({
-  schema: './src/db/schema.ts',
+  schema: './drizzle/schema.ts',
   dialect: 'turso',
   dbCredentials: {
     url: process.env.TURSO_CONNECTION_URL!,
