@@ -4,7 +4,7 @@ export const sessionCookieName = 'sessionId';
 
 export const sessionCookieOpts: CookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: 'strict',
+  secure: false,
+  sameSite: 'lax',
   path: '/jwt',
 }

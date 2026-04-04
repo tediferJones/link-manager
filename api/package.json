@@ -14,6 +14,7 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/ms": "^2.1.0",
     "@types/node": "^24.10.1",
@@ -23,6 +24,7 @@
     "@libsql/client": "^0.15.15",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
