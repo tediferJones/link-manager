@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcrypt';
 import ms from 'ms';
+import { validate } from 'shared/utils'
 import {
   createToken,
   createUser,
@@ -23,7 +24,6 @@ import {
   sessionCookieOpts,
   useDb,
   useJwt,
-  validate,
 } from '@/api/lib';
 import { LoginCredentials, PasswordReset, PasswordResetReq, Req } from '@/api/types';
 

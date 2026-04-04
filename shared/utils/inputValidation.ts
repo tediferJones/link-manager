@@ -7,7 +7,7 @@ type Validator<T> = { match: T, error: string }
 
 type Validators = {
   required: Validator<boolean>,
-  pattern: Validator<RegExp>,
+  pattern: Validator<string>,
   minLength: Validator<number>,
 };
 
@@ -26,7 +26,7 @@ const validators: { [K in InputNames]: Partial<Validators> } = {
       error: 'Email is required',
     },
     pattern: {
-      match: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/,
+      match: '^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,6}$',
       error: 'Email is not formatted correctly',
     }
   },
@@ -36,7 +36,7 @@ const validators: { [K in InputNames]: Partial<Validators> } = {
       error: 'Password is required',
     },
     pattern: {
-      match: /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$/,
+      match: '^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$',
       error: 'Password must contain at least one capital letter and one special character',
     },
     minLength: {
@@ -48,7 +48,7 @@ const validators: { [K in InputNames]: Partial<Validators> } = {
 
 const validationMethods: ValidationMethods = {
   required: (input, expected) => !expected ? true : !!input === expected,
-  pattern: (input, expected) => expected.test(input),
+  pattern: (input, expected) => RegExp(expected).test(input),
   minLength: (input, expected) => input.length >= expected,
 }
 
