@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db, tokens } from '@/api/drizzle';
-import { TokensInsert } from '@/api/types';
+import { TokensInsert, TokenTypes } from '@/api/types';
 
 export async function createToken(sessionRec: TokensInsert) {
   return await db.insert(tokens).values(sessionRec);
@@ -17,6 +17,11 @@ export async function updateToken(token: string, newToken: string) {
     .where(eq(tokens.token, token));
 }
 
-export async function deleteToken(token: string) {
-  return await db.delete(tokens).where(eq(tokens.token, token));
+export async function deleteToken(token: string, type: TokenTypes) {
+  return await db.delete(tokens).where(
+    and(
+      eq(tokens.token, token),
+      eq(tokens.type, type),
+    )
+  );
 }

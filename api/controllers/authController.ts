@@ -71,6 +71,7 @@ export async function verify(req: Req<never, { token?: string }>, res: Response)
     }
     userRec.verified = true;
     await updateUserById(userRec);
+    await deleteToken(tokenRec.token, tokenRec.type)
     // FIX ME should probably redirect to pwa/extension
     return res.sendStatus(200).json('Your account has been activated, you can close this window');
   });
@@ -120,7 +121,7 @@ export async function logout(req: Request, res: Response) {
   return useDb(res, async () => {
     const sessionId = getSessionCookie(req);
     if (sessionId) {
-      await deleteToken(sessionId);
+      await deleteToken(sessionId, 'session');
       res.clearCookie(sessionCookieName, sessionCookieOpts);
     }
     return res.sendStatus(204);

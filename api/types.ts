@@ -38,3 +38,6 @@ export type PasswordReset = Body<{
   token: string,
   password: string,
 }>
+
+export const tokenTypes = [ 'session', 'verify', 'reset' ] as const;
+export type TokenTypes = typeof tokenTypes[number];

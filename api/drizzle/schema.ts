@@ -1,5 +1,5 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { DbRef } from '@/api/types';
+import { DbRef, tokenTypes } from '@/api/types';
 
 // FIX ME verify "PRAGMA foreign_keys = ON;" in database
 // otherwise foreign key relationships will not enforced
@@ -18,7 +18,7 @@ export const tokens = sqliteTable('tokens', {
   userId: integer('userId').notNull().references(...refUserId),
   expiresAt: integer('expiresAt').notNull(),
   token: text('token').primaryKey().unique().notNull(),
-  type: text('type', { enum: [ 'session', 'verify', 'reset' ] }).notNull(),
+  type: text('type', { enum: tokenTypes }).notNull(),
 });
 
 export const vaults = sqliteTable('vaults', {
