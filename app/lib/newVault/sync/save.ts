@@ -3,6 +3,8 @@ import { unwrap } from '@/app/lib/newVault/result';
 import { newUserVault } from '@/app/lib/app/userVault';
 import { compress } from '@/app/lib/utils/compression';
 import { Vault } from '@/app/types';
+import fetchWithJwt from '@/app/lib/utils/fetchWithJwt';
+import { apiUrl } from '@/shared/constants';
 
 // FIX ME move to constants
 const storageKey = 'newUserVault';
@@ -19,7 +21,8 @@ export async function save() {
   const packedResult = await packFolder(newUserVault.root);
   const packed = unwrap(packedResult);
   // FIX ME do not compress whole vault, we still want easy access to date and version
-  const savedVault: Vault = { ...newUserVault, root: packed };
+  const { jwt, ws, ...userVault } = newUserVault
+  const savedVault: Vault = { ...userVault, root: packed };
   const compressed = await compress(JSON.stringify(savedVault));
 
   if (chrome.runtime?.id) {
@@ -27,4 +30,11 @@ export async function save() {
   } else {
     window.localStorage.setItem(storageKey, compressed);
   }
+
+  console.log('fetchWithJwtBody', compressed)
+  const uploadVaultRes = await fetchWithJwt(`${apiUrl}/vault`, {
+    method: 'PUT',
+    body: compressed,
+  });
+  console.log('uploadVaultRest', uploadVaultRes)
 }

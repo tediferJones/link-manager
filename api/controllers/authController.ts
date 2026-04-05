@@ -14,7 +14,7 @@ import {
   updateUserById,
 } from '@/api/models';
 import {
-    getPasswordHash,
+  getPasswordHash,
   getSessionCookie,
   getUniqueToken,
   normalize,
@@ -152,7 +152,8 @@ export async function jwt(req: Request, res: Response) {
     if (!userRec) return res.status(401).json('User does not exist');
     if (!userRec.verified) return res.status(401).json('Not verified');
 
-    await updateToken(sessionId, await getUniqueToken());
+    const newToken = await getUniqueToken();
+    await updateToken(sessionId, newToken);
 
     const jwt = await new SignJWT({ userId: sessionRec.userId })
       .setProtectedHeader({ alg: 'HS256' })
@@ -160,6 +161,7 @@ export async function jwt(req: Request, res: Response) {
       .setExpirationTime('10m')
       .sign(secret);
 
+    res.cookie(sessionCookieName, newToken, sessionCookieOpts);
     return res.json({ jwt });
   });
 }

@@ -10,6 +10,11 @@ export type Vault = {
   version: string,
 }
 
+export type UserSession = Vault & {
+  jwt: string,
+  ws: null | WebSocket,
+}
+
 // FIX ME move to constants
 export const contentTypes = [
   'link',

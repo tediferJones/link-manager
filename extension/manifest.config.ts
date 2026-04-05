@@ -1,5 +1,6 @@
-import { defineManifest } from '@crxjs/vite-plugin'
-import pkg from './package.json'
+import { defineManifest } from '@crxjs/vite-plugin';
+import pkg from './package.json';
+import { apiUrl } from 'shared/constants';
 
 export default defineManifest({
   manifest_version: 3,
@@ -22,7 +23,9 @@ export default defineManifest({
     'sidePanel',
     'contentSettings',
     'storage',
+    'cookies',
   ],
+  host_permissions: [ `${apiUrl}/*` ],
   side_panel: {
     default_path: 'src/sidepanel/index.html',
   },

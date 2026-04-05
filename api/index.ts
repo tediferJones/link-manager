@@ -2,14 +2,14 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import router from '@/api/routes';
-import { pwaUrl } from '@/shared/constants';
+import { pwaUrl, extUrl } from '@/shared/constants';
 
 export const app = express();
 
 app.use(cors({
   // FIX ME add chrome extension URL
   // chrome will generate a consistent id for the URL once published
-  origin: pwaUrl,
+  origin: [ pwaUrl, extUrl ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 }));

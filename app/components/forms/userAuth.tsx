@@ -54,13 +54,15 @@ export default function UserAuth() {
             console.log('failed to create account')
           }
         } else {
-          const res = await fetch(`${apiUrl}/login`, {
+          await fetch(`${apiUrl}/login`, {
             headers: { 'Content-Type': 'application/json' },
             method: 'POST',
             body: JSON.stringify({ email, password }),
             credentials: 'include'
           });
-          console.log(res)
+          window.dispatchEvent(new CustomEvent('getJwt', {
+            detail: { reload: true }
+          }));
           // FIX ME surface login result to user
           // if successfull, close login window and get jwt
         }
