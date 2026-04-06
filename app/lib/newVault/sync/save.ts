@@ -33,8 +33,9 @@ export async function save() {
 
   console.log('fetchWithJwtBody', compressed)
   const uploadVaultRes = await fetchWithJwt(`${apiUrl}/vault`, {
+    headers: { 'Content-Type': 'application/json' },
     method: 'PUT',
-    body: compressed,
+    body: JSON.stringify({ vault: compressed }),
   });
   console.log('uploadVaultRest', uploadVaultRes)
 }

@@ -16,8 +16,7 @@ export async function getVault(req: Request, res: Response) {
 export async function updateVault(req: Request, res: Response) {
   return useDb(res, async () => {
     return useJwt(req, res, async ({ userId }) => {
-      console.log('GOT UPDATE REQUEST', req.body)
-      const vault = req.body;
+      const { vault } = req.body;
       await upsertVault({ userId, vault });
       return res.json(vault);
     });
