@@ -5,6 +5,7 @@ import { compress } from '@/app/lib/utils/compression';
 import { Vault } from '@/app/types';
 import fetchWithJwt from '@/app/lib/utils/fetchWithJwt';
 import { apiUrl } from '@/shared/constants';
+import { sendClientWsMessage } from '@/shared/utils/ws';
 
 // FIX ME move to constants
 const storageKey = 'newUserVault';
@@ -25,6 +26,10 @@ export async function save() {
   const savedVault: Vault = { ...userVault, root: packed };
   const compressed = await compress(JSON.stringify(savedVault));
 
+  // FIX ME add save function to start config i.e.
+  // desktop has a specific save function
+  // extension has a specific save function
+  // etc..
   if (chrome.runtime?.id) {
     await chrome.storage.sync.set({ [storageKey]: compressed });
   } else {
@@ -38,4 +43,9 @@ export async function save() {
     body: JSON.stringify({ vault: compressed }),
   });
   console.log('uploadVaultRest', uploadVaultRes)
+
+  sendClientWsMessage(newUserVault.ws, {
+    action: 'reload',
+    jwt: newUserVault.jwt
+  });
 }

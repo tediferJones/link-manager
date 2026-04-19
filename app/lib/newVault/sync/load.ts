@@ -37,7 +37,7 @@ export async function load() {
   if (dbVaultRes.ok) {
     const dbVault = await extractVault(await dbVaultRes.json());
     console.log('loaded from api')
-    if (vault && vault.date < dbVault.date) {
+    if (!vault || vault.date <= dbVault.date) {
       vault = dbVault;
     } else {
       throw Error('local vault newer than db vault, prompt user to choose');

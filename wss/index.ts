@@ -1,22 +1,23 @@
 import WebSocket, { WebSocketServer } from 'ws';
-import { extractJwt } from 'shared/utils';
+import {
+  sendServerWsMessage,
+  ClientWsMessage,
+  getServerWsHandlers
+} from 'shared/utils/ws';
+import { config } from 'dotenv';
 
-type Actions = 'getToken'
+type ClientPools = { [key: number]: Client[] }
 
-type Handlers = { [K in Actions]: Function }
+type Client = WebSocket & { pool: Client[] }
 
-type ClientPools = {
-  [key: number]: WebSocket[]
-}
+config({ path: '.env' });
 
 const port = 9000;
 const wss = new WebSocketServer({ port });
 
 const clientPools: ClientPools = {}
 
-const handlers: Handlers = {
-  getToken: () => {}
-}
+const executeClientMessage = getServerWsHandlers(clientPools);
 
 // WSS workflow [All client messages should contain JWT]:
 //  Connection:
@@ -31,31 +32,23 @@ const handlers: Handlers = {
 //  Disconnect:
 //  - Client sends JWT, and the client ws is removed from clientPools[userId]
 
-wss.on('connection', async (ws, req) => {
-  console.log('client connected');
-  const payload = await extractJwt(req.headers.authorization);
-  if (!payload) return ws.close()
-  const { userId } = payload;
-  if (clientPools[userId]) {
-    clientPools[userId].push(ws);
-  } else {
-    clientPools[userId] = [ ws ];
-  }
+wss.on('connection', async (ws: Client) => {
+  sendServerWsMessage(ws, { action: 'authenticate' });
 
   ws.on('message', (data) => {
     try {
-      const parsed = JSON.parse(data.toString())
+      const clientMsg: ClientWsMessage = JSON.parse(data.toString());
+      executeClientMessage(ws, clientMsg);
     } catch {
-      console.log('Improperly formatted message')
+      throw Error(`Failed to execute: ${data.toString()}`);
     }
     console.log('Received message', data.toString());
   });
 
   ws.on('close', () => {
-    console.log('client disconnected');
+    console.log('client disconnected')
+    if (ws.pool) ws.pool = ws.pool.filter(client => client !== ws);
   });
-
-  ws.send(JSON.stringify({ action: 'getToken' }));
 });
 
 console.log(`WebSocket server is running on port ${port}`);

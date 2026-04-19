@@ -10,7 +10,7 @@ export default function fetchWithJwt(
   console.log('auth header', `${authHeaderPrefix}${newUserVault.jwt}`)
   return fetch(url, {
     headers: {
-      authorization: `${authHeaderPrefix}${newUserVault.jwt}`,
+      authorization: newUserVault.jwt,
       ...headers,
     },
     ...rest,

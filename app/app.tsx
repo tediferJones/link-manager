@@ -75,6 +75,9 @@ import { SizeTypes } from '@/app/types';
 //  - would allows a single item to show up in multiple places which could be useful
 // Add tracking/following to links?
 //  - update link url as user navigates from page to page
+// Standardize timestamps:
+//  - jwt exp is true unix time i.e. seconds
+//  - Date.now() which is used pretty much everywhere else is ms
 
 // FIX ME rename to layout.tsx, move start.ts to index.ts at root of repo, this should be entry point of the app
 export default function App({ type }: { type: SizeTypes }) {

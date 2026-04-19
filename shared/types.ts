@@ -1,1 +1,1 @@
-export type JwtPayload = { userId: number }
+export type JwtPayload = { userId: number, exp: number }
