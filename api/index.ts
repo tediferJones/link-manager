@@ -2,6 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import router from '@/api/routes';
+import { clearExpiredTokens } from '@/api/models';
 import { pwaUrl, extUrl } from '@/shared/constants';
 
 export const app = express();
@@ -19,3 +20,5 @@ app.use(cookieParser());
 app.use('/', router);
 
 app.listen(8000, () => console.log('Server running on port 8000'));
+
+setInterval(() => clearExpiredTokens(Date.now()), 1000 * 60 * 5);

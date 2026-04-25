@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, lte } from 'drizzle-orm';
 import { db, tokens } from '@/api/drizzle';
 import { TokensInsert, TokenTypes } from '@/api/types';
 
@@ -24,4 +24,8 @@ export async function deleteToken(token: string, type: TokenTypes) {
       eq(tokens.type, type),
     )
   );
+}
+
+export async function clearExpiredTokens(now: number) {
+  return await db.delete(tokens).where(lte(tokens.expiresAt, now));
 }
