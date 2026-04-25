@@ -53,7 +53,6 @@ export function getClientWsHandlers(load: Function) {
     userVault: UserSession,
     msg: ServerWsMessage<K>, 
   ) {
-    console.log('processing', msg)
     clientWsHandlers[msg.action](userVault, msg);
   }
 }
@@ -78,10 +77,7 @@ async function authenticateClientWs(
   pools: ClientPools,
 ) {
   const payload = await extractJwt(msg.jwt);
-  if (!payload) {
-    console.log('failed to extract jwt')
-    return closeClient(ws);
-  }
+  if (!payload) return closeClient(ws);
   const timeToExp = (payload.exp * 1000) - Date.now();
   ws.isAuthenticated = true;
   ws.refreshTimeout = setTimeout(() => {
@@ -93,7 +89,6 @@ async function authenticateClientWs(
     pools[payload.userId]!.push(ws);
   }
   if (!ws.pool) ws.pool = pools[payload.userId]!;
-  console.log('validated client ws')
 }
 
 async function jwtGuard(
@@ -102,10 +97,8 @@ async function jwtGuard(
   pools: ClientPools,
   callback: (ws: Client, msg: ServerWsMessage) => void
 ) {
-  console.log('checking jwt guard')
   if (!ws.isAuthenticated) await authenticateClientWs(ws, msg, pools);
   if (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) return;
-  console.log('passed jwt guard')
   return callback(ws, msg);
 }
 
@@ -124,14 +117,12 @@ export function getServerWsHandlers(pools: ClientPools) {
     ws: Client,
     msg: ClientWsMessage<K>,
   ) {
-    console.log('processing', msg)
     serverWsHandlers[msg.action](ws, msg);
   }
 }
 
 export function dispatchServerWsMessage(ws: Client, msg: ServerWsMessage) {
   const stringified = JSON.stringify(msg);
-  console.log('DISPATCHING', ws.pool)
   ws.pool?.filter(client => client !== ws && client.isAuthenticated)
     .forEach(client => client.send(stringified));
 }

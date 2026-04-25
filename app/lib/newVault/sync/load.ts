@@ -48,7 +48,8 @@ export async function load() {
     replaceObject(newUserVault, {
       ...vault,
       jwt: newUserVault.jwt,
-      ws: newUserVault.ws
+      ws: newUserVault.ws,
+      userData: newUserVault.userData,
     });
   }
 

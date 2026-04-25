@@ -22,7 +22,7 @@ export async function save() {
   const packedResult = await packFolder(newUserVault.root);
   const packed = unwrap(packedResult);
   // FIX ME do not compress whole vault, we still want easy access to date and version
-  const { jwt, ws, ...userVault } = newUserVault
+  const { jwt, ws, userData, ...userVault } = newUserVault
   const savedVault: Vault = { ...userVault, root: packed };
   const compressed = await compress(JSON.stringify(savedVault));
 

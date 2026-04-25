@@ -3,6 +3,7 @@ import { SignJWT } from 'jose';
 import bcrypt from 'bcrypt';
 import ms from 'ms';
 import { validate } from 'shared/utils'
+import { PayloadExtras, UserData } from 'shared/types';
 import {
   createToken,
   createUser,
@@ -25,7 +26,12 @@ import {
   useDb,
   useJwt,
 } from '@/api/lib';
-import { LoginCredentials, PasswordReset, PasswordResetReq, Req } from '@/api/types';
+import {
+  LoginCredentials,
+  PasswordReset,
+  PasswordResetReq,
+  Req
+} from '@/api/types';
 
 // FIX ME this file is getting too big, break it up into individual functions
 
@@ -133,7 +139,12 @@ export async function me(req: Request, res: Response) {
     return useJwt(req, res, async ({ userId }) => {
       const userRec = await getUserById(userId);
       if (!userRec) return res.sendStatus(404);
-      return res.send({ email: userRec.email });
+      return res.send({
+        email: userRec.email,
+        userId: userRec.id,
+        verified: userRec.verified,
+        createdAt: userRec.createdAt,
+      } satisfies UserData);
     });
   });
 }
@@ -155,7 +166,11 @@ export async function jwt(req: Request, res: Response) {
     const newToken = await getUniqueToken();
     await updateToken(sessionId, newToken);
 
-    const jwt = await new SignJWT({ userId: sessionRec.userId })
+    const jwtPayload = {
+      userId: userRec.id,
+    } satisfies PayloadExtras
+
+    const jwt = await new SignJWT(jwtPayload)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime('10m')
@@ -194,6 +209,7 @@ export async function resetPassword(req: Req<PasswordReset>, res: Response) {
     }
     userRec.passwordHash = await getPasswordHash(password);
     await updateUserById(userRec);
+    await deleteToken(tokenRec.token, tokenRec.type);
     return res.sendStatus(200).json('Your password has been changed');
   });
 }

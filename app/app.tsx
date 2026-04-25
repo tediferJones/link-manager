@@ -1,12 +1,13 @@
 import { ChevronUp, CloudUpload, Link, Plus, User } from 'lucide';
 import { Modal } from '@/app/components/layout';
 import { Dropdown, Icon, Loading } from '@/app/components/ui';
-import { AddItem, UserAuth } from '@/app/components/forms';
+import { AddItem } from '@/app/components/forms';
 import { openModal } from '@/app/effects';
 import { newUserVault } from '@/app/lib/app/userVault';
 import { setPath } from '@/app/lib/newVault/sync';
 import { getViewPath } from '@/app/lib/newVault/utils';
 import { SizeTypes } from '@/app/types';
+import { authContainerId } from './lib/constants';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
@@ -78,6 +79,13 @@ import { SizeTypes } from '@/app/types';
 // Standardize timestamps:
 //  - jwt exp is true unix time i.e. seconds
 //  - Date.now() which is used pretty much everywhere else is ms
+// Separate data that should be synced from data that is not synced
+//  - take a look at save.ts and load.ts we are constantly trying to do
+//    - when saving we do "back this stuff up but not this stuff"
+//    - when loading we do "this cloud data replaces this data but not this other data"
+//  - instead just make UserSession an object with two fields, vault and session
+//    - vault contains everything that gets backed up
+//    - session contains everything that does NOT get backed up
 
 // FIX ME rename to layout.tsx, move start.ts to index.ts at root of repo, this should be entry point of the app
 export default function App({ type }: { type: SizeTypes }) {
@@ -139,9 +147,10 @@ export default function App({ type }: { type: SizeTypes }) {
             >
               <Icon name={User} />
             </button>
-            <div className='flex flex-col gap-2 transition-all duration-300'
-            >
-              <button onClick={() => openModal("Login", <UserAuth />)}>Login</button>
+            <div className='flex flex-col gap-2 transition-all duration-300'>
+              <div id={authContainerId} className='m-auto'>
+                Loading...
+              </div>
               <hr />
               <button onClick={() => {
                 const savedTheme = localStorage.getItem('theme');

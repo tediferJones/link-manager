@@ -6,3 +6,4 @@ export { default as Dropdown } from '@/app/components/ui/dropdown';
 export { default as Autocomplete } from '@/app/components/ui/autocomplete';
 export { default as Tag } from '@/app/components/ui/tag';
 export { default as Input } from '@/app/components/ui/input';
+export { default as Auth } from '@/app/components/ui/auth';

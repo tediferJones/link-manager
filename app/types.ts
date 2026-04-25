@@ -1,4 +1,5 @@
 import { JSX, ReactElement } from 'jsx-dom';
+import { UserData } from 'shared/types';
 
 // FIX ME double check that exported types actually get used somewhere
 // if not used then delete them
@@ -13,6 +14,7 @@ export type Vault = {
 export type UserSession = Vault & {
   jwt: string,
   ws: null | WebSocket,
+  userData?: UserData
 }
 
 // FIX ME move to constants
