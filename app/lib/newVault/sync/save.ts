@@ -36,13 +36,11 @@ export async function save() {
     window.localStorage.setItem(storageKey, compressed);
   }
 
-  console.log('fetchWithJwtBody', compressed)
-  const uploadVaultRes = await fetchWithJwt(`${apiUrl}/vault`, {
+  await fetchWithJwt(`${apiUrl}/vault`, {
     headers: { 'Content-Type': 'application/json' },
     method: 'PUT',
     body: JSON.stringify({ vault: compressed }),
   });
-  console.log('uploadVaultRest', uploadVaultRes)
 
   sendClientWsMessage(newUserVault.ws, {
     action: 'reload',
