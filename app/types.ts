@@ -146,3 +146,16 @@ export type JSXElement<
 export type MockItemMap = {
   [K in ContentTypes]: (title: string) => Content<K>
 }
+
+export type UserAuthTypes = 'signup' | 'login' | 'reset' | 'reqReset'
+
+export type UserAuthRequiredInputs = 'email' | 'password' | 'confirmPassword'
+
+export type UserAuthHandlers = {
+  [K in UserAuthTypes]: {
+    submit: () => Promise<void>,
+    btnText: string
+    loadingText: string,
+    requiredInputs: UserAuthRequiredInputs[],
+  }
+}

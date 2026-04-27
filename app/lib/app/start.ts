@@ -9,6 +9,8 @@ import { load } from '@/app/lib/newVault/sync';
 import getJwt from '@/app/lib/utils/getJwt';
 import { authContainerId } from '@/app/lib/constants';
 import { Auth } from '@/app/components/ui';
+import { openModal } from '@/app/effects';
+import { UserAuth } from '@/app/components/forms';
 
 export default function start(type: SizeTypes) {
   setTheme();
@@ -25,4 +27,9 @@ export default function start(type: SizeTypes) {
   });
   getElement('#app').appendChild(App({ type }));
   dispatchEvent(new CustomEvent('getJwt', { detail: { reload: true } }));
+
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.has('token')) {
+    openModal('Reset Password', UserAuth({ type: 'reset' }));
+  }
 }

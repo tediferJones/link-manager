@@ -5,11 +5,13 @@ import router from '@/api/routes';
 import { clearExpiredTokens } from '@/api/models';
 import { pwaUrl, extUrl } from '@/shared/constants';
 
+// FIX ME verify user account is valid for every request besides signup
+// - should probably just create a wrapper like useDb or useJwt
+//   - maybe useVerifiedUser
+
 export const app = express();
 
 app.use(cors({
-  // FIX ME add chrome extension URL
-  // chrome will generate a consistent id for the URL once published
   origin: [ pwaUrl, extUrl ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,

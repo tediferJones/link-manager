@@ -21,7 +21,7 @@ function handleKeyDown(e: KeyboardEvent) {
 export function openModal(title: string, element: Element) {
   getElement<HTMLDivElement>(`#${modalTitleId}`).textContent = title;
   const content = getElement(`#${modalContentId}`);
-  content.appendChild(element);
+  content.replaceChildren(element);
 
   const container = getElement(`#${modalContainerId}`);
   container.classList.remove(...closedClasses);

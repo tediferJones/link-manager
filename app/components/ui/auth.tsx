@@ -21,7 +21,7 @@ export default function Auth() {
       </button>
     </div>
   ) : (
-    <button onClick={() => openModal("Login", <UserAuth />)}>
+    <button onClick={() => openModal("Login", <UserAuth type='login' />)}>
       Login
     </button>
   )
