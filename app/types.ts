@@ -147,9 +147,9 @@ export type MockItemMap = {
   [K in ContentTypes]: (title: string) => Content<K>
 }
 
-export type UserAuthTypes = 'signup' | 'login' | 'reset' | 'reqReset'
+export type UserAuthTypes = 'signup' | 'login' | 'reset' | 'reqReset' | 'recovery'
 
-export type UserAuthRequiredInputs = 'email' | 'password' | 'confirmPassword'
+export type UserAuthRequiredInputs = 'email' | 'password' | 'confirmPassword' | 'token'
 
 export type UserAuthHandlers = {
   [K in UserAuthTypes]: {

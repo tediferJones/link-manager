@@ -11,7 +11,7 @@ type Validators = {
   minLength: Validator<number>,
 };
 
-type InputNames = 'email' | 'password'
+type InputNames = 'email' | 'password' | 'token'
 
 type ValidationMethods = {
   [K in keyof Validators]: (input: string, expected: Validators[K]['match']) => boolean
@@ -44,6 +44,16 @@ const validators: { [K in InputNames]: Partial<Validators> } = {
       error: 'Password must be at least 8 characters long',
     }
   },
+  token: {
+    required: {
+      match: true,
+      error: 'Token is required',
+    },
+    pattern: {
+      match: '^[A-Za-z0-9+/]*={0,2}$',
+      error: 'Token is not valid base64',
+    }
+  }
 } as const;
 
 const validationMethods: ValidationMethods = {

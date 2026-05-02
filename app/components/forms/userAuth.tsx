@@ -7,11 +7,13 @@ import { UserAuthHandlers, UserAuthTypes } from '@/app/types';
 const userAuthEmailId = 'userAuthEmail';
 const userAuthPwdId = 'userAuthPwd';
 const userAuthPwdConfirmId = 'userAuthPwdConfirm';
+const userAuthTokenId = 'userAuthToken';
 const userAuthFormId = 'userAuthForm';
 const userAuthSubmitBtnId = 'userAuthSubmitBtn';
 
 const emailValidation = inlineValidation('email');
 const passwordValidation = inlineValidation('password');
+const tokenValidation = inlineValidation('token');
 
 export default function UserAuth({ type }: { type: UserAuthTypes }) {
   // FIX ME how do we want to display submit results to user
@@ -29,8 +31,7 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         if (error) return console.log('failed validation', error)
         await fetch(`${apiUrl}/login`, {
           headers: { 'Content-Type': 'application/json' },
-          // FIX ME do we need this?
-          // credentials: 'include',
+          credentials: 'include',
           method: 'POST',
           body: JSON.stringify({ email, password }),
         });
@@ -70,7 +71,11 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         const email = getElement<HTMLInputElement>(`#${userAuthEmailId}`).value;
         const error = validate({ email });
         if (error) return console.log('failed validation', error);
-        const res = await fetch(`${apiUrl}/requestPasswordReset`);
+        const res = await fetch(`${apiUrl}/requestPasswordReset`, {
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+          body: JSON.stringify({ email }),
+        });
         if (res.ok) {
           console.log('check email for reset link')
         } else {
@@ -103,6 +108,27 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         }
       },
     },
+    recovery: {
+      btnText: 'Recover Account',
+      loadingText: 'Recovering Account...',
+      requiredInputs: [ 'email', 'token' ],
+      submit: async () => {
+        const email = getElement<HTMLInputElement>(`#${userAuthEmailId}`).value;
+        const token = getElement<HTMLInputElement>(`#${userAuthTokenId}`).value;
+        const error = validate({ email, token });
+        if (error) return console.log('failed validation', error);
+        const res = await fetch(`${apiUrl}/recoverAccount`, {
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+          body: JSON.stringify({ email, token }),
+        });
+        if (res.ok) {
+          console.log('account recovery email sent')
+        } else {
+          console.log('failed to recover account')
+        }
+      }
+    }
   }
 
   const requiredInputs = handlers[type].requiredInputs;
@@ -134,7 +160,7 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         <>
           <label className='m-auto' htmlFor={userAuthEmailId}>E-mail</label>
           <input className='defaultBorder col-span-2'
-            type='input' 
+            type='text' 
             id={userAuthEmailId}
             onInput={handleInputChange}
             {...emailValidation}
@@ -153,9 +179,10 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         </>
       )}
       {requiredInputs.includes('confirmPassword') && (
-        // Do we really need this?  User can always just reset their password if needed
+        // FIX ME enforce password matching password confirm
+        // OR just delete this, user can always just reset their password
         <>
-          <label className='m-auto' htmlFor={userAuthPwdId}>
+          <label className='m-auto' htmlFor={userAuthPwdConfirmId}>
             Confirm Password
           </label>
           <input className='defaultBorder col-span-2'
@@ -166,11 +193,25 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
           />
         </>
       )}
+      {requiredInputs.includes('token') && (
+        <>
+          <label className='m-auto' htmlFor={userAuthTokenId}>
+            Confirm Password
+          </label>
+          <input className='defaultBorder col-span-2'
+            type='text'
+            id={userAuthTokenId}
+            onInput={handleInputChange}
+            {...tokenValidation}
+          />
+        </>
+      )}
       {type !== 'reset' && (
         <>
           <hr className='col-span-full' />
           {type !== 'login' && (
             <button className='col-span-full text-center underline'
+              type='button'
               onClick={() => openModal(
                 handlers['login'].btnText,
                 <UserAuth type='login' />
@@ -179,6 +220,7 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
           )}
           {type !== 'signup' && (
             <button className='col-span-full text-center underline'
+              type='button'
               onClick={() => openModal(
                 handlers['signup'].btnText,
                 <UserAuth type='signup' />
@@ -193,6 +235,15 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
                 <UserAuth type='reqReset' />
               )}
             >Forgot Password</button>
+          )}
+          {type !== 'recovery' && (
+            <button className='col-span-full text-center underline'
+              type='button'
+              onClick={() => openModal(
+                handlers['recovery'].btnText,
+                <UserAuth type='recovery' />
+              )}
+            >Recover Account</button>
           )}
         </>
       )}

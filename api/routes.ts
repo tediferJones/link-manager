@@ -6,6 +6,7 @@ import {
   login,
   logout,
   me,
+  recoverAccount,
   requestPasswordReset,
   resetPassword,
   signup,
@@ -23,6 +24,7 @@ router.get('/jwt', jwt);
 router.get('/me', me);
 router.post('/requestPasswordReset', requestPasswordReset);
 router.post('/resetPassword', resetPassword);
+router.post('/recoverAccount', recoverAccount);
 
 router.get('/vault', getVault);
 router.put('/vault', updateVault);

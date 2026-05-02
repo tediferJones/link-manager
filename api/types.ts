@@ -39,5 +39,10 @@ export type PasswordReset = Body<{
   password: string,
 }>
 
+export type RecoverAccount = Body<{
+  email: string,
+  token: string,
+}>
+
 export const tokenTypes = [ 'session', 'verify', 'reset' ] as const;
 export type TokenTypes = typeof tokenTypes[number];

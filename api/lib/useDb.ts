@@ -4,7 +4,7 @@ export async function useDb(res: Response, func: Function) {
   try {
     return await func()
   } catch {
-    return res.sendStatus(500).json(
+    return res.status(500).json(
       'Failed to process requests, database error'
     );
   }

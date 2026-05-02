@@ -12,6 +12,7 @@ export const users = sqliteTable('users', {
   passwordHash: text('passwordHash').notNull(),
   createdAt: integer('createdAt').notNull(),
   verified: integer({ mode: 'boolean' }).notNull(),
+  recoveryTokenHash: text('recoveryToken'),
 });
 
 export const tokens = sqliteTable('tokens', {

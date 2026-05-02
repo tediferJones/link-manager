@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { SignJWT } from 'jose';
+import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
 import ms from 'ms';
 import { validate } from 'shared/utils'
@@ -15,7 +16,7 @@ import {
   updateUserById,
 } from '@/api/models';
 import {
-  getPasswordHash,
+  getHash,
   getSessionCookie,
   getUniqueToken,
   normalize,
@@ -30,6 +31,7 @@ import {
   LoginCredentials,
   PasswordReset,
   PasswordResetReq,
+  RecoverAccount,
   Req
 } from '@/api/types';
 
@@ -54,7 +56,7 @@ export async function signup(req: Req<LoginCredentials>, res: Response) {
 
     const userRec = await createUser({
       email,
-      passwordHash: await getPasswordHash(password),
+      passwordHash: await getHash(password),
       createdAt: Date.now(),
       verified: false,
     });
@@ -78,8 +80,17 @@ export async function verify(req: Req<never, { token?: string }>, res: Response)
     userRec.verified = true;
     await updateUserById(userRec);
     await deleteToken(tokenRec.token, tokenRec.type)
+
+    const recoveryToken = randomBytes(32).toString('base64');
+    userRec.recoveryTokenHash = await getHash(recoveryToken);
+    await updateUserById(userRec);
+
     // FIX ME should probably redirect to pwa/extension
-    return res.sendStatus(200).json('Your account has been activated, you can close this window');
+    return res.status(200).json(
+      "Your account has been activated." +
+        "Below you can find your account recovery token, this will only be shown to you once." + 
+        `Please save it in a safe place: \n\n ${recoveryToken}`
+    );
   });
 }
 
@@ -207,9 +218,30 @@ export async function resetPassword(req: Req<PasswordReset>, res: Response) {
     if (!userRec) {
       throw Error('token is valid but user does not exist');
     }
-    userRec.passwordHash = await getPasswordHash(password);
+    userRec.passwordHash = await getHash(password);
     await updateUserById(userRec);
     await deleteToken(tokenRec.token, tokenRec.type);
-    return res.sendStatus(200).json('Your password has been changed');
+    return res.status(200).json('Your password has been changed');
+  });
+}
+
+export async function recoverAccount(req: Req<RecoverAccount>, res: Response) {
+  return useDb(res, async () => {
+    const { email, token } = req.body;
+    if (!email) return res.status(400).json('Email is required');
+    if (!token) return res.status(400).json('Token is required');
+    const userRec = await getUserByEmail(email);
+    if (!userRec) return res.status(404).json('Email not found');
+    const hashedToken = await getHash(token);
+    if (!userRec.recoveryTokenHash) {
+      return res.status(404).json('Recovery token does not exist');
+    }
+    if (userRec.recoveryTokenHash !== hashedToken) {
+      return res.status(404).json('Recovery token does not match');
+    }
+    userRec.email = email;
+    await updateUserById(userRec);
+    await sendConfirmationEmail(userRec);
+    return res.status(201).json('Verify email address');
   });
 }
