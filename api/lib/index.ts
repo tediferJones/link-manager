@@ -6,3 +6,4 @@ export * from '@/api/lib/constants';
 export * from '@/api/lib/normalize';
 export * from '@/api/lib/email';
 export * from '@/api/lib/getHash';
+export * from '@/api/lib/useRateLimit';
