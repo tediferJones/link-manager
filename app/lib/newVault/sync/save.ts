@@ -10,40 +10,46 @@ import { sendClientWsMessage } from '@/shared/utils/ws';
 // FIX ME move to constants
 const storageKey = 'newUserVault';
 
+let debounceTimer: undefined | NodeJS.Timeout = undefined;
+const debounceTimeout = 1000 * 2.5;
+
 export async function save() {
-  // FIX ME, add package version to saved vault
-  // this way if we make breaking changes to vault structure
-  // we can apply a function to patch old vaults
-  // also add date
-  //  - this way we can tell which data is the latest
-  //    - if client data is latest push to db
-  //    - if server data is latest pull from db
-  // also add delay to saving and debounce on next save request
-  const packedResult = await packFolder(newUserVault.root);
-  const packed = unwrap(packedResult);
-  // FIX ME do not compress whole vault, we still want easy access to date and version
-  const { jwt, ws, userData, ...userVault } = newUserVault
-  const savedVault: Vault = { ...userVault, root: packed };
-  const compressed = await compress(JSON.stringify(savedVault));
+  if (debounceTimer) clearTimeout(debounceTimer);
+  setTimeout(async () => {
+    // FIX ME, add package version to saved vault
+    // this way if we make breaking changes to vault structure
+    // we can apply a function to patch old vaults
+    // also add date
+    //  - this way we can tell which data is the latest
+    //    - if client data is latest push to db
+    //    - if server data is latest pull from db
+    // also add delay to saving and debounce on next save request
+    const packedResult = await packFolder(newUserVault.root);
+    const packed = unwrap(packedResult);
+    // FIX ME do not compress whole vault, we still want easy access to date and version
+    const { jwt, ws, userData, ...userVault } = newUserVault
+    const savedVault: Vault = { ...userVault, root: packed };
+    const compressed = await compress(JSON.stringify(savedVault));
 
-  // FIX ME add save function to start config i.e.
-  // desktop has a specific save function
-  // extension has a specific save function
-  // etc..
-  if (chrome.runtime?.id) {
-    await chrome.storage.sync.set({ [storageKey]: compressed });
-  } else {
-    window.localStorage.setItem(storageKey, compressed);
-  }
+    // FIX ME add save function to start config i.e.
+    // desktop has a specific save function
+    // extension has a specific save function
+    // etc..
+    if (chrome.runtime?.id) {
+      await chrome.storage.sync.set({ [storageKey]: compressed });
+    } else {
+      window.localStorage.setItem(storageKey, compressed);
+    }
 
-  await fetchWithJwt(`${apiUrl}/vault`, {
-    headers: { 'Content-Type': 'application/json' },
-    method: 'PUT',
-    body: JSON.stringify({ vault: compressed }),
-  });
+    await fetchWithJwt(`${apiUrl}/vault`, {
+      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT',
+      body: JSON.stringify({ vault: compressed }),
+    });
 
-  sendClientWsMessage(newUserVault.ws, {
-    action: 'reload',
-    jwt: newUserVault.jwt
-  });
+    sendClientWsMessage(newUserVault.ws, {
+      action: 'reload',
+      jwt: newUserVault.jwt
+    });
+  }, debounceTimeout);
 }
