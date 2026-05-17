@@ -9,7 +9,7 @@ import { Vault } from '@/app/types';
 // FIX ME move to constants
 const storageKey = 'newUserVault';
 
-export async function load() {
+export async function load({ preservePath }: { preservePath?: boolean } = {}) {
   // new storage strategy:
   // data is only stored in chrome.storage.local and database
   // switch to chrome.storage.local with 'unlimitedStorage' permission
@@ -44,7 +44,14 @@ export async function load() {
     }
   }
 
+  if (vault && preservePath) {
+    vault.path = newUserVault.path;
+  }
+
   if (vault) {
+    window.dispatchEvent(
+      new CustomEvent('updateUrl', { detail: { keys: vault.path } })
+    );
     replaceObject(newUserVault, {
       ...vault,
       jwt: newUserVault.jwt,

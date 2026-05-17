@@ -9,6 +9,7 @@ export default function Auth() {
       User: {newUserVault.userData.email}
       <hr />
       <button onClick={async () => {
+        // FIX ME logout is broken
         const res = await fetch(`${apiUrl}/logout`);
         if (res.ok) {
           newUserVault.jwt = '';
