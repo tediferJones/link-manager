@@ -2,7 +2,8 @@
   "name": "app",
   "version": "1.0.0",
   "description": "",
-  "main": "app.tsx",
+  "main": "index.ts",
+  "type": "module",
   "scripts": {
     "test": "vitest",
     "typeCheck": "npx tsc --noEmit"

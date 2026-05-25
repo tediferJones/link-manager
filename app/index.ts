@@ -1,5 +1,5 @@
 import '@/app/style.css';
-import App from '@/app/app';
+import Layout from '@/app/layout';
 import { DirectoryView } from '@/app/components/display';
 import setTheme from '@/app/lib/app/setTheme';
 import { enableHotKeys } from '@/app/lib/app/hotkeys';
@@ -44,7 +44,7 @@ export default function start(type: SizeTypes) {
       );
     }
   }
-  getElement('#app').appendChild(App({ type }));
+  getElement('#app').appendChild(Layout({ type }));
   // FIX ME make customEvent type to skip casting as CustomEvent
   // created a getCustomEvent helper to enforce the above types
   dispatchEvent(

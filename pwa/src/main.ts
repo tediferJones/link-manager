@@ -1,3 +1,3 @@
-import start from 'app/lib/app/start';
+import app from 'app';
 
-start('website');
+app('website');

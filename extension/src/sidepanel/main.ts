@@ -1,3 +1,3 @@
-import start from 'app/lib/app/start';
+import app from 'app';
 
-start('sidepanel');
+app('sidepanel');

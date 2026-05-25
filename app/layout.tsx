@@ -6,8 +6,8 @@ import { openModal } from '@/app/effects';
 import { newUserVault } from '@/app/lib/app/userVault';
 import { setPath } from '@/app/lib/newVault/sync';
 import { getViewPath } from '@/app/lib/newVault/utils';
+import { authContainerId } from '@/app/lib/constants';
 import { SizeTypes } from '@/app/types';
-import { authContainerId } from './lib/constants';
 
 // FIX ME decide on spacing either 2 or 4 (should probably go with 4),
 // then make sure gap, padding and margin are all the same
