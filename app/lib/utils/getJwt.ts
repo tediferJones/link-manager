@@ -1,9 +1,9 @@
 import { newUserVault } from '@/app/lib/app/userVault';
-import { apiUrl, authHeaderPrefix, wssUrl } from '@/shared/constants';
-import { getClientWsHandlers, ServerWsMessage } from 'shared/utils/ws';
 import { load } from '@/app/lib/newVault/sync';
 import fetchWithJwt from '@/app/lib/utils/fetchWithJwt';
-import { UserData } from '@/shared/types';
+import { apiUrl, authHeaderPrefix, wssUrl } from 'shared/constants';
+import { getClientWsHandlers, ServerWsMessage } from 'shared/utils/ws';
+import { UserData } from 'shared/types';
 
 const executeServerMsg = getClientWsHandlers(load);
 

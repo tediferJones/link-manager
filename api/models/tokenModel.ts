@@ -13,8 +13,9 @@ export async function getTokenByValue(token: string) {
 }
 
 export async function updateToken(token: string, newToken: string) {
-  return await db.update(tokens).set({ token: newToken })
-    .where(eq(tokens.token, token));
+  return await db.update(tokens).set({ token: newToken }).where(
+    eq(tokens.token, token)
+  );
 }
 
 export async function deleteToken(token: string, type: TokenTypes) {

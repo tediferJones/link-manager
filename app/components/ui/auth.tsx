@@ -1,7 +1,7 @@
-import { newUserVault } from "@/app/lib/app/userVault";
-import { UserAuth } from "@/app/components/forms";
-import { openModal } from "@/app/effects";
-import { apiUrl } from "@/shared/constants";
+import { newUserVault } from '@/app/lib/app/userVault';
+import { UserAuth } from '@/app/components/forms';
+import { openModal } from '@/app/effects';
+import { apiUrl } from 'shared/constants';
 
 export default function Auth() {
   return newUserVault.jwt && newUserVault.userData ? (
@@ -9,20 +9,25 @@ export default function Auth() {
       User: {newUserVault.userData.email}
       <hr />
       <button onClick={async () => {
-        // FIX ME logout is broken
-        const res = await fetch(`${apiUrl}/logout`);
+        const res = await fetch(`${apiUrl}/logout`, {
+          credentials: 'include',
+          method: 'POST'
+        });
         if (res.ok) {
           newUserVault.jwt = '';
           if (newUserVault.ws) newUserVault.ws.close();
           newUserVault.ws = null;
           delete newUserVault.userData;
+          dispatchEvent(
+            new CustomEvent('getJwt', { detail: { reload: true, preservePath: true } })
+          );
         }
       }}>
         Logout
       </button>
     </div>
   ) : (
-    <button onClick={() => openModal("Login", <UserAuth type='login' />)}>
+    <button onClick={() => openModal('Login', <UserAuth type='login' />)}>
       Login
     </button>
   )
