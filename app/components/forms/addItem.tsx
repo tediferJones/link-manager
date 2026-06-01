@@ -3,7 +3,6 @@ import { newUserVault } from '@/app/lib/app/userVault';
 import { addItem } from '@/app/lib/newVault/core';
 import { getNewSortedKeys } from '@/app/lib/newVault/utils';
 import getElement from '@/app/lib/utils/getElement';
-// import getNewSortedKeys from '@/app/lib/vault/getNewSortedKeys';
 
 // FIX ME consider moving these (and other exported ids) into their own file or something
 // gets a little bit messy here when it comes to using the index.ts file

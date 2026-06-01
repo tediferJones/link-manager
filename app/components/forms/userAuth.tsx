@@ -71,7 +71,7 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         const email = getElement<HTMLInputElement>(`#${userAuthEmailId}`).value;
         const error = validate({ email });
         if (error) return console.log('failed validation', error);
-        const res = await fetch(`${apiUrl}/requestPasswordReset`, {
+        const res = await fetch(`${apiUrl}/jwt/requestPasswordReset`, {
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
           body: JSON.stringify({ email }),
@@ -96,7 +96,7 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         const searchParams = new URLSearchParams(window.location.search);
         const token = searchParams.get('token');
         if (!token) throw Error('failed to get reset token');
-        const res = await fetch(`${apiUrl}/resetPassword`, {
+        const res = await fetch(`${apiUrl}/jwt/resetPassword`, {
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
           body: JSON.stringify({ password, token }),
@@ -117,7 +117,7 @@ export default function UserAuth({ type }: { type: UserAuthTypes }) {
         const token = getElement<HTMLInputElement>(`#${userAuthTokenId}`).value;
         const error = validate({ email, token });
         if (error) return console.log('failed validation', error);
-        const res = await fetch(`${apiUrl}/recoverAccount`, {
+        const res = await fetch(`${apiUrl}/jwt/recoverAccount`, {
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
           body: JSON.stringify({ email, token }),

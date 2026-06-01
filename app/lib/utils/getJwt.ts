@@ -8,13 +8,15 @@ import { UserData } from 'shared/types';
 const executeServerMsg = getClientWsHandlers(load);
 
 export default async function getJwt() {
-  const jwtRes = await fetch(`${apiUrl}/jwt`, { credentials: 'include' });
+  const jwtRes = await fetch(`${apiUrl}/session/jwt`, {
+    credentials: 'include'
+  });
   if (!jwtRes.ok) return;
 
   const body = await jwtRes.json();
   newUserVault.jwt = `${authHeaderPrefix}${body.jwt}`;
   const userData: UserData = (
-    await fetchWithJwt(`${apiUrl}/me`).then(res => res.json())
+    await fetchWithJwt(`${apiUrl}/jwt/me`).then(res => res.json())
   );
   newUserVault.userData = userData;
 

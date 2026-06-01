@@ -32,7 +32,7 @@ export async function load({ preservePath }: { preservePath?: boolean } = {}) {
   }
 
   console.log('fetch with jwt')
-  const dbVaultRes = await fetchWithJwt(`${apiUrl}/vault`);
+  const dbVaultRes = await fetchWithJwt(`${apiUrl}/jwt/vault`);
   console.log('dbVaultRes', dbVaultRes)
   if (dbVaultRes.ok) {
     const dbVault = await extractVault(await dbVaultRes.json());

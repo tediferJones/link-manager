@@ -9,7 +9,7 @@ export default function Auth() {
       User: {newUserVault.userData.email}
       <hr />
       <button onClick={async () => {
-        const res = await fetch(`${apiUrl}/logout`, {
+        const res = await fetch(`${apiUrl}/session/logout`, {
           credentials: 'include',
           method: 'POST'
         });

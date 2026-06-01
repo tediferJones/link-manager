@@ -41,7 +41,7 @@ export async function save() {
       window.localStorage.setItem(storageKey, compressed);
     }
 
-    await fetchWithJwt(`${apiUrl}/vault`, {
+    await fetchWithJwt(`${apiUrl}/jwt/vault`, {
       headers: { 'Content-Type': 'application/json' },
       method: 'PUT',
       body: JSON.stringify({ vault: compressed }),
