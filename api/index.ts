@@ -24,6 +24,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use('/', router);
 
-app.listen(8000, () => console.log('Server running on port 8000'));
+const port = process.env.PORT || 8000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
 
 setInterval(() => clearExpiredTokens(Date.now()), 1000 * 60 * 5);
