@@ -3,15 +3,13 @@ import ms from 'ms';
 import { getUniqueToken } from '@/api/lib';
 import { createToken } from '@/api/models';
 import { UsersSelect } from '@/api/types';
+import { apiUrl } from '@/shared/constants';
 
 const mailgun = new Mailgun(FormData);
 const mg = mailgun.client({
   username: 'api',
   key: process.env.MAILGUN_API_KEY!,
 });
-
-// FIX ME move to shared constants
-const apiUrl = 'localhost:8000'
 
 export async function sendConfirmationEmail({ id, email }: UsersSelect) {
   const token = await getUniqueToken();

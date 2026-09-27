@@ -12,7 +12,7 @@ type Client = WebSocket & { pool: Client[] }
 
 config({ path: '.env' });
 
-const port = 9000;
+const port = Number(process.env.PORT) || 9000;
 const wss = new WebSocketServer({ port });
 
 const clientPools: ClientPools = {}
