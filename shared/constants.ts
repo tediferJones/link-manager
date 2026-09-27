@@ -4,7 +4,7 @@ export const isProd = process.env.NODE_ENV === 'production';
 
 export const apiUrl = (
   isProd
-    ? 'https://api-production-61f1.up.railway.app'
+    ? 'https://api.linkman.theodrz.me'
     : 'http://localhost:8000'
 );
 export const pwaUrl = (
@@ -14,7 +14,7 @@ export const pwaUrl = (
 );
 export const wssUrl = (
   isProd
-    ? 'wss://wss-production-09fd.up.railway.app'
+    ? 'wss://wss.linkman.theodrz.me'
     : 'ws://localhost:9000'
 );
 export const extUrl = (

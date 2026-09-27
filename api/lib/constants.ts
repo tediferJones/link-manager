@@ -6,6 +6,6 @@ export const sessionCookieName = 'sessionId';
 export const sessionCookieOpts: CookieOptions = {
   httpOnly: true,
   secure: isProd,
-  sameSite: isProd ? 'none' : 'lax',
+  sameSite: 'lax',
   path: '/session',
 }
