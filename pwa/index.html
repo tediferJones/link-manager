@@ -7,6 +7,11 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      const searchParams = new URLSearchParams(window.location.search);
+      const spaPath = searchParams.get('spaPath');
+      if (spaPath) window.history.replaceState(null, '', spaPath);
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

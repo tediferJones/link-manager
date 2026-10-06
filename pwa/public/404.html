@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <script>
+      const { pathname, search, hash } = window.location;
+      const searchParams = new URLSearchParams({
+        spaPath: `${pathname}${search}${hash}`
+      });
+      window.location.replace(`/?${searchParams.toString()}`);
+    </script>
+  </head>
+  <body>
+    Redirecting...
+  </body>
+</html>
